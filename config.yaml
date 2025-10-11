@@ -1,0 +1,185 @@
+# ============================================
+# PLAF Configuration File
+# ============================================
+
+# -------------------- Data Paths --------------------
+data:
+  raw_dir: "OULAD dataset"
+  processed_dir: "data/processed"
+  features_dir: "data/features"
+  
+  # OULAD files
+  files:
+    student_info: "studentInfo.csv"
+    student_assessment: "studentAssessment.csv"
+    assessments: "assessments.csv"
+    student_registration: "studentRegistration.csv"
+    student_vle: "studentVle.csv"
+    vle: "vle.csv"
+    courses: "courses.csv"
+
+# -------------------- Feature Engineering --------------------
+features:
+  # Target variable
+  target_column: "is_at_risk"
+  
+  # Features to standardize with z-score
+  z_score_features:
+    - avg_assessment_score
+    - total_vle_clicks
+    - num_assessments_submitted
+    - papers_failed
+    - vle_activity_diversity
+    - days_to_course_start
+    - early_submission_rate
+  
+  # Categorical features to encode
+  categorical_features:
+    - gender
+    - region
+    - highest_education
+    - imd_band
+    - age_band
+    - disability
+    - code_module
+    - code_presentation
+  
+  # Immutable features (cannot be changed by students)
+  immutable_features:
+    - gender
+    - region
+    - age_band
+    - num_of_prev_attempts
+  
+  # Actionable features (can be changed by students)
+  actionable_features:
+    - avg_assessment_score
+    - total_vle_clicks
+    - num_assessments_submitted
+    - vle_activity_diversity
+    - early_submission_rate
+
+# -------------------- Model Training --------------------
+model:
+  # Train/test split
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+  
+  # Cross-validation
+  cv_folds: 5
+  
+  # Models to benchmark
+  models:
+    - random_forest
+    - catboost
+    - xgboost
+    - logistic_regression
+    - svm
+  
+  # Primary metric for model selection
+  primary_metric: "f1"
+  
+  # Hyperparameter tuning
+  hyperparameter_tuning:
+    enabled: true
+    method: "random_search"  # or "grid_search"
+    n_iter: 50
+  
+  # Model save path
+  save_dir: "models"
+  best_model_name: "best_model.pkl"
+
+# -------------------- eXplainable AI --------------------
+xai:
+  shap:
+    # Number of background samples for SHAP
+    background_samples: 100
+    
+    # Features to highlight in plots
+    top_features: 10
+  
+  anchors:
+    # Precision threshold for anchor rules
+    threshold: 0.90
+    
+    # Maximum number of conditions in a rule
+    max_anchor_size: 5
+
+# -------------------- Prescriptive Analytics --------------------
+prescriptive:
+  dice:
+    # Number of counterfactual examples to generate
+    total_CFs: 5
+    
+    # Desired predicted class (0 = safe, 1 = at-risk)
+    desired_class: 0
+    
+    # Diversity in counterfactuals
+    diversity_weight: 1.0
+    
+    # Feasibility constraints (multipliers of current values)
+    constraints:
+      avg_assessment_score:
+        min_multiplier: 1.0  # Can only increase
+        max_multiplier: 1.5
+      
+      total_vle_clicks:
+        min_multiplier: 1.0
+        max_multiplier: 2.0
+      
+      papers_failed:
+        min_multiplier: 0.0  # Can reduce to 0
+        max_multiplier: 1.0
+
+# -------------------- LLM (Gemini) --------------------
+llm:
+  model_name: "gemini-2.5-flash"
+  api_key_env: "GEMINI_API_KEY"
+  
+  # Generation parameters
+  temperature: 0.7
+  max_tokens: 500
+  top_p: 0.9
+  
+  # Prompt template
+  system_prompt: |
+    You are an experienced academic advisor helping at-risk students improve their performance.
+    Your role is to provide concrete, actionable, and encouraging advice based on data-driven insights.
+  
+  # Retry settings
+  max_retries: 3
+  retry_delay: 2  # seconds
+
+# -------------------- Dashboard --------------------
+dashboard:
+  title: "PLAF - Prescriptive Learning Analytics Dashboard"
+  port: 8501
+  
+  # Risk levels
+  risk_levels:
+    high: 0.7  # >= 70% probability
+    medium: 0.4  # 40-70%
+    low: 0.4  # < 40%
+  
+  # Students per page in list view
+  page_size: 20
+  
+  # Visualization settings
+  plot_height: 400
+  plot_width: 800
+
+# -------------------- Logging --------------------
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/plaf.log"
+
+# -------------------- Misc --------------------
+misc:
+  # Seed for reproducibility
+  seed: 42
+  
+  # Number of parallel jobs
+  n_jobs: -1  # -1 means use all CPU cores
+
