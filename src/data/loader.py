@@ -57,10 +57,8 @@ class OULADLoader:
             try:
                 # Handle large file differently
                 if filename == 'studentVle.csv':
-                    logger.info("Loading large studentVle file...")
-                    df = pd.read_csv(filepath, chunksize=10000)
-                    # For now, just load first chunk for testing
-                    df = next(df)
+                    logger.info("Loading large studentVle file (433MB)...")
+                    df = pd.read_csv(filepath)
                 else:
                     df = pd.read_csv(filepath)
                     
