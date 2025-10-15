@@ -178,6 +178,21 @@ Response:"""
             logger.error(f"Error generating response: {e}")
             return "I'm sorry, I encountered an error. Please try asking your question again."
     
+    def query(self, query: str, student_context: Dict = None, top_k: int = 3) -> str:
+        """
+        Simple query method that returns just the response text.
+        
+        Args:
+            query: User query
+            student_context: Student information
+            top_k: Number of context documents to retrieve
+            
+        Returns:
+            Response text (string)
+        """
+        result = self.chat(query, student_data=student_context, top_k=top_k)
+        return result['response']
+    
     def chat(self, query: str, student_data: Dict = None, top_k: int = 3) -> Dict:
         """
         Complete RAG chat workflow.
@@ -245,7 +260,7 @@ Response:"""
 
 
 def initialize_knowledge_base() -> RAGSystem:
-    """Initialize RAG system with course knowledge."""
+    """Initialize RAG system with course knowledge from OULAD."""
     rag = RAGSystem()
     
     # Add course materials (example)
@@ -286,6 +301,65 @@ def initialize_knowledge_base() -> RAGSystem:
         
         "Connect with classmates through forums and study groups. Peer learning can clarify difficult concepts and provide motivation.",
     ]
+    
+    # Load VLE activity descriptions from OULAD
+    try:
+        import sqlite3
+        conn = sqlite3.connect("data/lms.db")
+        cursor = conn.cursor()
+        
+        # Get VLE activity types and descriptions
+        vle_docs = [
+            "RESOURCE activities: Course resource materials including PDFs, documents, and study guides. These are essential reading materials for the course.",
+            
+            "OUCONTENT activities: Open University course content including lectures, presentations, and multimedia materials. Core learning content.",
+            
+            "URL activities: External web resources and links to supplementary materials. Expand your knowledge with these additional resources.",
+            
+            "FORUMNG activities: Discussion forums where you can interact with peers and instructors. Active participation improves understanding.",
+            
+            "QUIZ activities: Assessment quizzes to test your knowledge. Complete these to gauge your progress and identify areas for improvement.",
+            
+            "HOMEPAGE activities: Course homepage with announcements and overview. Check regularly for updates and important information.",
+            
+            "SUBPAGE activities: Course subpages with specific topic information. Navigate through these for detailed content.",
+            
+            "DATAPLUS activities: Data repositories and datasets for analysis. Practice with real data to develop analytical skills.",
+            
+            "OUCOLLABORATE activities: Collaboration tools for group work and projects. Work with peers to complete assignments.",
+            
+            "GLOSSARY activities: Course glossary with key terms and definitions. Use this to understand course terminology.",
+        ]
+        
+        course_docs.extend(vle_docs)
+        
+        # Get course-specific information
+        cursor.execute("SELECT DISTINCT code_module FROM vle LIMIT 10")
+        modules = cursor.fetchall()
+        
+        for (module,) in modules:
+            cursor.execute("""
+                SELECT activity_type, COUNT(*) as count
+                FROM vle
+                WHERE code_module = ?
+                GROUP BY activity_type
+                ORDER BY count DESC
+            """, (module,))
+            
+            activities = cursor.fetchall()
+            
+            if activities:
+                activity_summary = ", ".join([f"{count} {act_type}" for act_type, count in activities[:5]])
+                course_docs.append(
+                    f"Module {module} contains the following VLE activities: {activity_summary}. "
+                    f"Focus on completing all activity types for comprehensive learning."
+                )
+        
+        conn.close()
+        logger.info(f"Loaded VLE content from OULAD database")
+        
+    except Exception as e:
+        logger.warning(f"Could not load VLE data: {e}")
     
     rag.add_documents(course_docs)
     rag.build_index()

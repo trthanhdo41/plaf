@@ -272,55 +272,237 @@ def dashboard_page():
 
 
 def materials_page():
-    """Course materials page."""
-    st.markdown('<p class="main-header">📚 Course Materials</p>', unsafe_allow_html=True)
+    """Course materials page with VLE activities from OULAD."""
+    st.markdown('<p class="main-header">Course Materials</p>', unsafe_allow_html=True)
     
     student = st.session_state.student_data
     db = get_db()
+    conn = db.connect()
+    cursor = conn.cursor()
     
-    # Get materials for student's course
-    materials = db.get_course_materials(student['code_module'])
+    # Get VLE activities from OULAD for student's module
+    cursor.execute("""
+        SELECT activity_type, COUNT(*) as count
+        FROM vle
+        WHERE code_module = ? AND code_presentation = ?
+        GROUP BY activity_type
+        ORDER BY count DESC
+    """, (student['code_module'], student['code_presentation']))
     
-    if not materials:
-        st.info("📝 No materials available yet for your course. Check back later!")
+    activity_summary = cursor.fetchall()
+    
+    if not activity_summary:
+        st.warning("No VLE activities found for your course. Please contact your instructor.")
+        return
+    
+    # Display course info
+    st.info(f"**Course:** {student['code_module']} - {student['code_presentation']}")
+    
+    # Create two columns: Materials (left) + Chatbot (right)
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.subheader("Learning Activities")
         
-        # Add some demo materials
-        if st.button("Load Demo Materials"):
-            demo_materials = [
-                ("Week 1: Introduction", "Welcome to the course! This week we'll cover the fundamentals...", "lecture", 1),
-                ("Week 1: Reading Assignment", "Please read Chapters 1-3 of the textbook...", "reading", 1),
-                ("Week 2: Video Lecture", "Watch the recorded lecture on advanced topics...", "video", 2),
-                ("Week 2: Quiz", "Test your understanding with this week's quiz...", "quiz", 2),
-            ]
-            
-            for title, content, mat_type, week in demo_materials:
-                db.add_course_material(student['code_module'], title, content, material_type=mat_type, week=week)
-            
-            st.success("Demo materials loaded!")
-            st.rerun()
-    else:
-        # Group by week
-        weeks = sorted(set(m['week'] for m in materials if m['week']))
+        # Activity type filter
+        activity_types = [row[0] for row in activity_summary]
+        selected_type = st.selectbox(
+            "Filter by activity type:",
+            ["All"] + activity_types,
+            key="activity_filter"
+        )
         
-        for week in weeks:
-            st.subheader(f"📅 Week {week}")
-            
-            week_materials = [m for m in materials if m.get('week') == week]
-            
-            for material in week_materials:
-                with st.expander(f"{material['title']} ({material.get('material_type', 'resource')})"):
-                    st.write(material['content'])
+        # Get activities
+        if selected_type == "All":
+            cursor.execute("""
+                SELECT id_site, activity_type, week_from, week_to
+                FROM vle
+                WHERE code_module = ? AND code_presentation = ?
+                ORDER BY activity_type, id_site
+                LIMIT 50
+            """, (student['code_module'], student['code_presentation']))
+        else:
+            cursor.execute("""
+                SELECT id_site, activity_type, week_from, week_to
+                FROM vle
+                WHERE code_module = ? AND code_presentation = ? AND activity_type = ?
+                ORDER BY id_site
+                LIMIT 50
+            """, (student['code_module'], student['code_presentation'], selected_type))
+        
+        activities = cursor.fetchall()
+        
+        # Display activity summary
+        st.write(f"**Total activities:** {len(activities)}")
+        
+        # Group activities by type
+        activity_groups = {}
+        for activity in activities:
+            id_site, act_type, week_from, week_to = activity
+            if act_type not in activity_groups:
+                activity_groups[act_type] = []
+            activity_groups[act_type].append({
+                'id_site': id_site,
+                'week_from': week_from,
+                'week_to': week_to
+            })
+        
+        # Display activities
+        for act_type, items in activity_groups.items():
+            with st.expander(f"{act_type.upper()} ({len(items)} items)", expanded=(selected_type == act_type)):
+                for idx, item in enumerate(items[:20]):  # Limit to 20 per type
+                    col_a, col_b = st.columns([4, 1])
                     
-                    # Log activity when student views material
-                    if st.button(f"Mark as viewed", key=f"view_{material['id']}"):
-                        db.log_activity(
-                            st.session_state.student_id,
-                            'view_material',
-                            resource_id=material['id'],
-                            resource_type=material.get('material_type'),
-                            date=datetime.now().day
+                    with col_a:
+                        week_info = ""
+                        if item['week_from']:
+                            week_info = f" (Week {item['week_from']}"
+                            if item['week_to'] and item['week_to'] != item['week_from']:
+                                week_info += f"-{item['week_to']}"
+                            week_info += ")"
+                        
+                        st.write(f"**{act_type.capitalize()} #{idx+1}**{week_info}")
+                        
+                        # Activity description based on type
+                        descriptions = {
+                            'resource': 'Course resource material',
+                            'oucontent': 'Open University course content',
+                            'url': 'External web resource',
+                            'forumng': 'Discussion forum',
+                            'homepage': 'Course homepage',
+                            'quiz': 'Assessment quiz',
+                            'subpage': 'Course subpage',
+                            'dataplus': 'Data repository',
+                            'oucollaborate': 'Collaboration tool',
+                            'glossary': 'Course glossary'
+                        }
+                        st.caption(descriptions.get(act_type, 'Learning activity'))
+                    
+                    with col_b:
+                        # Check if this was just viewed
+                        viewed_key = f"viewed_{item['id_site']}"
+                        if viewed_key in st.session_state:
+                            st.success("✓ Logged")
+                        elif st.button("View", key=f"view_{item['id_site']}"):
+                            # Log activity to database
+                            db.log_activity(
+                                st.session_state.student_id,
+                                'view_material',
+                                resource_id=item['id_site'],
+                                resource_type=act_type,
+                                clicks=1,
+                                date=datetime.now().day
+                            )
+                            st.session_state[viewed_key] = True
+                            st.rerun()
+    
+    with col2:
+        st.subheader("AI Study Assistant")
+        st.caption("Ask questions about course materials")
+        
+        # Initialize RAG system
+        if st.session_state.rag_system is None:
+            with st.spinner("Loading AI..."):
+                try:
+                    st.session_state.rag_system = initialize_knowledge_base()
+                except Exception as e:
+                    st.error(f"AI unavailable: {e}")
+                    return
+        
+        rag = st.session_state.rag_system
+        
+        # Mini chat interface
+        if 'materials_chat' not in st.session_state:
+            st.session_state.materials_chat = []
+        
+        # Display recent messages with better styling
+        chat_container = st.container()
+        with chat_container:
+            if not st.session_state.materials_chat:
+                st.info("💬 Ask me anything about the course materials!")
+            else:
+                for msg in st.session_state.materials_chat[-5:]:  # Show last 5
+                    if msg['role'] == 'user':
+                        st.markdown(f"""
+                        <div style='background: #e3f2fd; padding: 10px; border-radius: 8px; margin: 5px 0;'>
+                            <strong>You:</strong> {msg['content']}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                        <div style='background: #f5f5f5; padding: 10px; border-radius: 8px; margin: 5px 0;'>
+                            <strong>AI:</strong> {msg['content']}
+                        </div>
+                        """, unsafe_allow_html=True)
+        
+        # Chat input
+        with st.form(key="materials_chat_form", clear_on_submit=True):
+            user_input = st.text_input(
+                "Ask about course content:",
+                placeholder="e.g., What resources are available?",
+                key="materials_chat_input"
+            )
+            submit = st.form_submit_button("Send", use_container_width=True)
+            
+            if submit and user_input:
+                # Add user message
+                st.session_state.materials_chat.append({
+                    'role': 'user',
+                    'content': user_input
+                })
+                
+                # Get AI response
+                try:
+                    # Show loading state
+                    with st.spinner("🤖 AI is thinking... Please wait"):
+                        response = rag.query(
+                            user_input,
+                            student_context=student
                         )
-                        st.success("Activity logged!")
+                        
+                        st.session_state.materials_chat.append({
+                            'role': 'assistant',
+                            'content': response
+                        })
+                        
+                        # Log chat
+                        db.log_chat(
+                            st.session_state.student_id,
+                            user_input,
+                            response,
+                            context=f"materials_{student['code_module']}"
+                        )
+                        
+                except Exception as e:
+                    error_msg = f"Sorry, I encountered an error: {str(e)}"
+                    st.session_state.materials_chat.append({
+                        'role': 'assistant',
+                        'content': error_msg
+                    })
+                    st.error(f"AI Error: {e}")
+                
+                st.rerun()
+        
+        # Quick questions
+        st.caption("Quick questions:")
+        quick_questions = [
+            "What activities should I focus on?",
+            "How can I improve my grade?",
+            "What resources are most important?"
+        ]
+        
+        for q in quick_questions:
+            if st.button(q, key=f"quick_{hash(q)}", use_container_width=True):
+                st.session_state.materials_chat.append({'role': 'user', 'content': q})
+                try:
+                    with st.spinner("🤖 AI is thinking..."):
+                        response = rag.query(q, student_context=student)
+                        st.session_state.materials_chat.append({'role': 'assistant', 'content': response})
+                        db.log_chat(st.session_state.student_id, q, response, context=f"materials_{student['code_module']}")
+                except Exception as e:
+                    error_msg = f"Sorry, I encountered an error: {str(e)}"
+                    st.session_state.materials_chat.append({'role': 'assistant', 'content': error_msg})
+                st.rerun()
 
 
 def chatbot_page():
