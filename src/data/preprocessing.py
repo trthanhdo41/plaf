@@ -79,10 +79,15 @@ class OULADPreprocessor:
         """
         df = student_df.copy()
         
-        # Create binary target: 1 = at-risk (Fail/Withdrawn), 0 = safe (Pass/Distinction)
-        df['is_at_risk'] = df['final_result'].apply(
-            lambda x: 1 if x in ['Fail', 'Withdrawn'] else 0
-        )
+        # Check if final_result column exists
+        if 'final_result' not in df.columns:
+            logger.warning("final_result column not found, creating dummy target")
+            df['is_at_risk'] = 0  # Default to not at-risk
+        else:
+            # Create binary target: 1 = at-risk (Fail/Withdrawn), 0 = safe (Pass/Distinction)
+            df['is_at_risk'] = df['final_result'].apply(
+                lambda x: 1 if x in ['Fail', 'Withdrawn'] else 0
+            )
         
         logger.info(f"Target variable created:")
         logger.info(f"At-risk: {df['is_at_risk'].sum()} ({df['is_at_risk'].mean():.2%})")
@@ -99,18 +104,36 @@ class OULADPreprocessor:
         """
         logger.info("Creating assessment features...")
         
+        if 'studentAssessment' not in self.data:
+            logger.warning("studentAssessment data not found")
+            return pd.DataFrame()
+        
         student_assess = self.data['studentAssessment']
-        assessments = self.data['assessments']
+        
+        if 'assessments' in self.data:
+            assessments = self.data['assessments']
+        else:
+            logger.warning("assessments data not found, using studentAssessment only")
+            assessments = None
         
         # Merge to get assessment metadata
-        assess_merged = student_assess.merge(
-            assessments,
-            on=['id_assessment', 'code_module', 'code_presentation'],
-            how='left'
-        )
+        if assessments is not None:
+            assess_merged = student_assess.merge(
+                assessments,
+                on=['id_assessment', 'code_module', 'code_presentation'],
+                how='left'
+            )
+        else:
+            assess_merged = student_assess.copy()
+        
+        # Check if required columns exist
+        required_cols = ['id_student', 'code_module', 'code_presentation']
+        if not all(col in assess_merged.columns for col in required_cols):
+            logger.warning(f"Missing required columns: {required_cols}")
+            return pd.DataFrame()
         
         # Aggregate by student
-        agg_features = assess_merged.groupby(['id_student', 'code_module', 'code_presentation']).agg({
+        agg_features = assess_merged.groupby(required_cols).agg({
             'score': ['mean', 'std', 'min', 'max', 'count'],
             'date': lambda x: (x < 0).sum(),  # Number of late submissions (negative dates)
         }).reset_index()
@@ -142,10 +165,20 @@ class OULADPreprocessor:
         """
         logger.info("Creating VLE engagement features...")
         
+        if 'studentVle' not in self.data:
+            logger.warning("studentVle data not found")
+            return pd.DataFrame()
+        
         student_vle = self.data['studentVle']
         
+        # Check if required columns exist
+        required_cols = ['id_student', 'code_module', 'code_presentation']
+        if not all(col in student_vle.columns for col in required_cols):
+            logger.warning(f"Missing required columns in VLE data: {required_cols}")
+            return pd.DataFrame()
+        
         # Aggregate by student
-        vle_features = student_vle.groupby(['id_student', 'code_module', 'code_presentation']).agg({
+        vle_features = student_vle.groupby(required_cols).agg({
             'sum_click': ['sum', 'mean', 'std', 'max'],
             'date': ['min', 'max', 'count'],  # First access, last access, num days active
             'id_site': 'nunique'  # Number of unique resources accessed
@@ -183,10 +216,20 @@ class OULADPreprocessor:
         """
         logger.info("Creating registration features...")
         
+        if 'studentRegistration' not in self.data:
+            logger.warning("studentRegistration data not found")
+            return pd.DataFrame()
+        
         student_reg = self.data['studentRegistration']
         
+        # Check if required columns exist
+        required_cols = ['id_student', 'code_module', 'code_presentation']
+        if not all(col in student_reg.columns for col in required_cols):
+            logger.warning(f"Missing required columns in registration data: {required_cols}")
+            return pd.DataFrame()
+        
         # Group by student
-        reg_features = student_reg.groupby(['id_student', 'code_module', 'code_presentation']).agg({
+        reg_features = student_reg.groupby(required_cols).agg({
             'date_registration': 'first',
             'date_unregistration': lambda x: x.notna().sum()  # Count unregistrations
         }).reset_index()
@@ -223,26 +266,41 @@ class OULADPreprocessor:
         # Merge everything
         merged = student_info.copy()
         
+        # Check if features exist before merging
+        merge_keys = ['id_student', 'code_module', 'code_presentation']
+        
         # Merge assessment features
-        merged = merged.merge(
-            assess_features,
-            on=['id_student', 'code_module', 'code_presentation'],
-            how='left'
-        )
+        if not assess_features.empty and all(key in assess_features.columns for key in merge_keys):
+            logger.info(f"Merging assessment features: {assess_features.shape}")
+            merged = merged.merge(
+                assess_features,
+                on=merge_keys,
+                how='left'
+            )
+        else:
+            logger.warning("Assessment features empty or missing merge keys")
         
         # Merge VLE features
-        merged = merged.merge(
-            vle_features,
-            on=['id_student', 'code_module', 'code_presentation'],
-            how='left'
-        )
+        if not vle_features.empty and all(key in vle_features.columns for key in merge_keys):
+            logger.info(f"Merging VLE features: {vle_features.shape}")
+            merged = merged.merge(
+                vle_features,
+                on=merge_keys,
+                how='left'
+            )
+        else:
+            logger.warning("VLE features empty or missing merge keys")
         
         # Merge registration features
-        merged = merged.merge(
-            reg_features,
-            on=['id_student', 'code_module', 'code_presentation'],
-            how='left'
-        )
+        if not reg_features.empty and all(key in reg_features.columns for key in merge_keys):
+            logger.info(f"Merging registration features: {reg_features.shape}")
+            merged = merged.merge(
+                reg_features,
+                on=merge_keys,
+                how='left'
+            )
+        else:
+            logger.warning("Registration features empty or missing merge keys")
         
         # Fill NaN values (students with no activity)
         numeric_cols = merged.select_dtypes(include=[np.number]).columns
