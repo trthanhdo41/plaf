@@ -118,9 +118,11 @@ python run_pipeline.py
 
 Project dùng OULAD (Open University Learning Analytics Dataset).
 
-Download tại: https://analyse.kmi.open.ac.uk/open_dataset
+**Dataset đã có sẵn trong source code** ở folder `OULAD dataset/`!
 
-Giải nén vào folder `data/`:
+Nếu cần download thêm, tải tại: https://www.kaggle.com/datasets/anlgrbz/student-demographics-online-education-dataoulad
+
+Hoặc giải nén vào folder `data/` hoặc `OULAD dataset/`:
 ```
 data/
 ├── studentInfo.csv
@@ -152,6 +154,57 @@ GEMINI_API_KEY=your_key_here
 - RAG system: Vector search và Gemini integration
 - Student portal: UI và chatbot
 - Real-time data updates
+
+## Benchmarking
+
+Hệ thống có comprehensive benchmark suite để đánh giá performance:
+
+### Run All Benchmarks
+```bash
+python run_all_benchmarks.py
+```
+
+### Individual Benchmarks
+
+**1. Predictive Models Benchmark**
+```bash
+python tests/benchmark_predictive.py
+```
+- So sánh tất cả ML models (CatBoost, RF, XGBoost, SVM, LR)
+- Metrics: AUC, F1, Precision, Recall, Training time
+- Output: `results/predictive_benchmark_*.csv`
+
+**2. RAG System Benchmark**
+```bash
+python tests/benchmark_rag.py
+```
+- Test retrieval quality, response quality, latency
+- 8 test cases covering different question types
+- Output: `results/rag_benchmark_*.json`
+
+**3. LLM Advice Benchmark**
+```bash
+python tests/benchmark_llm.py
+```
+- Evaluate advice quality, consistency, relevance
+- Test personalization and actionability
+- Output: `results/llm_benchmark_*.json`
+
+### View Benchmark Results on Web
+
+```bash
+streamlit run src/dashboard/benchmark_dashboard.py --server.port 8503
+```
+
+Mở browser: http://localhost:8503
+
+Dashboard hiển thị:
+- Model comparison charts
+- Performance metrics
+- RAG quality analysis  
+- LLM advice quality breakdown
+
+Chi tiết: xem `tests/BENCHMARK_README.md`
 
 ## Notes
 
