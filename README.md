@@ -108,6 +108,20 @@ Pipeline phân tích gồm 8 bước:
 7. Generate advice bằng LLM
 8. Dashboard để advisors can thiệp
 
+### Advanced Features
+
+**Cold Start Handler** - Xử lý sinh viên mới không có lịch sử:
+- Demographic-based prediction sử dụng K-Nearest Neighbors
+- Tìm sinh viên tương tự dựa trên demographics
+- Weighted prediction với confidence scoring
+- Xử lý missing data cho new students
+
+**Few-Shot Learning** - Học nhanh từ ít examples:
+- Prototypical Networks cho classification
+- Quick adaptation đến new courses/cohorts
+- Meta-learning approach
+- Chỉ cần 5-10 examples để adapt
+
 Để chạy full pipeline:
 
 ```bash
