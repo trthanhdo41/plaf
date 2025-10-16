@@ -10,8 +10,16 @@ from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from catboost import CatBoostClassifier
-from xgboost import XGBClassifier
+try:
+    from catboost import CatBoostClassifier
+    CATBOOST_AVAILABLE = True
+except ImportError:
+    CATBOOST_AVAILABLE = False
+try:
+    from xgboost import XGBClassifier
+    XGBOOST_AVAILABLE = False  # Force disable for Python 3.14 compatibility
+except ImportError:
+    XGBOOST_AVAILABLE = False
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, 
     f1_score, roc_auc_score, classification_report, confusion_matrix
@@ -69,16 +77,18 @@ class ModelTrainer:
                 n_jobs=-1
             ),
             
-            'CatBoost': CatBoostClassifier(
+            # CatBoost only if available
+            **({'CatBoost': CatBoostClassifier(
                 iterations=500,
                 learning_rate=0.1,
                 depth=6,
                 random_state=self.random_state,
                 auto_class_weights='Balanced',
                 verbose=False
-            ),
+            )} if CATBOOST_AVAILABLE else {}),
             
-            'XGBoost': XGBClassifier(
+            # XGBoost only if available
+            **({'XGBoost': XGBClassifier(
                 n_estimators=100,
                 max_depth=6,
                 learning_rate=0.1,
@@ -86,7 +96,7 @@ class ModelTrainer:
                 scale_pos_weight=len(self.y[self.y==0]) / len(self.y[self.y==1]),  # Handle imbalance
                 n_jobs=-1,
                 eval_metric='logloss'
-            ),
+            )} if XGBOOST_AVAILABLE else {}),
             
             'SVM': SVC(
                 kernel='rbf',

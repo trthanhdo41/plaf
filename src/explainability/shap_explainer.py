@@ -6,8 +6,17 @@ This module provides global and local model explanations using SHAP.
 
 import pandas as pd
 import numpy as np
-import shap
-import matplotlib.pyplot as plt
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except ImportError:
+    shap = None
+    SHAP_AVAILABLE = False
+try:
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
 import joblib
 from typing import Dict, List, Tuple, Optional
 import logging
@@ -44,6 +53,10 @@ class SHAPExplainer:
         """
         logger.info("Creating SHAP explainer...")
         
+        if not SHAP_AVAILABLE:
+            logger.warning("SHAP not available, skipping explainer creation")
+            return
+            
         try:
             if use_tree_explainer:
                 # For tree-based models (RF, XGBoost, CatBoost)
@@ -295,8 +308,16 @@ def explain_model_globally(model, X: pd.DataFrame,
         feature_names: List of feature names
         plots_dir: Directory to save plots
     """
+    if not SHAP_AVAILABLE:
+        logger.warning("SHAP not available, skipping global explanations")
+        return None, None
+        
     explainer = SHAPExplainer(model, X, feature_names)
     explainer.calculate_shap_values()
+    
+    if explainer.explainer is None:
+        logger.warning("SHAP explainer not available, skipping plots")
+        return explainer, None
     
     # Create plots
     explainer.plot_summary(save_path=f'{plots_dir}/summary_plot.png')

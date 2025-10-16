@@ -216,7 +216,11 @@ class FeatureEngineer:
         final_df = self.df[final_cols].copy()
         
         # Fill any remaining NaN with 0
-        final_df[valid_features] = final_df[valid_features].fillna(0)
+        existing_features = [col for col in valid_features if col in final_df.columns]
+        if existing_features:
+            # Fill NaN values in place to avoid shape mismatch
+            for col in existing_features:
+                final_df[col] = final_df[col].fillna(0)
         
         logger.info(f"Final modeling data: {final_df.shape}")
         logger.info(f"Number of features: {len(valid_features)}")

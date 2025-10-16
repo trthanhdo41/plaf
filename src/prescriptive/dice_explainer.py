@@ -6,8 +6,12 @@ This module generates counterfactual explanations using DiCE.
 
 import pandas as pd
 import numpy as np
-import dice_ml
-from dice_ml import Dice
+try:
+    import dice_ml
+    from dice_ml import Dice
+    DICE_AVAILABLE = True
+except ImportError:
+    DICE_AVAILABLE = False
 from typing import Dict, List, Tuple
 import logging
 
@@ -248,6 +252,12 @@ def generate_counterfactual_advice(model, X_train: pd.DataFrame, y_train: pd.Ser
     Returns:
         List of counterfactual explanations
     """
+    if not DICE_AVAILABLE:
+        logger.warning("DiCE not available, returning empty advice")
+        return []
+    
+    logger.info("Generating counterfactual advice with DiCE...")
+    
     generator = CounterfactualGenerator(
         model, X_train, y_train,
         feature_names, continuous_features
