@@ -146,8 +146,11 @@ def run_pipeline(
         best_model, X_sample, features, plots_dir='plots/shap'
     )
     
-    logger.info("Top 10 Most Important Features:")
-    logger.info("\n" + importance_df.head(10).to_string())
+    if importance_df is not None:
+        logger.info("Top 10 Most Important Features:")
+        logger.info("\n" + importance_df.head(10).to_string())
+    else:
+        logger.info("Feature importance not available (SHAP disabled)")
     
     # ===== STEP 6: Generate Counterfactuals =====
     logger.info("\n" + "="*80)
