@@ -89,3 +89,4 @@ site/
 
 # Keep directory structure but ignore contents
 !.gitkeep
+data/lms.db
