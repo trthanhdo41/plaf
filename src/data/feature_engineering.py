@@ -204,12 +204,16 @@ class FeatureEngineer:
         
         # Remove any features with all NaN or constant values
         valid_features = []
+        seen_features = set()
         for col in modeling_features:
-            if col in self.df.columns:
+            if col in self.df.columns and col not in seen_features:
                 if self.df[col].notna().sum() > 0 and self.df[col].nunique() > 1:
                     valid_features.append(col)
+                    seen_features.add(col)
                 else:
                     logger.warning(f"Dropping {col} - constant or all NaN")
+            elif col in seen_features:
+                logger.warning(f"Skipping duplicate feature: {col}")
         
         # Create final dataframe
         final_cols = ['id_student', 'code_module', 'code_presentation'] + valid_features + ['is_at_risk']
