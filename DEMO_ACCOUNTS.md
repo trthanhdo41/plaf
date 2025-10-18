@@ -1,23 +1,21 @@
-# 🎓 DEMO ACCOUNTS - Student Portal
-
 Đây là danh sách tài khoản demo để test Student Portal với students có data thật từ OULAD dataset.
 
-## 📋 DANH SÁCH TÀI KHOẢN
+## DANH SÁCH TÀI KHOẢN
 
 | Student ID | Email | Password | Status | Risk Level |
 |------------|-------|----------|--------|------------|
-| **432862** | student432862@ou.ac.uk | demo123 | 🔴 AT-RISK | 21.4% |
-| **650515** | student650515@ou.ac.uk | demo123 | 🔴 AT-RISK | 99.9% |
-| **2634238** | student2634238@ou.ac.uk | demo123 | 🔴 AT-RISK | 100.0% |
-| **604655** | student604655@ou.ac.uk | demo123 | 🔴 AT-RISK | 98.2% |
-| **595262** | student595262@ou.ac.uk | demo123 | 🔴 AT-RISK | 86.4% |
-| 513428 | student513428@ou.ac.uk | demo123 | 🟢 SAFE | 6.6% |
-| 588524 | student588524@ou.ac.uk | demo123 | 🟢 SAFE | 1.7% |
-| 348717 | student348717@ou.ac.uk | demo123 | 🟢 SAFE | 19.7% |
+| **432862** | student432862@ou.ac.uk | demo123 | AT-RISK | 21.4% |
+| **650515** | student650515@ou.ac.uk | demo123 | AT-RISK | 99.9% |
+| **2634238** | student2634238@ou.ac.uk | demo123 | AT-RISK | 100.0% |
+| **604655** | student604655@ou.ac.uk | demo123 | AT-RISK | 98.2% |
+| **595262** | student595262@ou.ac.uk | demo123 | AT-RISK | 86.4% |
+| 513428 | student513428@ou.ac.uk | demo123 | SAFE | 6.6% |
+| 588524 | student588524@ou.ac.uk | demo123 | SAFE | 1.7% |
+| 348717 | student348717@ou.ac.uk | demo123 | SAFE | 19.7% |
 
 ---
 
-## 🚀 HƯỚNG DẪN SỬ DỤNG
+## HƯỚNG DẪN SỬ DỤNG
 
 ### Bước 1: Chạy Student Portal
 
@@ -36,37 +34,37 @@ streamlit run src/lms_portal/student_app.py --server.port 8501
 
 ### Bước 3: Test các tính năng
 
-#### 🏠 **Dashboard** 
+#### Dashboard 
 - Xem tổng quan engagement (VLE clicks, assessments, etc.)
 - Xem risk gauge (mức độ rủi ro)
 - Nếu là AT-RISK student → có warning đỏ + recommendations
 
-#### 📚 **Course Materials**
+#### Course Materials
 - Xem danh sách VLE activities từ OULAD dataset
 - Filter theo activity type (resource, quiz, forum, etc.)
 - Click "View" để log activity
 - **Chat với AI Study Assistant** (cột bên phải)
 
-#### 🤖 **AI Advisor** 
+#### AI Advisor 
 - Chat với AI advisor để hỏi về học tập
 - Suggested questions có sẵn
 - AI sẽ trả lời dựa trên knowledge base
 - **Dành cho AT-RISK students:** Advice cá nhân hóa dựa trên predictions
 
-#### 👤 **Profile**
+#### Profile
 - Xem thông tin cá nhân
 - Xem risk status
 
 ---
 
-## 💡 TEST CASES
+## TEST CASES
 
 ### Test 1: AT-RISK Student với risk cao (99.9%)
 ```
 Email: student650515@ou.ac.uk
 Password: demo123
 ```
-✅ **Kỳ vọng:**
+**Kỳ vọng:**
 - Dashboard hiển thị warning đỏ
 - Risk gauge ~100%
 - AI Advisor đưa ra advice cụ thể để cải thiện
@@ -76,7 +74,7 @@ Password: demo123
 Email: student588524@ou.ac.uk
 Password: demo123
 ```
-✅ **Kỳ vọng:**
+**Kỳ vọng:**
 - Dashboard hiển thị "You're On Track" màu xanh
 - Risk gauge ~2%
 - Encouragement messages
@@ -91,7 +89,7 @@ Password: demo123
 
 ---
 
-## 🔄 TẠO LẠI TÀI KHOẢN
+## TẠO LẠI TÀI KHOẢN
 
 Nếu cần tạo lại accounts mới:
 
@@ -111,7 +109,7 @@ Script sẽ tự động:
 
 ---
 
-## ⚠️ LƯU Ý
+## LƯU Ý
 
 1. **Database:** Tài khoản lưu trong `data/lms.db` (SQLite)
 2. **Data thật:** Students có data từ OULAD dataset (scores, VLE clicks, etc.)
@@ -120,7 +118,7 @@ Script sẽ tự động:
 
 ---
 
-## 🛠️ TROUBLESHOOTING
+## TROUBLESHOOTING
 
 ### Lỗi "Invalid email or password"
 - Kiểm tra email đúng format: `student{ID}@ou.ac.uk`
@@ -137,7 +135,3 @@ rm data/lms.db-journal data/lms.db-wal data/lms.db-shm
 - Xem logs trong terminal
 
 ---
-
-📅 **Generated:** October 18, 2025  
-🔧 **Version:** PLAF v1.0
-
