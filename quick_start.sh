@@ -51,7 +51,16 @@ python run_pipeline.py
 
 echo ""
 echo "========================================"
-echo "STEP 2: Creating Demo Accounts"
+echo "STEP 2: Loading VLE Data"
+echo "========================================"
+echo ""
+
+# Load VLE data from OULAD into database
+python src/data/load_vle_data.py
+
+echo ""
+echo "========================================"
+echo "STEP 3: Creating Demo Accounts"
 echo "========================================"
 echo ""
 
@@ -60,7 +69,7 @@ python src/data/create_demo_accounts.py
 
 echo ""
 echo "========================================"
-echo "STEP 3: Starting Student Portal"
+echo "STEP 4: Starting Student Portal"
 echo "========================================"
 echo ""
 
