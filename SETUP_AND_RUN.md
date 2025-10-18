@@ -1,286 +1,126 @@
-# QUY TRÌNH CHẠY ĐẦY ĐỦ PLAF SYSTEM
+# HƯỚNG DẪN CHẠY PLAF SYSTEM (Ubuntu/Linux)
 
-Hướng dẫn này giúp bạn chạy toàn bộ hệ thống PLAF từ đầu đến cuối.
+## CÁCH NHANH NHẤT - CHẠY SCRIPT TỰ ĐỘNG
 
-**Hỗ trợ:**
-- ✅ Ubuntu/Linux
-- ✅ Windows 10/11
-- ✅ macOS
+```bash
+./quick_start.sh
+```
+
+Script sẽ tự động:
+1. Tạo virtual environment
+2. Cài đặt dependencies
+3. Chạy pipeline (train models)
+4. Tạo demo accounts
+5. Khởi động Student Portal
 
 ---
 
-## BƯỚC 1: CÀI ĐẶT MÔI TRƯỜNG
+## HƯỚNG DẪN CHI TIẾT (Chạy thủ công)
 
-### 1.1. Clone repository
+### Bước 1: Clone repository
 
 ```bash
 git clone https://github.com/trthanhdo41/plaf.git
 cd plaf
 ```
 
-### 1.2. Tạo virtual environment
+### Bước 2: Tạo virtual environment
 
-**Ubuntu/Linux/macOS:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-**Windows:**
-```cmd
-python -m venv venv
-venv\Scripts\activate
-```
-
-### 1.3. Cài đặt dependencies
+### Bước 3: Cài đặt dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 1.4. Cấu hình API key (TÙY CHỌN - chỉ cần nếu muốn dùng chatbot)
-
-Tạo file `.env`:
-
-```bash
-nano .env
-```
-
-Thêm nội dung (nếu có API key):
-
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
-Lưu và thoát (Ctrl+O, Enter, Ctrl+X).
-
-**LƯU Ý:** Nếu không có API key, bạn vẫn có thể chạy toàn bộ hệ thống, chỉ chatbot sẽ không hoạt động.
-
----
-
-## BƯỚC 2: CHẠY PIPELINE (Train model và tạo predictions)
-
-### 2.1. Chạy pipeline đầy đủ
+### Bước 4: Chạy pipeline
 
 ```bash
 python run_pipeline.py
 ```
 
-**Thời gian:** ~2-3 phút
-
-**Kết quả mong đợi:**
-- Model được train (Random Forest, Logistic Regression, SVM)
+Kết quả:
+- Model được train (Random Forest ~98% AUC)
 - File predictions: `data/processed/student_predictions.csv`
 - Best model: `models/best_model.pkl`
-- Test AUC: ~98%
 
-**Kiểm tra kết quả:**
-
-```bash
-ls -lh data/processed/student_predictions.csv
-ls -lh models/best_model.pkl
-```
-
----
-
-## BƯỚC 3: TẠO DEMO ACCOUNTS
-
-### 3.1. Chạy script tạo accounts
+### Bước 5: Tạo demo accounts
 
 ```bash
 python src/data/create_demo_accounts.py
 ```
 
-**Kết quả:**
-- Tạo 8 demo accounts (5 at-risk + 3 safe)
-- File danh sách: `data/demo_accounts.csv`
-- Database: `data/lms.db`
+Kết quả:
+- 8 demo accounts (5 at-risk + 3 safe)
+- File: `data/demo_accounts.csv`
 
-### 3.2. Xem danh sách accounts
+### Bước 6: Chạy Student Portal
+
+```bash
+streamlit run src/lms_portal/student_app.py --server.port 8501
+```
+
+### Bước 7: Login
+
+Mở browser: **http://localhost:8501**
+
+**Tài khoản at-risk (để test chatbot):**
+- Email: `student650515@ou.ac.uk`
+- Password: `demo123`
+- Risk: 99.9%
+
+**Tài khoản safe:**
+- Email: `student588524@ou.ac.uk`
+- Password: `demo123`
+- Risk: 1.7%
+
+---
+
+## DANH SÁCH TÀI KHOẢN ĐẦY ĐỦ
+
+Sau khi chạy script tạo accounts, xem file:
 
 ```bash
 cat data/demo_accounts.csv
 ```
 
-Hoặc xem file `DEMO_ACCOUNTS.md` để biết chi tiết.
+Hoặc:
 
-**Ví dụ accounts:**
-- Email: `student650515@ou.ac.uk`, Password: `demo123` (AT-RISK 99.9%)
-- Email: `student2634238@ou.ac.uk`, Password: `demo123` (AT-RISK 100%)
-- Email: `student588524@ou.ac.uk`, Password: `demo123` (SAFE 1.7%)
-
----
-
-## BƯỚC 4: CHẠY STUDENT PORTAL
-
-### 4.1. Khởi động Student Portal
-
-```bash
-streamlit run src/lms_portal/student_app.py --server.port 8501
-```
-
-### 4.2. Mở trình duyệt
-
-Truy cập: **http://localhost:8501**
-
-### 4.3. Login
-
-1. Click tab **"Login"**
-2. Nhập:
-   - Email: `student650515@ou.ac.uk`
-   - Password: `demo123`
-3. Click **"Login"**
-
-**Nếu gặp lỗi "Invalid email or password":**
-
-Chạy lại script tạo accounts:
-
-```bash
-# Xóa database cũ
-rm -f data/lms.db*
-
-# Tạo lại accounts
-python src/data/create_demo_accounts.py
-```
+| Student ID | Email | Password | Status | Risk |
+|------------|-------|----------|--------|------|
+| 432862 | student432862@ou.ac.uk | demo123 | AT-RISK | 21.4% |
+| 650515 | student650515@ou.ac.uk | demo123 | AT-RISK | 99.9% |
+| 2634238 | student2634238@ou.ac.uk | demo123 | AT-RISK | 100.0% |
+| 604655 | student604655@ou.ac.uk | demo123 | AT-RISK | 98.2% |
+| 595262 | student595262@ou.ac.uk | demo123 | AT-RISK | 86.4% |
+| 513428 | student513428@ou.ac.uk | demo123 | SAFE | 6.6% |
+| 588524 | student588524@ou.ac.uk | demo123 | SAFE | 1.7% |
+| 348717 | student348717@ou.ac.uk | demo123 | SAFE | 19.7% |
 
 ---
 
-## BƯỚC 5: TEST CÁC TÍNH NĂNG
+## TEST CÁC TÍNH NĂNG
 
-### 5.1. Dashboard
+### 1. Dashboard
+- Xem risk gauge
+- Warning box (nếu at-risk)
+- Engagement metrics
 
-Sau khi login, bạn sẽ thấy:
-- **Risk Gauge** (đồng hồ đo rủi ro)
-- **Warning box** (nếu at-risk)
-- **Engagement metrics**
+### 2. Course Materials + AI Study Assistant
+- Xem VLE activities
+- Chat với AI (cột bên phải)
 
-### 5.2. Course Materials + AI Study Assistant
+### 3. AI Advisor
+- Chat với AI advisor
+- Nhận personalized advice
 
-1. Click sidebar → **"Course Materials"**
-2. Xem VLE activities từ OULAD dataset
-3. **Chat với AI** (cột bên phải):
-   - "What activities should I focus on?"
-   - "How can I improve my grade?"
-
-### 5.3. AI Advisor (Chatbot chính)
-
-1. Click sidebar → **"AI Advisor"**
-2. Chat với AI advisor:
-   - "I'm at risk of failing. What should I do?"
-   - "How can I improve my engagement?"
-3. Click **Suggested Questions** để test nhanh
-
-### 5.4. Profile
-
-Click sidebar → **"Profile"** để xem thông tin cá nhân và risk status.
-
----
-
-## BƯỚC 6: CHẠY ADVISOR DASHBOARD (TÙY CHỌN)
-
-### 6.1. Khởi động Advisor Dashboard
-
-Mở terminal mới:
-
-```bash
-cd plaf
-source venv/bin/activate
-streamlit run src/dashboard/app.py --server.port 8502
-```
-
-### 6.2. Mở trình duyệt
-
-Truy cập: **http://localhost:8502**
-
-### 6.3. Chức năng
-
-- Xem danh sách tất cả students
-- Filter by risk level, module, presentation
-- Xem chi tiết predictions và feature importance
-
----
-
-## BƯỚC 7: CHẠY BENCHMARK (TÙY CHỌN)
-
-### 7.1. Benchmark RAG System
-
-```bash
-python tests/benchmark_rag.py
-```
-
-**Yêu cầu:** Cần GEMINI_API_KEY trong `.env`
-
-### 7.2. Benchmark LLM Advisor
-
-```bash
-python tests/benchmark_llm.py
-```
-
-**Yêu cầu:** Cần GEMINI_API_KEY trong `.env`
-
----
-
-## TÓM TẮT QUY TRÌNH NHANH
-
-### Ubuntu/Linux:
-
-```bash
-# Chạy script tự động
-./quick_start.sh
-```
-
-Hoặc chạy thủ công:
-
-```bash
-# 1. Clone và setup
-git clone https://github.com/trthanhdo41/plaf.git
-cd plaf
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# 2. Chạy pipeline
-python run_pipeline.py
-
-# 3. Tạo demo accounts
-python src/data/create_demo_accounts.py
-
-# 4. Chạy Student Portal
-streamlit run src/lms_portal/student_app.py --server.port 8501
-
-# 5. Mở browser: http://localhost:8501
-# Login: student650515@ou.ac.uk / demo123
-```
-
-### Windows:
-
-```cmd
-REM Chạy script tự động
-quick_start_windows.bat
-```
-
-Hoặc chạy thủ công:
-
-```cmd
-REM 1. Clone và setup
-git clone https://github.com/trthanhdo41/plaf.git
-cd plaf
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-
-REM 2. Chạy pipeline
-python run_pipeline.py
-
-REM 3. Tạo demo accounts
-python src/data/create_demo_accounts.py
-
-REM 4. Chạy Student Portal
-streamlit run src/lms_portal/student_app.py --server.port 8501
-
-REM 5. Mở browser: http://localhost:8501
-REM Login: student650515@ou.ac.uk / demo123
-```
+### 4. Profile
+- Xem thông tin cá nhân
+- Risk status
 
 ---
 
@@ -308,37 +148,10 @@ pip install -r requirements.txt
 
 ### Chatbot không hoạt động
 
-Kiểm tra:
-1. File `.env` có `GEMINI_API_KEY`
-2. API key còn valid không
-3. Xem logs trong terminal
+Kiểm tra file `.env` có `GEMINI_API_KEY`
 
-**LƯU Ý:** Nếu không có API key, toàn bộ hệ thống vẫn chạy được, chỉ chatbot báo lỗi.
+Nếu không có API key, toàn bộ hệ thống vẫn chạy được, chỉ chatbot báo lỗi.
 
 ---
 
-## KẾT QUẢ MONG ĐỢI
-
-Sau khi hoàn thành, bạn sẽ có:
-
-1. ✅ Model được train với AUC ~98%
-2. ✅ 8 demo accounts để test
-3. ✅ Student Portal chạy tại http://localhost:8501
-4. ✅ Dashboard hiển thị risk gauge và warnings
-5. ✅ Chatbot hoạt động (nếu có API key)
-6. ✅ VLE activities từ OULAD dataset
-
----
-
-## HỖ TRỢ
-
-Nếu gặp vấn đề:
-1. Xem file `DEMO_ACCOUNTS.md` cho danh sách tài khoản
-2. Xem logs trong terminal
-3. Kiểm tra file `data/demo_accounts.csv`
-
----
-
-**Cập nhật:** October 18, 2025  
-**Version:** PLAF v1.0
-
+**Cập nhật:** October 19, 2025
