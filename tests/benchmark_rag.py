@@ -83,11 +83,11 @@ class RAGBenchmark:
             
             # Retrieve documents
             start_time = time.time()
-            docs = chatbot.vector_store.similarity_search(question, k=3)
+            results = chatbot.search(question, top_k=3)
             retrieval_time = time.time() - start_time
             
             # Check if expected topics are in retrieved docs
-            retrieved_text = " ".join([doc.page_content.lower() for doc in docs])
+            retrieved_text = " ".join([doc.lower() for doc, score in results])
             
             topic_matches = sum(1 for topic in expected_topics if topic in retrieved_text)
             relevance_score = topic_matches / len(expected_topics)
@@ -97,7 +97,7 @@ class RAGBenchmark:
                 "category": test["category"],
                 "relevance_score": relevance_score,
                 "retrieval_time": retrieval_time,
-                "num_docs_retrieved": len(docs)
+                "num_docs_retrieved": len(results)
             })
             
             print(f"  [{i+1}/{len(self.test_cases)}] {test['category']}: "

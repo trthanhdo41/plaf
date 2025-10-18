@@ -117,8 +117,8 @@ class LLMBenchmark:
             start_time = time.time()
             
             advice = advisor.generate_advice(
-                student_profile=profile["profile"],
-                counterfactual=profile["counterfactual"]
+                student_data=profile["profile"],
+                counterfactual_changes=profile["counterfactual"]
             )
             
             response_time = time.time() - start_time
@@ -148,8 +148,8 @@ class LLMBenchmark:
         
         for i, profile in enumerate(self.test_profiles):
             advice = advisor.generate_advice(
-                student_profile=profile["profile"],
-                counterfactual=profile["counterfactual"]
+                student_data=profile["profile"],
+                counterfactual_changes=profile["counterfactual"]
             )
             
             # Quality criteria
@@ -204,8 +204,8 @@ class LLMBenchmark:
             advices = []
             for _ in range(n_runs):
                 advice = advisor.generate_advice(
-                    student_profile=profile["profile"],
-                    counterfactual=profile["counterfactual"]
+                    student_data=profile["profile"],
+                    counterfactual_changes=profile["counterfactual"]
                 )
                 advices.append(advice)
             
@@ -257,8 +257,8 @@ class LLMBenchmark:
         
         for i, profile in enumerate(self.test_profiles):
             advice = advisor.generate_advice(
-                student_profile=profile["profile"],
-                counterfactual=profile["counterfactual"]
+                student_data=profile["profile"],
+                counterfactual_changes=profile["counterfactual"]
             )
             
             risk_level = profile["risk_level"]
