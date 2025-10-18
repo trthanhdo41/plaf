@@ -20,6 +20,11 @@ try:
     XGBOOST_AVAILABLE = False  # Force disable for Python 3.14 compatibility
 except ImportError:
     XGBOOST_AVAILABLE = False
+try:
+    from imblearn.over_sampling import SMOTE
+    SMOTE_AVAILABLE = True
+except ImportError:
+    SMOTE_AVAILABLE = False
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, 
     f1_score, roc_auc_score, classification_report, confusion_matrix
@@ -36,7 +41,7 @@ logger = logging.getLogger(__name__)
 class ModelTrainer:
     """Train and evaluate multiple ML models."""
     
-    def __init__(self, X: pd.DataFrame, y: pd.Series, random_state: int = 42):
+    def __init__(self, X: pd.DataFrame, y: pd.Series, random_state: int = 42, use_smote: bool = True):
         """
         Initialize model trainer.
         
@@ -44,14 +49,49 @@ class ModelTrainer:
             X: Feature matrix
             y: Target variable
             random_state: Random seed for reproducibility
+            use_smote: Whether to apply SMOTE for balancing (default: True)
         """
         self.X = X
         self.y = y
         self.random_state = random_state
+        self.use_smote = use_smote and SMOTE_AVAILABLE
         self.models = {}
         self.results = {}
         self.best_model = None
         self.best_model_name = None
+        
+        # Apply SMOTE if requested
+        if self.use_smote:
+            logger.info("Applying SMOTE to balance dataset...")
+            self._apply_smote()
+        else:
+            if use_smote and not SMOTE_AVAILABLE:
+                logger.warning("SMOTE requested but not available. Install imbalanced-learn: pip install imbalanced-learn")
+    
+    def _apply_smote(self):
+        """Apply SMOTE to balance the dataset."""
+        if not SMOTE_AVAILABLE:
+            return
+        
+        original_counts = self.y.value_counts()
+        original_size = len(self.y)
+        logger.info(f"Original class distribution: {original_counts.to_dict()}")
+        
+        try:
+            smote = SMOTE(random_state=self.random_state, k_neighbors=5)
+            X_resampled, y_resampled = smote.fit_resample(self.X, self.y)
+            
+            # Convert back to DataFrame/Series to maintain column names
+            self.X = pd.DataFrame(X_resampled, columns=self.X.columns)
+            self.y = pd.Series(y_resampled, name=self.y.name)
+            
+            new_counts = self.y.value_counts()
+            logger.info(f"After SMOTE class distribution: {new_counts.to_dict()}")
+            logger.info(f"Dataset size: {original_size} -> {len(self.y)}")
+            
+        except Exception as e:
+            logger.error(f"SMOTE failed: {e}")
+            logger.warning("Continuing without SMOTE...")
         
     def initialize_models(self) -> Dict:
         """
@@ -269,7 +309,8 @@ class ModelTrainer:
 
 def train_models(X: pd.DataFrame, y: pd.Series, 
                 n_folds: int = 5, 
-                save_path: str = 'models/best_model.pkl') -> Tuple[object, pd.DataFrame]:
+                save_path: str = 'models/best_model.pkl',
+                use_smote: bool = True) -> Tuple[object, pd.DataFrame]:
     """
     Convenience function to train and select best model.
     
@@ -278,11 +319,12 @@ def train_models(X: pd.DataFrame, y: pd.Series,
         y: Target variable
         n_folds: Number of CV folds
         save_path: Path to save best model
+        use_smote: Whether to apply SMOTE for balancing
         
     Returns:
         Tuple of (best_model, results_dataframe)
     """
-    trainer = ModelTrainer(X, y)
+    trainer = ModelTrainer(X, y, use_smote=use_smote)
     
     # Train all models
     trainer.initialize_models()
