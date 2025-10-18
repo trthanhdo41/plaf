@@ -18,7 +18,7 @@ faiss-cpu==1.7.4  # For RAG similarity search
 # ML Models
 catboost==1.2.2
 xgboost==2.0.3
-lightgbm==4.1.0
+lightgbm==4.5.0  # Updated for better macOS ARM64 support
 
 # -------------------- eXplainable AI (XAI) --------------------
 shap==0.44.0
