@@ -69,7 +69,48 @@ python src/data/create_demo_accounts.py
 
 echo ""
 echo "========================================"
-echo "STEP 4: Starting Student Portal"
+echo "STEP 4: Setup API Key for AI Features"
+echo "========================================"
+echo ""
+
+# Check if API key is already set
+if [ -z "$GEMINI_API_KEY" ]; then
+    echo "⚠️  AI features require a Gemini API key."
+    echo ""
+    echo "To get your API key:"
+    echo "1. Visit: https://aistudio.google.com/app/apikey"
+    echo "2. Click 'Create API Key'"
+    echo "3. Copy the generated key"
+    echo ""
+    
+    read -p "Enter your Gemini API key (or press Enter to skip): " api_key
+    
+    if [ ! -z "$api_key" ]; then
+        export GEMINI_API_KEY="$api_key"
+        echo "✅ API key set successfully!"
+        
+        # Test API key
+        echo "Testing API key..."
+        python -c "
+import os
+try:
+    from src.chatbot.rag_system import RAGSystem
+    rag = RAGSystem()
+    print('✅ API key is working!')
+except Exception as e:
+    print('❌ API key error:', str(e))
+    print('AI features may not work properly.')
+"
+    else
+        echo "⚠️  Skipping API key setup. AI features will be disabled."
+    fi
+else
+    echo "✅ API key already set!"
+fi
+
+echo ""
+echo "========================================"
+echo "STEP 5: Starting Student Portal"
 echo "========================================"
 echo ""
 

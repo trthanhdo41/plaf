@@ -37,6 +37,27 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Bước 3.5: Cấu hình API Key (TÙY CHỌN)
+
+**Lưu ý:** API key chỉ cần cho AI features (chatbot, AI advisor). Không có API key thì AI features sẽ bị vô hiệu hóa.
+
+#### Cách 1: Script tự động (KHUYẾN NGHỊ)
+Khi chạy `./quick_start.sh`, script sẽ tự động hỏi API key:
+1. Script hiển thị hướng dẫn lấy API key
+2. Nhập API key khi được yêu cầu
+3. Script tự động test và cấu hình
+
+#### Cách 2: Thiết lập thủ công
+```bash
+export GEMINI_API_KEY=YOUR_API_KEY_HERE
+```
+
+#### Lấy API key miễn phí:
+1. Truy cập: https://aistudio.google.com/app/apikey
+2. Đăng nhập Google account
+3. Click "Create API Key"
+4. Copy và sử dụng
+
 ### Bước 4: Chạy pipeline
 
 ```bash
