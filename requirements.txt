@@ -23,7 +23,7 @@ lightgbm==4.1.0
 # -------------------- eXplainable AI (XAI) --------------------
 shap==0.44.0
 anchor-exp==0.0.2.0
-dice-ml==0.11
+dice-ml==0.12  # Updated to support pandas>=2.0
 
 # -------------------- LLM Integration --------------------
 google-generativeai==0.3.2  # Gemini API
