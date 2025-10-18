@@ -1,6 +1,11 @@
 # QUY TRÌNH CHẠY ĐẦY ĐỦ PLAF SYSTEM
 
-Hướng dẫn này giúp bạn chạy toàn bộ hệ thống PLAF từ đầu đến cuối trên Ubuntu/Linux.
+Hướng dẫn này giúp bạn chạy toàn bộ hệ thống PLAF từ đầu đến cuối.
+
+**Hỗ trợ:**
+- ✅ Ubuntu/Linux
+- ✅ Windows 10/11
+- ✅ macOS
 
 ---
 
@@ -15,9 +20,16 @@ cd plaf
 
 ### 1.2. Tạo virtual environment
 
+**Ubuntu/Linux/macOS:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+
+**Windows:**
+```cmd
+python -m venv venv
+venv\Scripts\activate
 ```
 
 ### 1.3. Cài đặt dependencies
@@ -210,6 +222,15 @@ python tests/benchmark_llm.py
 
 ## TÓM TẮT QUY TRÌNH NHANH
 
+### Ubuntu/Linux:
+
+```bash
+# Chạy script tự động
+./quick_start.sh
+```
+
+Hoặc chạy thủ công:
+
 ```bash
 # 1. Clone và setup
 git clone https://github.com/trthanhdo41/plaf.git
@@ -229,6 +250,36 @@ streamlit run src/lms_portal/student_app.py --server.port 8501
 
 # 5. Mở browser: http://localhost:8501
 # Login: student650515@ou.ac.uk / demo123
+```
+
+### Windows:
+
+```cmd
+REM Chạy script tự động
+quick_start_windows.bat
+```
+
+Hoặc chạy thủ công:
+
+```cmd
+REM 1. Clone và setup
+git clone https://github.com/trthanhdo41/plaf.git
+cd plaf
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+REM 2. Chạy pipeline
+python run_pipeline.py
+
+REM 3. Tạo demo accounts
+python src/data/create_demo_accounts.py
+
+REM 4. Chạy Student Portal
+streamlit run src/lms_portal/student_app.py --server.port 8501
+
+REM 5. Mở browser: http://localhost:8501
+REM Login: student650515@ou.ac.uk / demo123
 ```
 
 ---
