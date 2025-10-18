@@ -136,7 +136,8 @@ class RAGBenchmark:
             
             # Generate response
             start_time = time.time()
-            response = chatbot.get_response(question, student_data)
+            result = chatbot.chat(question, student_data=student_data)
+            response = result['response']
             response_time = time.time() - start_time
             
             # Quality metrics
