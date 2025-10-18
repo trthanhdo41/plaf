@@ -58,13 +58,23 @@ Kết quả:
 - 8 demo accounts (5 at-risk + 3 safe)
 - File: `data/demo_accounts.csv`
 
-### Bước 6: Chạy Student Portal
+### Bước 6: Test login (TÙY CHỌN)
+
+Test xem accounts có login được không:
+
+```bash
+python test_login.py
+```
+
+Nếu tất cả test PASSED → Accounts sẵn sàng!
+
+### Bước 7: Chạy Student Portal
 
 ```bash
 streamlit run src/lms_portal/student_app.py --server.port 8501
 ```
 
-### Bước 7: Login
+### Bước 8: Login
 
 Mở browser: **http://localhost:8501**
 
