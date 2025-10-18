@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 class ModelTrainer:
     """Train and evaluate multiple ML models."""
     
-    def __init__(self, X: pd.DataFrame, y: pd.Series, random_state: int = 42, use_smote: bool = True):
+    def __init__(self, X: pd.DataFrame, y: pd.Series, random_state: int = 42, use_smote: bool = False):
         """
         Initialize model trainer.
         
@@ -310,7 +310,7 @@ class ModelTrainer:
 def train_models(X: pd.DataFrame, y: pd.Series, 
                 n_folds: int = 5, 
                 save_path: str = 'models/best_model.pkl',
-                use_smote: bool = True) -> Tuple[object, pd.DataFrame]:
+                use_smote: bool = False) -> Tuple[object, pd.DataFrame]:
     """
     Convenience function to train and select best model.
     
