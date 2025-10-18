@@ -13,7 +13,17 @@ echo ""
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
-    python3 -m venv venv
+    # Try to use Python 3.11 or 3.12 (pandas 2.1.4 doesn't support 3.14 yet)
+    if command -v python3.11 &> /dev/null; then
+        python3.11 -m venv venv
+    elif command -v python3.12 &> /dev/null; then
+        python3.12 -m venv venv
+    elif command -v python3.10 &> /dev/null; then
+        python3.10 -m venv venv
+    else
+        echo "⚠️  Warning: Using default python3 (may cause issues if version > 3.13)"
+        python3 -m venv venv
+    fi
 fi
 
 # Activate virtual environment
