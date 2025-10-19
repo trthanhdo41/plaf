@@ -7,10 +7,10 @@ pip install streamlit sqlalchemy google-generativeai scikit-learn plotly python-
 python src/data/load_vle_data.py
 
 #3. Chạy Student Portal
-export GEMINI_API_KEY=AIzaSyBxqH7HXGHGFcdBz13GBPN8BrnEj5hf3R0
+export GEMINI_API_KEY=AIzaSyAyUJgplnBnutMJMbpHhlAvEaBDeo4jXUU
 streamlit run src/lms_portal/student_app.py
 
 # Hoặc chạy 1 lệnh:
-cd /Users/mac/Desktop/plaf && source venv/bin/activate && GEMINI_API_KEY=AIzaSyBxqH7HXGHGFcdBz13GBPN8BrnEj5hf3R0 streamlit run src/lms_portal/student_app.py --server.port 8501
+cd /Users/mac/Desktop/plaf && source venv/bin/activate && GEMINI_API_KEY=AIzaSyAyUJgplnBnutMJMbpHhlAvEaBDeo4jXUU streamlit run src/lms_portal/student_app.py --server.port 8501
 
 # Mở web: http://localhost:8501
