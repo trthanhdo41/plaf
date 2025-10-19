@@ -43,7 +43,7 @@ class RAGSystem:
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
         self.embedding_model = genai.GenerativeModel('text-embedding-004') if hasattr(genai, 'text_embedding_004') else None
         
         # Knowledge base

@@ -185,7 +185,7 @@ class RAGBenchmark:
         
         for i, test in enumerate(self.test_cases):
             start_time = time.time()
-            response = chatbot.get_response(test["question"], {})
+            response = chatbot.generate_response(test["question"], {})
             latency = time.time() - start_time
             
             latencies.append(latency)
