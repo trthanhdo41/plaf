@@ -129,6 +129,18 @@ class Database:
             )
         """)
         
+        # VLE table (from OULAD dataset)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS vle (
+                id_site INTEGER PRIMARY KEY,
+                code_module TEXT NOT NULL,
+                code_presentation TEXT NOT NULL,
+                activity_type TEXT NOT NULL,
+                week_from INTEGER,
+                week_to INTEGER
+            )
+        """)
+        
         conn.commit()
         logger.info("Database tables created successfully")
     
@@ -301,6 +313,19 @@ class Database:
         """, (student_id, limit))
         
         return [dict(row) for row in cursor.fetchall()]
+    
+    def clear_chat_history(self, student_id: int):
+        """Clear chat history for a student."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            DELETE FROM chat_history
+            WHERE id_student = ?
+        """, (student_id,))
+        
+        conn.commit()
+        logger.info(f"Cleared chat history for student {student_id}")
     
     def add_course_material(self, code_module: str, title: str, content: str, **kwargs):
         """Add course material."""

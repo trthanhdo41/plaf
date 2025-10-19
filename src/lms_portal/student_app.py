@@ -522,29 +522,43 @@ def chatbot_page():
     rag = st.session_state.rag_system
     db = get_db()
     
-    # Load chat history
+    # Load chat history with context
     if not st.session_state.chat_history:
         history = db.get_chat_history(st.session_state.student_id, limit=10)
         st.session_state.chat_history = list(reversed(history))
     
-    # Display chat history
-    st.subheader("Chat History")
+    # Display chat history with better formatting
+    st.subheader("💬 Conversation History")
+    
+    # Show conversation context
+    if st.session_state.chat_history:
+        st.info(f"📚 **Context:** I remember our previous {len(st.session_state.chat_history)} conversations. I can refer to our earlier discussions to provide more personalized advice.")
     
     chat_container = st.container()
     
     with chat_container:
-        for chat in st.session_state.chat_history:
-            st.markdown(f"""
-            <div class="chat-message user-message">
-                <strong>You:</strong> {chat['message']}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown(f"""
-            <div class="chat-message bot-message">
-                <strong>AI Advisor:</strong> {chat['response']}
-            </div>
-            """, unsafe_allow_html=True)
+        if st.session_state.chat_history:
+            for i, chat in enumerate(st.session_state.chat_history):
+                # Show timestamp
+                timestamp = chat.get('timestamp', 'Unknown time')
+                if hasattr(timestamp, 'strftime'):
+                    time_str = timestamp.strftime("%Y-%m-%d %H:%M")
+                else:
+                    time_str = str(timestamp)
+                
+                st.markdown(f"""
+                <div class="chat-message-container" style="margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #f8f9fa;">
+                    <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">{time_str}</div>
+                    <div class="chat-message user-message" style="margin-bottom: 8px;">
+                        <strong>👤 You:</strong> {chat['message']}
+                    </div>
+                    <div class="chat-message bot-message">
+                        <strong>🤖 AI Advisor:</strong> {chat['response']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("💬 **Start a conversation!** Ask me anything about your studies, and I'll remember our chat for better future advice.")
     
     # Chat input
     st.markdown("---")
@@ -562,56 +576,103 @@ def chatbot_page():
     
     if send_button and user_input:
         with st.spinner("AI is thinking..."):
-            # Get response from RAG
-            result = rag.chat(user_input, student_data=st.session_state.student_data)
+            # Build context from previous conversations
+            conversation_context = ""
+            if st.session_state.chat_history:
+                recent_chats = st.session_state.chat_history[-3:]  # Last 3 conversations
+                conversation_context = "\n\nPrevious conversation context:\n"
+                for chat in recent_chats:
+                    conversation_context += f"Student: {chat['message']}\n"
+                    conversation_context += f"Advisor: {chat['response']}\n"
             
-            # Save to database
+            # Get response from RAG with context
+            result = rag.chat(
+                user_input, 
+                student_data=st.session_state.student_data,
+                conversation_context=conversation_context
+            )
+            
+            # Save to database with enhanced context
             db.log_chat(
                 st.session_state.student_id,
                 user_input,
                 result['response'],
-                context=str(result.get('context_used', []))
+                context=f"conversation_history_{len(st.session_state.chat_history)}"
             )
             
-            # Add to session
+            # Add to session with timestamp
             st.session_state.chat_history.append({
                 'message': user_input,
                 'response': result['response'],
-                'timestamp': datetime.now()
+                'timestamp': datetime.now(),
+                'context_used': result.get('context_used', [])
             })
+            
+            # Keep only last 10 conversations to avoid memory issues
+            if len(st.session_state.chat_history) > 10:
+                st.session_state.chat_history = st.session_state.chat_history[-10:]
             
             st.rerun()
     
-    # Suggested questions
+    # Chat management and suggestions
     st.markdown("---")
-    st.write("💡 Suggested Questions:")
-    suggestions = [
-        "How can I improve my grades?",
-        "I'm feeling overwhelmed with assignments. What should I do?",
-        "What study techniques work best?",
-        "How can I manage my time better?",
-        "I'm struggling with the course material. Where can I get help?"
-    ]
+    col1, col2 = st.columns([3, 1])
     
-    cols = st.columns(2)
-    for i, suggestion in enumerate(suggestions):
-        with cols[i % 2]:
-            if st.button(suggestion, key=f"suggest_{i}", use_container_width=True):
-                # Manually add suggestion as a chat
-                with st.spinner("AI is thinking..."):
-                    result = rag.chat(suggestion, student_data=st.session_state.student_data)
-                    db.log_chat(
-                        st.session_state.student_id,
-                        suggestion,
-                        result['response'],
-                        context=str(result.get('context_used', []))
-                    )
-                    st.session_state.chat_history.append({
-                        'message': suggestion,
-                        'response': result['response'],
-                        'timestamp': datetime.now()
-                    })
-                    st.rerun()
+    with col1:
+        st.write("💡 Suggested Questions:")
+        suggestions = [
+            "How can I improve my grades?",
+            "I'm feeling overwhelmed with assignments. What should I do?",
+            "What study techniques work best?",
+            "How can I manage my time better?",
+            "I'm struggling with the course material. Where can I get help?"
+        ]
+        
+        cols = st.columns(2)
+        for i, suggestion in enumerate(suggestions):
+            with cols[i % 2]:
+                if st.button(suggestion, key=f"suggest_{i}", use_container_width=True):
+                    # Manually add suggestion as a chat with context
+                    with st.spinner("AI is thinking..."):
+                        # Build context from previous conversations
+                        conversation_context = ""
+                        if st.session_state.chat_history:
+                            recent_chats = st.session_state.chat_history[-3:]
+                            conversation_context = "\n\nPrevious conversation context:\n"
+                            for chat in recent_chats:
+                                conversation_context += f"Student: {chat['message']}\n"
+                                conversation_context += f"Advisor: {chat['response']}\n"
+                        
+                        result = rag.chat(
+                            suggestion, 
+                            student_data=st.session_state.student_data,
+                            conversation_context=conversation_context
+                        )
+                        db.log_chat(
+                            st.session_state.student_id,
+                            suggestion,
+                            result['response'],
+                            context=f"suggestion_with_history_{len(st.session_state.chat_history)}"
+                        )
+                        st.session_state.chat_history.append({
+                            'message': suggestion,
+                            'response': result['response'],
+                            'timestamp': datetime.now(),
+                            'context_used': result.get('context_used', [])
+                        })
+                        st.rerun()
+    
+    with col2:
+        st.write("🗑️ Chat Management")
+        if st.button("Clear Chat History", help="Clear all previous conversations", use_container_width=True):
+            st.session_state.chat_history = []
+            # Clear from database if method exists
+            try:
+                db.clear_chat_history(st.session_state.student_id)
+            except:
+                pass  # Method might not exist yet
+            st.success("Chat history cleared!")
+            st.rerun()
 
 
 def main():

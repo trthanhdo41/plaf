@@ -115,8 +115,22 @@ Generate the advice now:"""
                 }
             )
             
-            # Parse response
-            response_text = response.text
+            # Parse response - handle different response formats
+            try:
+                response_text = response.text
+            except Exception as e:
+                logger.warning(f"Could not use response.text: {e}")
+                # Try alternative access methods
+                if hasattr(response, 'parts') and response.parts:
+                    response_text = ''.join([part.text for part in response.parts if hasattr(part, 'text')])
+                elif hasattr(response, 'candidates') and response.candidates:
+                    candidate = response.candidates[0]
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        response_text = ''.join([part.text for part in candidate.content.parts if hasattr(part, 'text')])
+                    else:
+                        response_text = str(response)
+                else:
+                    response_text = str(response)
             
             # Try to extract JSON from response
             try:

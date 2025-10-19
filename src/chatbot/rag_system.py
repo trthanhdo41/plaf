@@ -126,7 +126,7 @@ class RAGSystem:
         
         return results
     
-    def generate_response(self, query: str, context: List[str], student_data: Dict = None) -> str:
+    def generate_response(self, query: str, context: List[str], student_data: Dict = None, conversation_context: str = None) -> str:
         """
         Generate response using RAG.
         
@@ -151,9 +151,21 @@ Student Information:
 - Risk Level: {student_data.get('risk_probability', 0)*100:.1f}%
 """
         
-        prompt = f"""You are a friendly and supportive AI academic advisor for students.
+        # Add conversation context if available
+        conversation_info = ""
+        if conversation_context:
+            conversation_info = f"""
+Previous Conversation Context:
+{conversation_context}
+
+Use this context to provide more personalized and consistent advice. Reference previous discussions when relevant.
+"""
+        
+        prompt = f"""You are a friendly and supportive AI academic advisor for students. You have memory of previous conversations with this student.
 
 {student_info}
+
+{conversation_info}
 
 Context from knowledge base:
 {context_text}
@@ -161,6 +173,7 @@ Context from knowledge base:
 Student Question: {query}
 
 Please provide a helpful, encouraging, and actionable response. Be specific and reference the context when relevant.
+If this relates to previous conversations, acknowledge that and build upon the previous advice.
 Keep the response concise (2-3 paragraphs maximum).
 
 Response:"""
@@ -193,14 +206,15 @@ Response:"""
         result = self.chat(query, student_data=student_context, top_k=top_k)
         return result['response']
     
-    def chat(self, query: str, student_data: Dict = None, top_k: int = 3) -> Dict:
+    def chat(self, query: str, student_data: Dict = None, top_k: int = 3, conversation_context: str = None) -> Dict:
         """
-        Complete RAG chat workflow.
+        Complete RAG chat workflow with conversation history.
         
         Args:
             query: User query
             student_data: Student information
             top_k: Number of context documents to retrieve
+            conversation_context: Previous conversation context
             
         Returns:
             Dictionary with response and metadata
@@ -209,14 +223,15 @@ Response:"""
         search_results = self.search(query, top_k=top_k)
         context_docs = [doc for doc, score in search_results]
         
-        # Generate response
-        response = self.generate_response(query, context_docs, student_data)
+        # Generate response with conversation context
+        response = self.generate_response(query, context_docs, student_data, conversation_context)
         
         return {
             'query': query,
             'response': response,
             'context_used': context_docs,
-            'num_contexts': len(context_docs)
+            'num_contexts': len(context_docs),
+            'has_conversation_context': conversation_context is not None
         }
     
     def save_index(self, path: str = "data/rag_index.pkl"):

@@ -296,8 +296,70 @@ def student_detail_page(data, model_data):
     # Real data mode
     student_data = data[data['id_student'] == student_id].iloc[0]
     
-    st.write(f"**Student ID:** {student_id}")
-    st.write(f"**Course:** {student_data.get('code_module', 'N/A')}")
+    # Student basic info
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write(f"**Student ID:** {student_id}")
+    with col2:
+        st.write(f"**Course:** {student_data.get('code_module', 'N/A')} - {student_data.get('code_presentation', 'N/A')}")
+    with col3:
+        st.write(f"**Final Result:** {student_data.get('final_result', 'N/A')}")
+    
+    # Student study duration and participation
+    st.subheader("📚 Study Information")
+    info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+    
+    with info_col1:
+        # Use available data fields
+        if 'num_days_active' in student_data:
+            days_active = int(student_data['num_days_active'])
+            st.metric("Days Active", f"{days_active} days")
+        elif 'total_clicks' in student_data:
+            # Estimate based on clicks (rough calculation)
+            total_clicks = int(student_data['total_clicks'])
+            estimated_days = max(1, total_clicks // 20)  # Assume 20 clicks per day average
+            st.metric("Days Active", f"~{estimated_days} days")
+        else:
+            st.metric("Days Active", "📊 Calculating...")
+    
+    with info_col2:
+        if 'total_clicks' in student_data:
+            total_clicks = int(student_data['total_clicks'])
+            if 'num_days_active' in student_data:
+                days_active = int(student_data['num_days_active'])
+                avg_daily = total_clicks / max(days_active, 1)
+            else:
+                avg_daily = total_clicks / max(1, total_clicks // 20)
+            st.metric("Daily Engagement", f"{avg_daily:.1f} clicks/day")
+        else:
+            st.metric("Daily Engagement", "📊 Calculating...")
+    
+    with info_col3:
+        if 'num_assessments' in student_data:
+            assessments = int(student_data['num_assessments'])
+            st.metric("Assessments", f"{assessments} completed")
+        elif 'final_result' in student_data and student_data['final_result'] != 'N/A':
+            # Use final result as assessment indicator
+            result = student_data['final_result']
+            st.metric("Course Status", f"{result}")
+        else:
+            st.metric("Assessments", "📊 In Progress")
+    
+    with info_col4:
+        if 'avg_score' in student_data:
+            avg_score = student_data['avg_score']
+            score_status = "🟢 Good" if avg_score >= 70 else "🟡 Average" if avg_score >= 50 else "🔴 Low"
+            st.metric("Average Score", f"{avg_score:.1f}% {score_status}")
+        elif 'final_result' in student_data:
+            result = student_data['final_result']
+            if result in ['Pass', 'Distinction']:
+                st.metric("Course Result", f"✅ {result}")
+            elif result in ['Fail', 'Withdrawn']:
+                st.metric("Course Result", f"❌ {result}")
+            else:
+                st.metric("Course Result", f"📊 {result}")
+        else:
+            st.metric("Course Progress", "📊 Ongoing")
     
     # Risk assessment
     col1, col2 = st.columns([1, 2])
@@ -308,21 +370,70 @@ def student_detail_page(data, model_data):
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader("Student Performance")
+        st.subheader("🎯 Risk Analysis")
         
+        # Risk explanation
+        risk_percentage = risk_prob * 100 if risk_prob <= 1 else risk_prob
+        
+        if risk_percentage >= 70:
+            risk_color = "🔴"
+            risk_text = "HIGH RISK"
+            risk_explanation = "Student shows strong indicators of potential course failure"
+        elif risk_percentage >= 40:
+            risk_color = "🟡"
+            risk_text = "MEDIUM RISK"
+            risk_explanation = "Student shows some concerning patterns that need attention"
+        else:
+            risk_color = "🟢"
+            risk_text = "LOW RISK"
+            risk_explanation = "Student is performing well and on track for success"
+        
+        # Better contrast colors
+        if risk_percentage >= 70:
+            bg_color = "#ffebee"
+            text_color = "#c62828"
+            border_color = "#f44336"
+        elif risk_percentage >= 40:
+            bg_color = "#fff3e0"
+            text_color = "#ef6c00"
+            border_color = "#ff9800"
+        else:
+            bg_color = "#e8f5e9"
+            text_color = "#2e7d32"
+            border_color = "#4caf50"
+        
+        st.markdown(f"""
+        <div style="background-color: {bg_color}; padding: 15px; border-radius: 8px; border-left: 4px solid {border_color}; margin: 10px 0;">
+        <h4 style="color: {text_color}; margin: 0 0 8px 0;">{risk_color} Risk Level: {risk_text}</h4>
+        <p style="color: {text_color}; margin: 0; font-weight: 500;">{risk_explanation}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Key performance indicators
+        st.subheader("📊 Key Performance Indicators")
         metrics_col1, metrics_col2 = st.columns(2)
         
         with metrics_col1:
-            if 'avg_score' in student_data:
-                st.metric("Average Score", f"{student_data['avg_score']:.1f}%")
             if 'total_clicks' in student_data:
-                st.metric("Total VLE Clicks", f"{student_data['total_clicks']:.0f}")
+                clicks = int(student_data['total_clicks'])
+                click_status = "🟢 Good" if clicks >= 500 else "🟡 Average" if clicks >= 200 else "🔴 Low"
+                st.metric("VLE Engagement", f"{clicks} clicks {click_status}")
+            
+            if 'num_days_active' in student_data:
+                days = int(student_data['num_days_active'])
+                day_status = "🟢 Good" if days >= 30 else "🟡 Average" if days >= 14 else "🔴 Low"
+                st.metric("Activity Level", f"{days} days {day_status}")
         
         with metrics_col2:
+            if 'avg_score' in student_data:
+                score = student_data['avg_score']
+                score_status = "🟢 Good" if score >= 70 else "🟡 Average" if score >= 50 else "🔴 Low"
+                st.metric("Academic Performance", f"{score:.1f}% {score_status}")
+            
             if 'num_assessments' in student_data:
-                st.metric("Assessments Completed", f"{student_data['num_assessments']:.0f}")
-            if 'num_days_active' in student_data:
-                st.metric("Days Active", f"{student_data['num_days_active']:.0f}")
+                assessments = int(student_data['num_assessments'])
+                assess_status = "🟢 Good" if assessments >= 5 else "🟡 Average" if assessments >= 3 else "🔴 Low"
+                st.metric("Assessment Completion", f"{assessments} {assess_status}")
 
 
 def main():

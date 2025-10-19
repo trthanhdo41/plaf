@@ -152,15 +152,23 @@ class LLMBenchmark:
                 counterfactual_changes=profile["counterfactual"]
             )
             
+            # Extract advice text for analysis
+            if isinstance(advice, dict):
+                advice_text = advice.get('raw_response', '') or advice.get('summary', '') or str(advice)
+                advice_length = len(advice_text)
+            else:
+                advice_text = str(advice)
+                advice_length = len(advice_text)
+            
             # Quality criteria
             scores = {
                 "student_id": profile["student_id"],
                 "risk_level": profile["risk_level"],
-                "advice_length": len(advice),
+                "advice_length": advice_length,
                 "has_specific_numbers": self._check_specific_numbers(advice, profile),
                 "has_actionable_steps": self._check_actionable_steps(advice),
-                "mentions_engagement": "engagement" in advice.lower() or "clicks" in advice.lower(),
-                "mentions_grades": "grade" in advice.lower() or "score" in advice.lower(),
+                "mentions_engagement": "engagement" in advice_text.lower() or "clicks" in advice_text.lower(),
+                "mentions_grades": "grade" in advice_text.lower() or "score" in advice_text.lower(),
                 "is_personalized": self._check_personalization(advice, profile),
                 "has_encouragement": self._check_encouragement(advice),
                 "readability": self._assess_readability(advice)
@@ -211,14 +219,28 @@ class LLMBenchmark:
             
             # Check consistency
             # 1. Length consistency
-            lengths = [len(a) for a in advices]
-            length_std = np.std(lengths) / np.mean(lengths)  # Coefficient of variation
+            lengths = []
+            for a in advices:
+                if isinstance(a, dict):
+                    text = a.get('raw_response', '') or a.get('summary', '') or str(a)
+                else:
+                    text = str(a)
+                lengths.append(len(text))
+            
+            length_std = np.std(lengths) / np.mean(lengths) if np.mean(lengths) > 0 else 0  # Coefficient of variation
             
             # 2. Content consistency (check if key terms appear consistently)
             key_terms = ["engagement", "clicks", "grade", "score", "improve"]
             term_consistency = []
             for term in key_terms:
-                appearances = sum(1 for a in advices if term in a.lower())
+                appearances = 0
+                for a in advices:
+                    if isinstance(a, dict):
+                        text = a.get('raw_response', '') or a.get('summary', '') or str(a)
+                    else:
+                        text = str(a)
+                    if term in text.lower():
+                        appearances += 1
                 term_consistency.append(appearances / n_runs)
             
             avg_term_consistency = np.mean(term_consistency)
@@ -263,25 +285,31 @@ class LLMBenchmark:
             
             risk_level = profile["risk_level"]
             
+            # Extract advice text for analysis
+            if isinstance(advice, dict):
+                advice_text = advice.get('raw_response', '') or advice.get('summary', '') or str(advice)
+            else:
+                advice_text = str(advice)
+            
             # Check if advice matches risk level
             if risk_level == "high":
                 # High risk should mention urgency, immediate action
                 relevant = (
-                    ("urgent" in advice.lower() or "immediately" in advice.lower() or
-                     "critical" in advice.lower() or "important" in advice.lower()) and
-                    "improve" in advice.lower()
+                    ("urgent" in advice_text.lower() or "immediately" in advice_text.lower() or
+                     "critical" in advice_text.lower() or "important" in advice_text.lower()) and
+                    "improve" in advice_text.lower()
                 )
             elif risk_level == "medium":
                 # Medium risk should be balanced
                 relevant = (
-                    "improve" in advice.lower() and
-                    ("focus" in advice.lower() or "increase" in advice.lower())
+                    "improve" in advice_text.lower() and
+                    ("focus" in advice_text.lower() or "increase" in advice_text.lower())
                 )
             else:  # low
                 # Low risk should be encouraging
                 relevant = (
-                    "good" in advice.lower() or "maintain" in advice.lower() or
-                    "continue" in advice.lower()
+                    "good" in advice_text.lower() or "maintain" in advice_text.lower() or
+                    "continue" in advice_text.lower()
                 )
             
             relevance_score = 1.0 if relevant else 0.5
@@ -312,34 +340,61 @@ class LLMBenchmark:
             str(counterfactual.get("avg_score", "")) in advice
         )
     
-    def _check_actionable_steps(self, advice: str) -> bool:
+    def _check_actionable_steps(self, advice) -> bool:
         """Check if advice contains actionable steps."""
         action_words = ["should", "need to", "try to", "focus on", "increase", 
                        "improve", "engage", "complete", "participate"]
-        return any(word in advice.lower() for word in action_words)
+        
+        # Handle both string and dict advice formats
+        if isinstance(advice, dict):
+            # Extract text from dict format
+            advice_text = advice.get('raw_response', '') or advice.get('summary', '') or str(advice)
+        else:
+            advice_text = str(advice)
+            
+        return any(word in advice_text.lower() for word in action_words)
     
-    def _check_personalization(self, advice: str, profile: Dict) -> bool:
+    def _check_personalization(self, advice, profile: Dict) -> bool:
         """Check if advice is personalized to student."""
         student_data = profile["profile"]
         risk_level = "high" if student_data.get("risk_probability", 0) > 0.6 else "low"
         
+        # Handle both string and dict advice formats
+        if isinstance(advice, dict):
+            advice_text = advice.get('raw_response', '') or advice.get('summary', '') or str(advice)
+        else:
+            advice_text = str(advice)
+        
         # Check if mentions current performance
         mentions_current = (
-            str(int(student_data.get("total_clicks", 0))) in advice or
-            str(int(student_data.get("avg_score", 0))) in advice
+            str(int(student_data.get("total_clicks", 0))) in advice_text or
+            str(int(student_data.get("avg_score", 0))) in advice_text
         )
         
         return mentions_current
     
-    def _check_encouragement(self, advice: str) -> bool:
+    def _check_encouragement(self, advice) -> bool:
         """Check if advice is encouraging."""
         encouraging_words = ["you can", "help you", "support", "improve", "achieve", "succeed"]
-        return any(word in advice.lower() for word in encouraging_words)
+        
+        # Handle both string and dict advice formats
+        if isinstance(advice, dict):
+            advice_text = advice.get('raw_response', '') or advice.get('summary', '') or str(advice)
+        else:
+            advice_text = str(advice)
+            
+        return any(word in advice_text.lower() for word in encouraging_words)
     
-    def _assess_readability(self, advice: str) -> float:
+    def _assess_readability(self, advice) -> float:
         """Assess readability (simple heuristic)."""
+        # Handle both string and dict advice formats
+        if isinstance(advice, dict):
+            advice_text = advice.get('raw_response', '') or advice.get('summary', '') or str(advice)
+        else:
+            advice_text = str(advice)
+            
         # Good length: 100-300 characters
-        length = len(advice)
+        length = len(advice_text)
         if 100 <= length <= 300:
             length_score = 1.0
         elif length < 100:
@@ -348,9 +403,12 @@ class LLMBenchmark:
             length_score = max(0.5, 1.0 - (length - 300) / 500)
         
         # Not too many long words
-        words = advice.split()
-        avg_word_length = np.mean([len(w) for w in words])
-        word_score = 1.0 if avg_word_length < 7 else 0.7
+        words = advice_text.split()
+        if words:
+            avg_word_length = np.mean([len(w) for w in words])
+            word_score = 1.0 if avg_word_length < 7 else 0.7
+        else:
+            word_score = 0.0
         
         return (length_score + word_score) / 2
     
