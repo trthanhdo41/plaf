@@ -568,7 +568,7 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 # Generation parameters (config.yaml)
 generation_config = {
     'temperature': 0.7,      # Balanced creativity/consistency
-    'max_tokens': 500,       # Concise advice
+    'max_output_tokens': 4096,  # Allow longer responses
     'top_p': 0.9             # Nucleus sampling
 }
 ```

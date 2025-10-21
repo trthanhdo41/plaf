@@ -111,7 +111,7 @@ Generate the advice now:"""
                 prompt,
                 generation_config={
                     'temperature': temperature,
-                    'max_output_tokens': 1024,
+                    'max_output_tokens': 4096,
                 }
             )
             
