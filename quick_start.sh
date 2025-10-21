@@ -110,19 +110,17 @@ fi
 
 echo ""
 echo "========================================"
-echo "STEP 5: Starting Student Portal"
+echo "STEP 5: Setup Complete!"
 echo "========================================"
 echo ""
 
-echo "Student Portal will start at: http://localhost:8501"
+echo "✅ All setup steps completed successfully!"
 echo ""
-echo "LOGIN CREDENTIALS:"
-echo "  Email: student650515@ou.ac.uk"
-echo "  Password: demo123"
-echo ""
-echo "Press Ctrl+C to stop the server"
+echo "========================================"
+echo "🚀 Starting PLAF System..."
+echo "========================================"
 echo ""
 
-# Start Student Portal
-streamlit run src/lms_portal/student_app.py --server.port 8501
+# Run the full system startup script
+./start_plaf.sh
 

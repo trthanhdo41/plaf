@@ -314,6 +314,24 @@ class Database:
         
         return [dict(row) for row in cursor.fetchall()]
     
+    def save_chat_message(self, student_id: int, message: str, response: str):
+        """Save a chat message to history."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        # Use datetime.now() for Vietnam timezone (UTC+7)
+        from datetime import datetime, timezone, timedelta
+        vietnam_tz = timezone(timedelta(hours=7))
+        timestamp = datetime.now(vietnam_tz).isoformat()
+        
+        cursor.execute("""
+            INSERT INTO chat_history (id_student, message, response, timestamp)
+            VALUES (?, ?, ?, ?)
+        """, (student_id, message, response, timestamp))
+        
+        conn.commit()
+        logger.info(f"Saved chat message for student {student_id}")
+    
     def clear_chat_history(self, student_id: int):
         """Clear chat history for a student."""
         conn = self.connect()
