@@ -63,6 +63,47 @@ class RAGSystem:
         self.documents.extend(documents)
         logger.info(f"Added {len(documents)} documents to knowledge base")
     
+    def create_semantic_embeddings(self, texts: List[str]) -> np.ndarray:
+        """
+        Create semantic embeddings using Gemini embedding model.
+        
+        Args:
+            texts: List of texts
+            
+        Returns:
+            Embeddings matrix (numpy array)
+        """
+        logger.info(f"Creating semantic embeddings for {len(texts)} documents...")
+        embeddings = []
+        
+        try:
+            # Use Gemini embedding model
+            for i, text in enumerate(texts):
+                if i % 10 == 0:
+                    logger.info(f"Processing embedding {i+1}/{len(texts)}")
+                
+                try:
+                    # Use Gemini embedding API
+                    result = genai.embed_content(
+                        model="models/text-embedding-004",
+                        content=text,
+                        task_type="retrieval_document"
+                    )
+                    embedding = result['embedding']
+                    embeddings.append(embedding)
+                except Exception as e:
+                    logger.error(f"Error creating embedding for text {i}: {e}")
+                    # Fallback to simple zero embedding
+                    embeddings.append(np.zeros(768))
+            
+            embeddings = np.array(embeddings, dtype='float32')
+            logger.info(f"Created {len(embeddings)} embeddings with shape {embeddings.shape}")
+            return embeddings
+            
+        except Exception as e:
+            logger.warning(f"Failed to create semantic embeddings: {e}. Using fallback TF-IDF.")
+            return self.create_simple_embeddings(texts)
+    
     def create_simple_embeddings(self, texts: List[str]) -> np.ndarray:
         """
         Create simple TF-IDF-like embeddings (fallback if no embedding model).
@@ -82,21 +123,33 @@ class RAGSystem:
         return embeddings.astype('float32')
     
     def build_index(self):
-        """Build index for similarity search."""
+        """Build FAISS index for fast similarity search."""
         if not self.documents:
             logger.warning("No documents to index")
             return
         
-        # Create embeddings
-        logger.info("Creating embeddings...")
-        self.embeddings = self.create_simple_embeddings(self.documents)
+        # Create semantic embeddings
+        logger.info("Creating semantic embeddings...")
+        self.embeddings = self.create_semantic_embeddings(self.documents)
         
-        # Don't use FAISS for now - use simple search
-        logger.info(f"Built search index with {len(self.documents)} documents")
+        # Build FAISS index for fast search
+        if FAISS_AVAILABLE:
+            try:
+                dimension = self.embeddings.shape[1]
+                # Use IndexFlatL2 for exact search (can upgrade to IndexIVFFlat for approximate search with large datasets)
+                self.index = faiss.IndexFlatL2(dimension)
+                self.index.add(self.embeddings.astype('float32'))
+                logger.info(f"Built FAISS index with {self.index.ntotal} vectors")
+            except Exception as e:
+                logger.warning(f"Failed to build FAISS index: {e}. Using simple search.")
+                self.index = None
+        else:
+            logger.warning("FAISS not available. Using simple search.")
+            self.index = None
     
     def search(self, query: str, top_k: int = 3) -> List[Tuple[str, float]]:
         """
-        Search for relevant documents.
+        Search for relevant documents using FAISS (if available) or simple search.
         
         Args:
             query: Search query
@@ -108,15 +161,45 @@ class RAGSystem:
         if not self.documents:
             return []
         
-        # Create query embedding using the same vectorizer
-        if hasattr(self, 'vectorizer') and self.vectorizer is not None:
-            query_embedding = self.vectorizer.transform([query]).toarray().astype('float32')
-        else:
-            query_embedding = self.create_simple_embeddings([query])
+        # Create query embedding
+        try:
+            # Use semantic embedding for query
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=query,
+                task_type="retrieval_query"
+            )
+            query_embedding = np.array([result['embedding']], dtype='float32')
+            logger.info(f"Created query embedding with shape {query_embedding.shape}")
+        except Exception as e:
+            logger.warning(f"Failed to create semantic embedding for query: {e}")
+            # Fallback
+            if hasattr(self, 'vectorizer') and self.vectorizer is not None:
+                query_embedding = self.vectorizer.transform([query]).toarray().astype('float32')
+            else:
+                query_embedding = self.create_simple_embeddings([query])
         
-        # Use simple cosine similarity (more stable than FAISS)
+        # Use FAISS for fast similarity search
+        if self.index is not None:
+            try:
+                # Search using FAISS
+                k = min(top_k, len(self.documents))
+                distances, indices = self.index.search(query_embedding, k)
+                
+                results = []
+                for i, (distance, idx) in enumerate(zip(distances[0], indices[0])):
+                    if idx < len(self.documents):
+                        # Convert L2 distance to similarity score (1 / (1 + distance))
+                        similarity = 1.0 / (1.0 + distance)
+                        results.append((self.documents[idx], float(similarity)))
+                
+                logger.info(f"FAISS search returned {len(results)} results")
+                return results
+            except Exception as e:
+                logger.warning(f"FAISS search failed: {e}. Using fallback search.")
+        
+        # Fallback: Use simple cosine similarity
         from sklearn.metrics.pairwise import cosine_similarity
-        
         similarities = cosine_similarity(query_embedding, self.embeddings)[0]
         top_indices = np.argsort(similarities)[::-1][:top_k]
         
@@ -274,11 +357,56 @@ Response:"""
             return False
 
 
+def load_course_materials_from_db() -> List[str]:
+    """Load course materials dynamically from database."""
+    docs = []
+    try:
+        import sqlite3
+        conn = sqlite3.connect("data/lms.db")
+        cursor = conn.cursor()
+        
+        # Get all VLE materials with descriptions
+        cursor.execute("""
+            SELECT activity_type, COUNT(*) as count, code_module
+            FROM vle
+            GROUP BY activity_type, code_module
+            ORDER BY count DESC
+        """)
+        
+        vle_data = cursor.fetchall()
+        for activity_type, count, module in vle_data:
+            docs.append(
+                f"Module {module} has {count} {activity_type} activities. "
+                f"Access these {activity_type} materials regularly to stay engaged with the course content."
+            )
+        
+        # Get assessment information
+        cursor.execute("""
+            SELECT DISTINCT assessment_type, code_module
+            FROM assessments
+        """)
+        
+        assessments = cursor.fetchall()
+        for assessment_type, module in assessments:
+            docs.append(
+                f"Module {module} includes {assessment_type} assessments. "
+                f"Prepare thoroughly for {assessment_type} by reviewing course materials and practicing regularly."
+            )
+        
+        conn.close()
+        logger.info(f"Loaded {len(docs)} documents from database")
+        
+    except Exception as e:
+        logger.warning(f"Could not load course materials from database: {e}")
+    
+    return docs
+
+
 def initialize_knowledge_base() -> RAGSystem:
-    """Initialize RAG system with course knowledge from OULAD."""
+    """Initialize RAG system with dynamic course knowledge from OULAD database."""
     rag = RAGSystem()
     
-    # Add course materials (example)
+    # Core study strategies (generic knowledge)
     course_docs = [
         # General study tips
         "Effective study techniques include: active recall, spaced repetition, and practice testing. Review your notes regularly and test yourself frequently.",
@@ -304,77 +432,17 @@ def initialize_knowledge_base() -> RAGSystem:
         
         "If you're feeling overwhelmed, remember that many students experience similar challenges. Reach out to student support services for help.",
         
-        # Course-specific (OULAD)
-        "For module AAA (Arts and Humanities): Focus on critical reading and writing skills. Engage deeply with primary sources.",
-        
-        "For module BBB (Social Sciences): Understand research methods and data analysis. Practice interpreting statistics and graphs.",
-        
-        "For module CCC (STEM): Build strong foundational knowledge. Complete practice problems and understand underlying concepts.",
-        
         # General advice
         "Maintaining a balanced lifestyle improves academic performance. Get adequate sleep, exercise regularly, and manage stress.",
         
         "Connect with classmates through forums and study groups. Peer learning can clarify difficult concepts and provide motivation.",
     ]
     
-    # Load VLE activity descriptions from OULAD
-    try:
-        import sqlite3
-        conn = sqlite3.connect("data/lms.db")
-        cursor = conn.cursor()
-        
-        # Get VLE activity types and descriptions
-        vle_docs = [
-            "RESOURCE activities: Course resource materials including PDFs, documents, and study guides. These are essential reading materials for the course.",
-            
-            "OUCONTENT activities: Open University course content including lectures, presentations, and multimedia materials. Core learning content.",
-            
-            "URL activities: External web resources and links to supplementary materials. Expand your knowledge with these additional resources.",
-            
-            "FORUMNG activities: Discussion forums where you can interact with peers and instructors. Active participation improves understanding.",
-            
-            "QUIZ activities: Assessment quizzes to test your knowledge. Complete these to gauge your progress and identify areas for improvement.",
-            
-            "HOMEPAGE activities: Course homepage with announcements and overview. Check regularly for updates and important information.",
-            
-            "SUBPAGE activities: Course subpages with specific topic information. Navigate through these for detailed content.",
-            
-            "DATAPLUS activities: Data repositories and datasets for analysis. Practice with real data to develop analytical skills.",
-            
-            "OUCOLLABORATE activities: Collaboration tools for group work and projects. Work with peers to complete assignments.",
-            
-            "GLOSSARY activities: Course glossary with key terms and definitions. Use this to understand course terminology.",
-        ]
-        
-        course_docs.extend(vle_docs)
-        
-        # Get course-specific information
-        cursor.execute("SELECT DISTINCT code_module FROM vle LIMIT 10")
-        modules = cursor.fetchall()
-        
-        for (module,) in modules:
-            cursor.execute("""
-                SELECT activity_type, COUNT(*) as count
-                FROM vle
-                WHERE code_module = ?
-                GROUP BY activity_type
-                ORDER BY count DESC
-            """, (module,))
-            
-            activities = cursor.fetchall()
-            
-            if activities:
-                activity_summary = ", ".join([f"{count} {act_type}" for act_type, count in activities[:5]])
-                course_docs.append(
-                    f"Module {module} contains the following VLE activities: {activity_summary}. "
-                    f"Focus on completing all activity types for comprehensive learning."
-                )
-        
-        conn.close()
-        logger.info(f"Loaded VLE content from OULAD database")
-        
-    except Exception as e:
-        logger.warning(f"Could not load VLE data: {e}")
+    # Load dynamic content from database
+    dynamic_docs = load_course_materials_from_db()
+    course_docs.extend(dynamic_docs)
+    
+    # Note: VLE content is now loaded dynamically via load_course_materials_from_db()
     
     rag.add_documents(course_docs)
     rag.build_index()

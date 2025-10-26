@@ -248,26 +248,36 @@ export default function CoursesPage() {
           </CardContent>
         </Card>
 
-        {/* Materials Grid */}
+        {/* Materials Grid - Udemy Style */}
         {filteredMaterials.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMaterials.map((material) => (
-              <Card key={material.id_site} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
+              <Card 
+                key={material.id_site} 
+                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-blue-500"
+                onClick={() => setSelectedMaterial(material)}
+              >
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-3">
-                    <div className={`p-3 rounded-lg ${getActivityColor(material.activity_type)}`}>
+                    <div className={`p-3 rounded-lg group-hover:scale-110 transition-transform ${getActivityColor(material.activity_type)}`}>
                       {getActivityIcon(material.activity_type)}
                     </div>
-                    <Badge variant="outline">{material.activity_type}</Badge>
+                    <Badge variant="outline" className="group-hover:bg-blue-50 group-hover:text-blue-600">
+                      {material.activity_type}
+                    </Badge>
                   </div>
-                  <CardTitle className="text-lg">{material.code_module}</CardTitle>
-                  <CardDescription>{material.code_presentation}</CardDescription>
+                  <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                    {material.code_module}
+                  </CardTitle>
+                  <CardDescription className="group-hover:text-gray-700">
+                    {material.code_presentation}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-gray-600">
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>
+                      <Clock className="w-4 h-4 group-hover:text-blue-600" />
+                      <span className="group-hover:text-gray-900">
                         {material.week_from && material.week_to 
                           ? `Week ${material.week_from}-${material.week_to}`
                           : 'Available now'}
@@ -275,11 +285,10 @@ export default function CoursesPage() {
                     </div>
                   </div>
                   <Button 
-                    className="w-full mt-4" 
+                    className="w-full group-hover:bg-blue-600 group-hover:text-white transition-colors" 
                     variant="outline"
-                    onClick={() => setSelectedMaterial(material)}
                   >
-                    View Material
+                    View Details →
                   </Button>
                 </CardContent>
               </Card>
