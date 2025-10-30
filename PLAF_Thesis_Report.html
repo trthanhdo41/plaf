@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLAF: Prescriptive Learning Analytics Framework with AI-Powered Student Support</title>
+    <title>PLAF: Hệ Thống Phân Tích Học Tập Kê Đơn với Hỗ Trợ Sinh Viên bằng AI</title>
     <style>
         /* ========== PAGE SETUP ========== */
         @page {
@@ -280,8 +280,8 @@
 <!-- ========== COVER PAGE ========== -->
 <div class="cover-page">
     <div class="university-info">
-        VIETNAM NATIONAL UNIVERSITY, HO CHI MINH CITY<br>
-        UNIVERSITY OF INFORMATION TECHNOLOGY
+        ĐẠI HỌC QUỐC GIA TP. HỒ CHÍ MINH<br>
+        TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN
     </div>
     
     <div style="margin: 1.5cm 0;">
@@ -289,390 +289,392 @@
     </div>
     
     <div class="thesis-title">
-        PLAF: PRESCRIPTIVE LEARNING ANALYTICS FRAMEWORK<br>
-        WITH AI-POWERED STUDENT SUPPORT
+        PLAF: HỆ THỐNG PHÂN TÍCH HỌC TẬP KÊ ĐƠN<br>
+        VỚI HỖ TRỢ SINH VIÊN BẰNG TRÍ TUỆ NHÂN TẠO
     </div>
     
     <div class="thesis-subtitle">
-        A Complete Implementation with Explainable AI,<br>
-        RAG-based Chatbot Intervention, and Cold-Start Handling
+        Triển khai hoàn chỉnh với AI Giải Thích Được,<br>
+        Chatbot Can Thiệp dựa trên RAG, và Xử lý Cold-Start
     </div>
     
     <div class="author-info">
-        <strong>Bachelor Thesis</strong><br>
-        Major: Information Systems<br><br>
+        <strong>Luận Văn Tốt Nghiệp</strong><br>
+        Ngành: Hệ Thống Thông Tin<br><br>
         
-        <strong>Author:</strong> [Your Full Name]<br>
-        <strong>Student ID:</strong> [Your Student ID]<br><br>
+        <strong>Sinh viên thực hiện:</strong> [Họ và Tên]<br>
+        <strong>Mã số sinh viên:</strong> [MSSV]<br><br>
         
-        <strong>Supervisor:</strong> [Supervisor Name, Ph.D.]
+        <strong>Giảng viên hướng dẫn:</strong> [TS. Tên Giảng Viên]
     </div>
     
     <div class="graduation-info">
-        Ho Chi Minh City – 2025
+        Thành phố Hồ Chí Minh – 2025
     </div>
 </div>
 
 <!-- ========== ABSTRACT ========== -->
 <div class="page-break">
-    <h1>ABSTRACT</h1>
+    <h1>TÓM TẮT</h1>
     
     <div class="abstract">
-        <p>Student retention remains a critical challenge in higher education, with dropout rates ranging from 30-50% globally. While predictive learning analytics can identify at-risk students with high accuracy, a fundamental gap exists between prediction and intervention. Current systems lack automated mechanisms for providing personalized, actionable support at scale, particularly for new students without historical learning data.</p>
+        <p>Giữ chân sinh viên vẫn là một thách thức quan trọng trong giáo dục đại học, với tỷ lệ bỏ học dao động từ 30-50% trên toàn cầu. Mặc dù phân tích học tập dự đoán có thể xác định sinh viên có nguy cơ với độ chính xác cao, một khoảng trống cơ bản vẫn tồn tại giữa dự đoán và can thiệp. Các hệ thống hiện tại thiếu cơ chế tự động để cung cấp hỗ trợ cá nhân hóa, có thể thực thi được ở quy mô lớn, đặc biệt là đối với sinh viên mới không có dữ liệu học tập lịch sử.</p>
         
-        <p>This thesis presents the first complete implementation of the Prescriptive Learning Analytics Framework (PLAF), integrating cutting-edge technologies to bridge the prediction-intervention gap. We develop an end-to-end system comprising: (1) High-accuracy predictive models achieving AUC = 0.983 using CatBoost on the OULAD dataset (32,593 students), (2) Multi-level explainability through SHAP, Anchor, and DiCE counterfactual explanations, (3) A novel Retrieval-Augmented Generation (RAG) chatbot combining FAISS vector search with Google Gemini 2.5 Flash for automated, personalized student intervention, (4) A demographic-based K-NN cold-start handler enabling immediate risk assessment for new students, and (5) A dual-interface web application providing distinct dashboards for students and academic advisors.</p>
+        <p>Luận văn này trình bày việc triển khai hoàn chỉnh đầu tiên của Khung Phân Tích Học Tập Kê Đơn (PLAF), tích hợp các công nghệ tiên tiến để thu hẹp khoảng cách giữa dự đoán và can thiệp. Chúng tôi phát triển một hệ thống end-to-end bao gồm: (1) Mô hình dự đoán độ chính xác cao đạt AUC = 0.983 sử dụng CatBoost trên bộ dữ liệu OULAD (32,593 sinh viên), (2) Khả năng giải thích đa cấp thông qua SHAP, Anchor và giải thích phản thực tế DiCE, (3) Chatbot Tạo Tăng Cường Truy Xuất (RAG) mới kết hợp tìm kiếm vector FAISS với Google Gemini 2.5 Flash để can thiệp sinh viên tự động và cá nhân hóa, (4) Bộ xử lý cold-start dựa trên K-NN nhân khẩu học cho phép đánh giá rủi ro ngay lập tức cho sinh viên mới, và (5) Ứng dụng web giao diện kép cung cấp bảng điều khiển riêng biệt cho sinh viên và cố vấn học tập.</p>
         
-        <p>Our key innovations include: the integration of RAG technology for scalable 24/7 student support with context-aware, empathetic responses; a cold-start solution achieving acceptable prediction accuracy using only demographic features available at enrollment; and comprehensive XAI integration that transforms opaque predictions into actionable intervention strategies. The system distinguishes between immutable demographic features and modifiable behavioral features, enabling targeted recommendations for student behavior change.</p>
+        <p>Các đổi mới chính của chúng tôi bao gồm: tích hợp công nghệ RAG để hỗ trợ sinh viên có thể mở rộng 24/7 với các phản hồi đồng cảm, nhận biết ngữ cảnh; giải pháp cold-start đạt độ chính xác dự đoán chấp nhận được chỉ sử dụng các đặc trưng nhân khẩu học có sẵn khi ghi danh; và tích hợp XAI toàn diện biến đổi các dự đoán mơ hồ thành chiến lược can thiệp có thể thực thi. Hệ thống phân biệt giữa các đặc trưng nhân khẩu học bất biến và các đặc trưng hành vi có thể thay đổi, cho phép đưa ra khuyến nghị có mục tiêu cho việc thay đổi hành vi của sinh viên.</p>
         
-        <p>Experimental evaluation demonstrates: (1) Predictive performance: CatBoost outperforms Random Forest, XGBoost, SVM, and Logistic Regression with AUC = 0.983, Precision = 0.891, Recall = 0.945, (2) RAG quality: 87% retrieval relevance, 2.3s average response latency, highly personalized and actionable advice as validated through automated benchmarks, (3) Cold-start effectiveness: MAE = 0.23 using demographics alone, enabling day-one risk assessment with quantified confidence scores, and (4) System usability: Streamlit-based interface tested with real student data, demonstrating practical deployment feasibility.</p>
+        <p>Đánh giá thực nghiệm cho thấy: (1) Hiệu suất dự đoán: CatBoost vượt trội hơn Random Forest, XGBoost, SVM và Logistic Regression với AUC = 0.983, Precision = 0.891, Recall = 0.945, (2) Chất lượng RAG: 87% độ liên quan truy xuất, độ trễ phản hồi trung bình 2.3s, lời khuyên được cá nhân hóa cao và có thể thực thi được xác thực thông qua các điểm chuẩn tự động, (3) Hiệu quả Cold-start: MAE = 0.23 chỉ sử dụng nhân khẩu học, cho phép đánh giá rủi ro ngay từ ngày đầu tiên với điểm số tin cậy được định lượng, và (4) Khả năng sử dụng hệ thống: giao diện dựa trên Streamlit được kiểm tra với dữ liệu sinh viên thực tế, chứng minh tính khả thi triển khai thực tế.</p>
         
-        <p>This work advances the state-of-the-art in prescriptive learning analytics by demonstrating that intelligent automation can scale personalized academic support without sacrificing quality or empathy. The open-source implementation provides a reproducible foundation for future research in AI-powered educational interventions, with potential extensions to multi-modal learning, reinforcement learning for adaptive interventions, and federated learning for privacy-preserving cross-institutional deployment.</p>
+        <p>Công trình này thúc đẩy nghiên cứu tiên tiến trong phân tích học tập kê đơn bằng cách chứng minh rằng tự động hóa thông minh có thể mở rộng hỗ trợ học tập cá nhân hóa mà không hy sinh chất lượng hoặc sự đồng cảm. Việc triển khai mã nguồn mở cung cấp nền tảng có thể tái tạo cho nghiên cứu tương lai trong can thiệp giáo dục được hỗ trợ bởi AI, với các mở rộng tiềm năng cho học tập đa phương thức, học tăng cường cho can thiệp thích ứng, và học liên kết để triển khai liên tổ chức bảo vệ quyền riêng tư.</p>
     </div>
     
     <div class="keywords">
-        <p><strong>Keywords:</strong> Prescriptive Learning Analytics, Student At-Risk Prediction, Explainable AI, Retrieval-Augmented Generation, Educational Chatbot, Cold-Start Problem, Machine Learning in Education, OULAD Dataset, SHAP, DiCE Counterfactuals</p>
+        <p><strong>Từ khóa:</strong> Phân Tích Học Tập Kê Đơn, Dự Đoán Sinh Viên Có Nguy Cơ, AI Giải Thích Được, Tạo Tăng Cường Truy Xuất, Chatbot Giáo Dục, Vấn Đề Cold-Start, Học Máy trong Giáo Dục, Bộ Dữ Liệu OULAD, SHAP, Giải Thích Phản Thực Tế DiCE</p>
     </div>
 </div>
 
 <!-- ========== TABLE OF CONTENTS ========== -->
 <div class="toc page-break">
-    <h1>TABLE OF CONTENTS</h1>
+    <h1>MỤC LỤC</h1>
     
     <div class="toc-item toc-chapter">
-        <a href="#chapter1">CHAPTER 1: INTRODUCTION ................................................... 1</a>
+        <a href="#chapter1">CHƯƠNG 1: GIỚI THIỆU ................................................... 1</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section1-1">1.1 Research Context ................................................... 1</a>
+        <a href="#section1-1">1.1 Bối Cảnh Nghiên Cứu ................................................... 1</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section1-2">1.2 Problem Statement ................................................... 3</a>
+        <a href="#section1-2">1.2 Phát Biểu Vấn Đề ................................................... 3</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section1-3">1.3 Research Questions ................................................... 4</a>
+        <a href="#section1-3">1.3 Câu Hỏi Nghiên Cứu ................................................... 4</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section1-4">1.4 Research Contributions ................................................... 5</a>
+        <a href="#section1-4">1.4 Đóng Góp Nghiên Cứu ................................................... 5</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section1-5">1.5 Thesis Organization ................................................... 7</a>
-    </div>
-    
-    <div class="toc-item toc-chapter">
-        <a href="#chapter2">CHAPTER 2: LITERATURE REVIEW & THEORETICAL FRAMEWORK ................................................... 9</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section2-1">2.1 Learning Analytics Framework ................................................... 9</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section2-2">2.2 Student At-Risk Prediction ................................................... 12</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section2-3">2.3 Explainable AI in Education ................................................... 15</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section2-4">2.4 Conversational AI for Education ................................................... 19</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section2-5">2.5 Cold-Start Problem in Educational AI ................................................... 23</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section2-6">2.6 Research Gap Summary ................................................... 26</a>
+        <a href="#section1-5">1.5 Cấu Trúc Luận Văn ................................................... 7</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#chapter3">CHAPTER 3: SYSTEM ARCHITECTURE & DESIGN ................................................... 28</a>
+        <a href="#chapter2">CHƯƠNG 2: TỔNG QUAN VÀ KHUNG LÝ THUYẾT ................................................... 9</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section3-1">3.1 Overall System Architecture ................................................... 28</a>
+        <a href="#section2-1">2.1 Khung Phân Tích Học Tập ................................................... 9</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section3-2">3.2 Data Layer ................................................... 31</a>
+        <a href="#section2-2">2.2 Dự Đoán Sinh Viên Có Nguy Cơ ................................................... 12</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section3-3">3.3 Predictive Analytics Layer ................................................... 38</a>
+        <a href="#section2-3">2.3 AI Giải Thích Được trong Giáo Dục ................................................... 15</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section3-4">3.4 Explainability Layer ................................................... 42</a>
+        <a href="#section2-4">2.4 AI Đàm Thoại cho Giáo Dục ................................................... 19</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section3-5">3.5 Prescriptive Analytics Layer ................................................... 46</a>
+        <a href="#section2-5">2.5 Vấn Đề Cold-Start trong AI Giáo Dục ................................................... 23</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section3-6">3.6 Interface Layer ................................................... 50</a>
-    </div>
-    <div class="toc-item toc-section">
-        <a href="#section3-7">3.7 Integration Layer ................................................... 54</a>
+        <a href="#section2-6">2.6 Tổng Hợp Khoảng Trống Nghiên Cứu ................................................... 26</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#chapter4">CHAPTER 4: IMPLEMENTATION ................................................... 56</a>
+        <a href="#chapter3">CHƯƠNG 3: KIẾN TRÚC VÀ THIẾT KẾ HỆ THỐNG ................................................... 28</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-1">4.1 Development Environment & Technology Stack ................................................... 56</a>
+        <a href="#section3-1">3.1 Kiến Trúc Hệ Thống Tổng Quan ................................................... 28</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-2">4.2 8-Stage Pipeline Implementation ................................................... 58</a>
+        <a href="#section3-2">3.2 Tầng Dữ Liệu ................................................... 31</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-3">4.3 Machine Learning Model Training ................................................... 65</a>
+        <a href="#section3-3">3.3 Tầng Phân Tích Dự Đoán ................................................... 38</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-4">4.4 XAI Techniques Implementation ................................................... 69</a>
+        <a href="#section3-4">3.4 Tầng Giải Thích ................................................... 42</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-5">4.5 RAG Chatbot System ................................................... 73</a>
+        <a href="#section3-5">3.5 Tầng Phân Tích Kê Đơn ................................................... 46</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-6">4.6 Cold-Start Handler ................................................... 77</a>
+        <a href="#section3-6">3.6 Tầng Giao Diện ................................................... 50</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section4-7">4.7 Web Application Development ................................................... 80</a>
+        <a href="#section3-7">3.7 Tầng Tích Hợp ................................................... 54</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#chapter5">CHAPTER 5: EVALUATION & RESULTS ................................................... 85</a>
+        <a href="#chapter4">CHƯƠNG 4: TRIỂN KHAI ................................................... 56</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section5-1">5.1 Experimental Setup ................................................... 85</a>
+        <a href="#section4-1">4.1 Môi Trường Phát Triển & Ngăn Xếp Công Nghệ ................................................... 56</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section5-2">5.2 Predictive Model Performance ................................................... 87</a>
+        <a href="#section4-2">4.2 Triển Khai Pipeline 8 Giai Đoạn ................................................... 58</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section5-3">5.3 Explainability Analysis ................................................... 92</a>
+        <a href="#section4-3">4.3 Huấn Luyện Mô Hình Học Máy ................................................... 65</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section5-4">5.4 RAG System Quality Evaluation ................................................... 96</a>
+        <a href="#section4-4">4.4 Triển Khai Kỹ Thuật XAI ................................................... 69</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section5-5">5.5 Cold-Start Handler Effectiveness ................................................... 100</a>
+        <a href="#section4-5">4.5 Hệ Thống Chatbot RAG ................................................... 73</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section5-6">5.6 System Usability & User Feedback ................................................... 103</a>
+        <a href="#section4-6">4.6 Bộ Xử Lý Cold-Start ................................................... 77</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section4-7">4.7 Phát Triển Ứng Dụng Web ................................................... 80</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#chapter6">CHAPTER 6: DISCUSSION ................................................... 106</a>
+        <a href="#chapter5">CHƯƠNG 5: ĐÁNH GIÁ & KẾT QUẢ ................................................... 85</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section6-1">6.1 Interpretation of Key Findings ................................................... 106</a>
+        <a href="#section5-1">5.1 Thiết Lập Thực Nghiệm ................................................... 85</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section6-2">6.2 Theoretical Implications ................................................... 109</a>
+        <a href="#section5-2">5.2 Hiệu Suất Mô Hình Dự Đoán ................................................... 87</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section6-3">6.3 Practical Implications ................................................... 111</a>
+        <a href="#section5-3">5.3 Phân Tích Khả Năng Giải Thích ................................................... 92</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section6-4">6.4 Limitations ................................................... 113</a>
+        <a href="#section5-4">5.4 Đánh Giá Chất Lượng Hệ Thống RAG ................................................... 96</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section6-5">6.5 Ethical Considerations ................................................... 115</a>
+        <a href="#section5-5">5.5 Hiệu Quả Bộ Xử Lý Cold-Start ................................................... 100</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section5-6">5.6 Khả Năng Sử Dụng & Phản Hồi Người Dùng ................................................... 103</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#chapter7">CHAPTER 7: CONCLUSION & FUTURE WORK ................................................... 118</a>
+        <a href="#chapter6">CHƯƠNG 6: THẢO LUẬN ................................................... 106</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section7-1">7.1 Summary of Contributions ................................................... 118</a>
+        <a href="#section6-1">6.1 Diễn Giải Các Phát Hiện Chính ................................................... 106</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section7-2">7.2 Answers to Research Questions ................................................... 119</a>
+        <a href="#section6-2">6.2 Hàm Ý Lý Thuyết ................................................... 109</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section7-3">7.3 Future Research Directions ................................................... 121</a>
+        <a href="#section6-3">6.3 Hàm Ý Thực Tiễn ................................................... 111</a>
     </div>
     <div class="toc-item toc-section">
-        <a href="#section7-4">7.4 Concluding Remarks ................................................... 123</a>
+        <a href="#section6-4">6.4 Hạn Chế ................................................... 113</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section6-5">6.5 Các Cân Nhắc Đạo Đức ................................................... 115</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#references">REFERENCES ................................................... 125</a>
+        <a href="#chapter7">CHƯƠNG 7: KẾT LUẬN & HƯỚNG PHÁT TRIỂN ................................................... 118</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section7-1">7.1 Tóm Tắt Các Đóng Góp ................................................... 118</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section7-2">7.2 Trả Lời Các Câu Hỏi Nghiên Cứu ................................................... 119</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section7-3">7.3 Hướng Nghiên Cứu Tương Lai ................................................... 121</a>
+    </div>
+    <div class="toc-item toc-section">
+        <a href="#section7-4">7.4 Kết Luận ................................................... 123</a>
     </div>
     
     <div class="toc-item toc-chapter">
-        <a href="#appendix">APPENDICES ................................................... 132</a>
+        <a href="#references">TÀI LIỆU THAM KHẢO ................................................... 125</a>
+    </div>
+    
+    <div class="toc-item toc-chapter">
+        <a href="#appendix">PHỤ LỤC ................................................... 132</a>
     </div>
 </div>
 
 <!-- ========== CHAPTER 1: INTRODUCTION ========== -->
 <div class="page-break">
-    <h1 id="chapter1">CHAPTER 1: INTRODUCTION</h1>
+    <h1 id="chapter1">CHƯƠNG 1: GIỚI THIỆU</h1>
     
-    <h2 id="section1-1">1.1 Research Context</h2>
+    <h2 id="section1-1">1.1 Bối Cảnh Nghiên Cứu</h2>
     
-    <h3>1.1.1 The Evolution of Learning Analytics</h3>
+    <h3>1.1.1 Sự Phát Triển của Phân Tích Học Tập</h3>
     
-    <p>Learning analytics has emerged as a transformative field in educational technology, evolving through several distinct phases over the past two decades. This evolution reflects both technological advancements and a deepening understanding of how data-driven insights can improve educational outcomes.</p>
+    <p>Phân tích học tập đã nổi lên như một lĩnh vực chuyển đổi trong công nghệ giáo dục, phát triển qua nhiều giai đoạn riêng biệt trong hai thập kỷ qua. Sự phát triển này phản ánh cả tiến bộ công nghệ và hiểu biết ngày càng sâu sắc về cách thức mà các thông tin dữ liệu có thể cải thiện kết quả giáo dục.</p>
     
-    <p><strong>Descriptive Analytics</strong> represents the foundational phase, focusing on understanding "what happened" in educational settings. This approach involves historical data analysis of student grades, attendance records, and course completion rates. While descriptive analytics provides valuable retrospective insights through dashboard reporting for administrators, it suffers from a fundamental limitation: it is inherently reactive, offering no predictive power to anticipate future student outcomes.</p>
+    <p><strong>Phân Tích Mô Tả</strong> đại diện cho giai đoạn nền tảng, tập trung vào việc hiểu "điều gì đã xảy ra" trong bối cảnh giáo dục. Cách tiếp cận này bao gồm phân tích dữ liệu lịch sử về điểm số sinh viên, hồ sơ điểm danh và tỷ lệ hoàn thành khóa học. Mặc dù phân tích mô tả cung cấp thông tin nhìn lại giá trị thông qua báo cáo bảng điều khiển cho quản trị viên, nó bị hạn chế cơ bản: vốn dĩ phản ứng, không có khả năng dự đoán để dự đoán kết quả sinh viên trong tương lai.</p>
     
-    <p><strong>Diagnostic Analytics</strong> advances beyond mere description to answer "why it happened." This phase introduces correlation analysis and pattern identification to perform root cause analysis of student performance. Techniques such as regression analysis and factor analysis help educators understand the relationships between various factors affecting student success. However, diagnostic analytics remains limited in its ability to forecast future events, focusing primarily on explaining past outcomes.</p>
+    <p><strong>Phân Tích Chẩn Đoán</strong> tiến xa hơn mô tả đơn thuần để trả lời "tại sao nó xảy ra." Giai đoạn này giới thiệu phân tích tương quan và nhận dạng mẫu để thực hiện phân tích nguyên nhân gốc rễ về hiệu suất sinh viên. Các kỹ thuật như phân tích hồi quy và phân tích nhân tố giúp nhà giáo dục hiểu mối quan hệ giữa các yếu tố khác nhau ảnh hưởng đến sự thành công của sinh viên. Tuy nhiên, phân tích chẩn đoán vẫn bị giới hạn trong khả năng dự báo các sự kiện tương lai, chủ yếu tập trung vào việc giải thích kết quả trong quá khứ.</p>
     
-    <p><strong>Predictive Analytics</strong> marks a significant leap forward by addressing "what will happen." Through machine learning algorithms, this approach can forecast student outcomes, identifying at-risk students before they fail or drop out. Early warning systems based on predictive models have been widely adopted in institutions globally. Despite this advancement, predictive analytics faces a critical limitation: it stops at prediction without providing prescription. Knowing a student is at-risk does not automatically translate into knowing how to intervene effectively.</p>
+    <p><strong>Phân Tích Dự Đoán</strong> đánh dấu một bước nhảy vọt đáng kể bằng cách giải quyết "điều gì sẽ xảy ra." Thông qua các thuật toán học máy, cách tiếp cận này có thể dự báo kết quả sinh viên, xác định sinh viên có nguy cơ trước khi họ trượt hoặc bỏ học. Các hệ thống cảnh báo sớm dựa trên mô hình dự đoán đã được các tổ chức trên toàn cầu áp dụng rộng rãi. Mặc dù có sự tiến bộ này, phân tích dự đoán phải đối mặt với hạn chế quan trọng: nó dừng lại ở dự đoán mà không cung cấp kê đơn. Biết một sinh viên có nguy cơ không tự động chuyển thành biết cách can thiệp hiệu quả.</p>
     
-    <p><strong>Prescriptive Analytics</strong> represents the current frontier, focusing on "what should we do." This phase provides actionable recommendations based on predictions, offering intervention strategies and personalized guidance to students and advisors. The key innovation of prescriptive analytics is closing the loop from insight to action, transforming passive observation into active intervention. Susnjak (2023) formalized this approach in the Prescriptive Learning Analytics Framework (PLAF), which serves as the theoretical foundation for this thesis.</p>
+    <p><strong>Phân Tích Kê Đơn</strong> đại diện cho biên giới hiện tại, tập trung vào "chúng ta nên làm gì." Giai đoạn này cung cấp khuyến nghị có thể thực hiện dựa trên dự đoán, đưa ra chiến lược can thiệp và hướng dẫn cá nhân hóa cho sinh viên và cố vấn. Đổi mới chính của phân tích kê đơn là đóng vòng lặp từ thông tin đến hành động, chuyển đổi quan sát thụ động thành can thiệp chủ động. Susnjak (2023) đã chính thức hóa cách tiếp cận này trong Khung Phân Tích Học Tập Kê Đơn (PLAF), đóng vai trò là nền tảng lý thuyết cho luận văn này.</p>
     
-    <h3>1.1.2 Student Retention Challenges in Higher Education</h3>
+    <h3>1.1.2 Thách Thức Giữ Chân Sinh Viên trong Giáo Dục Đại Học</h3>
     
-    <p>Student retention constitutes one of the most pressing challenges facing higher education institutions worldwide. The scope and impact of this problem extend far beyond individual student outcomes, affecting institutions, economies, and societies at large.</p>
+    <p>Giữ chân sinh viên là một trong những thách thức cấp bách nhất đối với các cơ sở giáo dục đại học trên toàn thế giới. Phạm vi và tác động của vấn đề này vượt xa kết quả sinh viên cá nhân, ảnh hưởng đến các tổ chức, nền kinh tế và xã hội nói chung.</p>
     
-    <p>From a <strong>global perspective</strong>, university dropout rates range from 30% to 50% across different institutions and countries. This represents millions of students who begin their higher education journey but fail to complete it, despite significant investments of time, money, and effort. The <strong>financial impact</strong> is substantial: institutions lose tuition revenue, while educational resources invested in departed students yield no return. Governments and funding bodies face questions about the efficiency and effectiveness of higher education spending.</p>
+    <p>Từ <strong>góc độ toàn cầu</strong>, tỷ lệ bỏ học đại học dao động từ 30% đến 50% ở các tổ chức và quốc gia khác nhau. Điều này đại diện cho hàng triệu sinh viên bắt đầu hành trình giáo dục đại học nhưng không hoàn thành, bất chấp đầu tư đáng kể về thời gian, tiền bạc và công sức. <strong>Tác động tài chính</strong> là đáng kể: các tổ chức mất doanh thu học phí, trong khi các nguồn lực giáo dục đầu tư vào sinh viên rời đi không mang lại lợi nhuận. Chính phủ và các cơ quan tài trợ đối mặt với câu hỏi về hiệu quả của chi tiêu giáo dục đại học.</p>
     
-    <p>Most critically, the <strong>student impact</strong> can be devastating. Academic failure often leads to emotional distress, damaged self-confidence, career setbacks, and in some cases, substantial debt without a degree to show for it. Research consistently shows that the <strong>early intervention window</strong>—particularly in the first semester or year—is critical for retention. Students who struggle early but receive timely, appropriate support are far more likely to persist and succeed than those who fall through the cracks.</p>
+    <p>Quan trọng nhất, <strong>tác động đến sinh viên</strong> có thể tàn phá. Thất bại học tập thường dẫn đến căng thẳng cảm xúc, tổn hại sự tự tin, thất bại nghề nghiệp, và trong một số trường hợp, nợ nần đáng kể mà không có bằng cấp để chứng minh. Nghiên cứu liên tục cho thấy <strong>cửa sổ can thiệp sớm</strong>—đặc biệt là trong học kỳ hoặc năm đầu tiên—là rất quan trọng để giữ chân. Sinh viên gặp khó khăn sớm nhưng nhận được hỗ trợ kịp thời, phù hợp có khả năng kiên trì và thành công cao hơn nhiều so với những người bị bỏ qua.</p>
     
-    <h3>1.1.3 Current Limitations of Learning Analytics Systems</h3>
+    <h3>1.1.3 Hạn Chế Hiện Tại của Hệ Thống Phân Tích Học Tập</h3>
     
-    <p>Despite significant advances in educational technology and data analytics, current learning analytics systems face several critical limitations that prevent them from realizing their full potential:</p>
+    <p>Mặc dù có những tiến bộ đáng kể trong công nghệ giáo dục và phân tích dữ liệu, các hệ thống phân tích học tập hiện tại phải đối mặt với một số hạn chế quan trọng ngăn cản họ đạt được toàn bộ tiềm năng:</p>
     
-    <p class="no-indent"><strong>1. Prediction Without Action:</strong> Most existing systems excel at identifying at-risk students but provide no automated mechanism for intervention. A predictive model that achieves 90% accuracy is of limited value if no one acts on its predictions in a timely manner.</p>
+    <p class="no-indent"><strong>1. Dự Đoán Mà Không Hành Động:</strong> Hầu hết các hệ thống hiện có xuất sắc trong việc xác định sinh viên có nguy cơ nhưng không cung cấp cơ chế tự động để can thiệp. Một mô hình dự đoán đạt độ chính xác 90% có giá trị hạn chế nếu không ai hành động theo dự đoán của nó kịp thời.</p>
     
-    <p class="no-indent"><strong>2. Manual Intervention Bottleneck:</strong> Academic advisors are overwhelmed when trying to provide personalized support to hundreds or thousands of students. Even when at-risk students are identified, the human capacity for individual intervention does not scale, leading to generic advice or delayed responses.</p>
+    <p class="no-indent"><strong>2. Nghẽn Can Thiệp Thủ Công:</strong> Các cố vấn học tập bị quá tải khi cố gắng cung cấp hỗ trợ cá nhân hóa cho hàng trăm hoặc hàng nghìn sinh viên. Ngay cả khi sinh viên có nguy cơ được xác định, khả năng con người cho can thiệp cá nhân không thể mở rộng, dẫn đến lời khuyên chung chung hoặc phản hồi chậm trễ.</p>
     
-    <p class="no-indent"><strong>3. Delayed Response:</strong> Traditional academic advising operates on timescales of days or weeks—students schedule appointments, wait for availability, and receive advice long after the critical moment has passed. In contrast, students experiencing confusion or anxiety need immediate support when problems arise.</p>
+    <p class="no-indent"><strong>3. Phản Hồi Chậm Trễ:</strong> Tư vấn học tập truyền thống hoạt động trên quy mô thời gian hàng ngày hoặc hàng tuần—sinh viên lên lịch hẹn, chờ đợi sẵn sàng, và nhận lời khuyên rất lâu sau khi thời điểm quan trọng đã qua. Ngược lại, sinh viên gặp phải sự nhầm lẫn hoặc lo lắng cần hỗ trợ ngay lập tức khi vấn đề phát sinh.</p>
     
-    <p class="no-indent"><strong>4. Lack of Personalization:</strong> Generic advice such as "study harder" or "attend office hours" fails to address individual student contexts, learning styles, and specific challenges. Effective intervention requires understanding each student's unique situation and providing tailored guidance.</p>
+    <p class="no-indent"><strong>4. Thiếu Cá Nhân Hóa:</strong> Lời khuyên chung chung như "học chăm chỉ hơn" hoặc "tham dự giờ văn phòng" không giải quyết bối cảnh sinh viên cá nhân, phong cách học tập và thách thức cụ thể. Can thiệp hiệu quả đòi hỏi phải hiểu tình huống độc đáo của mỗi sinh viên và cung cấp hướng dẫn phù hợp.</p>
     
-    <p class="no-indent"><strong>5. Cold-Start Problem:</strong> New students without historical learning data cannot be assessed by traditional predictive models, which rely on features like past grades and engagement patterns. This creates a blind spot precisely when early intervention would be most valuable—at the beginning of a student's academic journey.</p>
+    <p class="no-indent"><strong>5. Vấn Đề Cold-Start:</strong> Sinh viên mới không có dữ liệu học tập lịch sử không thể được đánh giá bởi các mô hình dự đoán truyền thống, vốn dựa vào các đặc trưng như điểm số trong quá khứ và mẫu tương tác. Điều này tạo ra một điểm mù chính xác khi can thiệp sớm sẽ có giá trị nhất—vào đầu hành trình học tập của sinh viên.</p>
     
-    <h2 id="section1-2">1.2 Problem Statement</h2>
+    <h2 id="section1-2">1.2 Phát Biểu Vấn Đề</h2>
     
-    <p>Despite significant advances in predictive learning analytics, a critical gap exists between <strong>prediction and intervention</strong>. Current systems can identify at-risk students with high accuracy, often exceeding 85-90% AUC (Area Under the Curve), yet this predictive power fails to translate into improved student outcomes because of systemic barriers in the intervention process.</p>
+    <p>Mặc dù có những tiến bộ đáng kể trong phân tích học tập dự đoán, một khoảng trống quan trọng tồn tại giữa <strong>dự đoán và can thiệp</strong>. Các hệ thống hiện tại có thể xác định sinh viên có nguy cơ với độ chính xác cao, thường vượt quá 85-90% AUC (Area Under the Curve), nhưng sức mạnh dự đoán này không chuyển thành cải thiện kết quả sinh viên vì các rào cản hệ thống trong quá trình can thiệp.</p>
     
-    <p>This research identifies and addresses five fundamental gaps in existing learning analytics systems:</p>
+    <p>Nghiên cứu này xác định và giải quyết năm khoảng trống cơ bản trong các hệ thống phân tích học tập hiện có:</p>
     
-    <p class="no-indent"><strong>Gap 1: No Automated Mechanism for Immediate Student Intervention</strong><br>
-    Existing systems generate predictions but require manual interpretation and action by advisors. There is no automated pathway from risk identification to student contact, creating delays that can span days or weeks during which at-risk students continue to struggle without support.</p>
+    <p class="no-indent"><strong>Khoảng Trống 1: Không Có Cơ Chế Tự Động Cho Can Thiệp Sinh Viên Ngay Lập Tức</strong><br>
+    Các hệ thống hiện có tạo ra dự đoán nhưng yêu cầu giải thích và hành động thủ công bởi cố vấn. Không có con đường tự động từ xác định rủi ro đến liên hệ sinh viên, tạo ra sự chậm trễ có thể kéo dài hàng ngày hoặc hàng tuần trong đó sinh viên có nguy cơ tiếp tục gặp khó khăn mà không có hỗ trợ.</p>
     
-    <p class="no-indent"><strong>Gap 2: Advisors Cannot Scale Personalized Support</strong><br>
-    Academic advisors typically manage caseloads of hundreds or thousands of students. While they can provide high-quality personalized support in one-on-one sessions, the mathematics of time allocation make it impossible to deliver this level of attention to every student who needs it. This scalability problem means many at-risk students receive no intervention at all.</p>
+    <p class="no-indent"><strong>Khoảng Trống 2: Cố Vấn Không Thể Mở Rộng Hỗ Trợ Cá Nhân Hóa</strong><br>
+    Các cố vấn học tập thường quản lý khối lượng công việc hàng trăm hoặc hàng nghìn sinh viên. Trong khi họ có thể cung cấp hỗ trợ cá nhân hóa chất lượng cao trong các phiên một-một, toán học phân bổ thời gian khiến không thể mang lại mức độ quan tâm này cho mọi sinh viên cần nó. Vấn đề khả năng mở rộng này có nghĩa là nhiều sinh viên có nguy cơ không nhận được can thiệp nào cả.</p>
     
-    <p class="no-indent"><strong>Gap 3: Explanations Are Not Actionable</strong><br>
-    Current XAI (Explainable AI) techniques provide feature importance scores and correlation analyses, but these technical explanations do not translate directly into actions students can take. For example, knowing that "total VLE clicks" is the top predictive feature does not tell a student what specific behavioral changes would reduce their risk.</p>
+    <p class="no-indent"><strong>Khoảng Trống 3: Giải Thích Không Thể Thực Thi</strong><br>
+    Các kỹ thuật XAI (AI Giải Thích Được) hiện tại cung cấp điểm số quan trọng của đặc trưng và phân tích tương quan, nhưng những giải thích kỹ thuật này không chuyển trực tiếp thành hành động sinh viên có thể thực hiện. Ví dụ, biết rằng "tổng số lần nhấp VLE" là đặc trưng dự đoán hàng đầu không nói cho sinh viên biết những thay đổi hành vi cụ thể nào sẽ giảm rủi ro của họ.</p>
     
-    <p class="no-indent"><strong>Gap 4: New Students Receive No Early Support</strong><br>
-    Students without historical data fall outside the scope of traditional predictive models. This cold-start problem means that precisely when students are most vulnerable—at the beginning of their academic journey—the system has no basis for assessing their risk or providing proactive guidance.</p>
+    <p class="no-indent"><strong>Khoảng Trống 4: Sinh Viên Mới Không Nhận Được Hỗ Trợ Sớm</strong><br>
+    Sinh viên không có dữ liệu lịch sử rơi ra ngoài phạm vi của các mô hình dự đoán truyền thống. Vấn đề cold-start này có nghĩa là chính xác khi sinh viên dễ bị tổn thương nhất—vào đầu hành trình học tập của họ—hệ thống không có cơ sở để đánh giá rủi ro của họ hoặc cung cấp hướng dẫn chủ động.</p>
     
-    <p class="no-indent"><strong>Gap 5: Lack of Empathetic, Conversational Support Available 24/7</strong><br>
-    Students experiencing stress, confusion, or academic difficulties need empathetic support that acknowledges their emotional state while providing concrete guidance. However, human advisors are constrained by office hours and availability. There is no system providing compassionate, context-aware support on demand.</p>
+    <p class="no-indent"><strong>Khoảng Trống 5: Thiếu Hỗ Trợ Đồng Cảm, Đàm Thoại 24/7</strong><br>
+    Sinh viên gặp phải căng thẳng, nhầm lẫn hoặc khó khăn học tập cần hỗ trợ đồng cảm công nhận trạng thái cảm xúc của họ trong khi cung cấp hướng dẫn cụ thể. Tuy nhiên, các cố vấn con người bị ràng buộc bởi giờ văn phòng và tính sẵn sàng. Không có hệ thống nào cung cấp hỗ trợ thương hại, nhận thức ngữ cảnh theo yêu cầu.</p>
     
-    <p><strong>Core Research Problem:</strong> How can we design an end-to-end prescriptive learning analytics system that not only predicts student risk but automatically provides personalized, explainable, and empathetic interventions at scale, including for students without historical learning data?</p>
+    <p><strong>Vấn Đề Nghiên Cứu Cốt Lõi:</strong> Làm thế nào chúng ta có thể thiết kế một hệ thống phân tích học tập kê đơn end-to-end không chỉ dự đoán rủi ro sinh viên mà còn tự động cung cấp can thiệp cá nhân hóa, có thể giải thích và đồng cảm ở quy mô, bao gồm cho sinh viên không có dữ liệu học tập lịch sử?</p>
     
-    <h2 id="section1-3">1.3 Research Questions</h2>
+    <h2 id="section1-3">1.3 Câu Hỏi Nghiên Cứu</h2>
     
-    <p>This dissertation addresses four primary research questions, each with associated sub-questions that guide the investigation:</p>
+    <p>Luận văn này giải quyết bốn câu hỏi nghiên cứu chính, mỗi câu với các câu hỏi phụ liên quan hướng dẫn điều tra:</p>
     
-    <h3>RQ1: Predictive Accuracy</h3>
-    <p class="no-indent"><strong>How accurately can machine learning models predict at-risk students using the OULAD dataset?</strong></p>
+    <h3>CH1: Độ Chính Xác Dự Đoán</h3>
+    <p class="no-indent"><strong>Các mô hình học máy có thể dự đoán chính xác đến mức nào sinh viên có nguy cơ sử dụng bộ dữ liệu OULAD?</strong></p>
     
-    <p>Sub-questions:</p>
+    <p>Câu hỏi phụ:</p>
     <ul>
-        <li>Which machine learning algorithms (Random Forest, CatBoost, XGBoost, Support Vector Machines, Logistic Regression) achieve the best predictive performance in terms of AUC, precision, recall, and F1-score?</li>
-        <li>What features are most predictive of student risk, and how do feature importance rankings vary across different algorithms?</li>
-        <li>How well do models generalize across different courses (code_module) and course presentations (code_presentation) in the OULAD dataset?</li>
+        <li>Thuật toán học máy nào (Random Forest, CatBoost, XGBoost, Support Vector Machines, Logistic Regression) đạt được hiệu suất dự đoán tốt nhất về AUC, precision, recall và F1-score?</li>
+        <li>Những đặc trưng nào dự đoán rủi ro sinh viên nhiều nhất, và xếp hạng quan trọng đặc trưng thay đổi như thế nào trên các thuật toán khác nhau?</li>
+        <li>Các mô hình tổng quát hóa tốt như thế nào trên các khóa học khác nhau (code_module) và bài thuyết trình khóa học (code_presentation) trong bộ dữ liệu OULAD?</li>
     </ul>
     
-    <h3>RQ2: Explainable AI for Actionability</h3>
-    <p class="no-indent"><strong>How can XAI techniques make risk predictions actionable for students and educators?</strong></p>
+    <h3>CH2: AI Giải Thích Được cho Khả Năng Thực Thi</h3>
+    <p class="no-indent"><strong>Các kỹ thuật XAI có thể làm cho dự đoán rủi ro có thể thực thi như thế nào cho sinh viên và nhà giáo dục?</strong></p>
     
-    <p>Sub-questions:</p>
+    <p>Câu hỏi phụ:</p>
     <ul>
-        <li>What insights do SHAP (SHapley Additive exPlanations) provide about global and local feature importance in student risk prediction?</li>
-        <li>How can DiCE (Diverse Counterfactual Explanations) counterfactual explanations guide specific student behavior changes to reduce risk?</li>
-        <li>How do Anchor rule-based explanations provide interpretable decision boundaries that students and advisors can understand?</li>
+        <li>SHAP (SHapley Additive exPlanations) cung cấp thông tin gì về tầm quan trọng đặc trưng toàn cầu và cục bộ trong dự đoán rủi ro sinh viên?</li>
+        <li>Giải thích phản thực tế DiCE (Diverse Counterfactual Explanations) có thể hướng dẫn thay đổi hành vi sinh viên cụ thể như thế nào để giảm rủi ro?</li>
+        <li>Giải thích dựa trên quy tắc Anchor cung cấp ranh giới quyết định có thể giải thích như thế nào mà sinh viên và cố vấn có thể hiểu?</li>
     </ul>
     
-    <h3>RQ3: RAG-based Chatbot Intervention Effectiveness</h3>
-    <p class="no-indent"><strong>How effective is a Retrieval-Augmented Generation (RAG) chatbot for automated student intervention compared to traditional methods?</strong></p>
+    <h3>CH3: Hiệu Quả Can Thiệp Chatbot dựa trên RAG</h3>
+    <p class="no-indent"><strong>Chatbot Tạo Tăng Cường Truy Xuất (RAG) hiệu quả như thế nào cho can thiệp sinh viên tự động so với các phương pháp truyền thống?</strong></p>
     
-    <p>Sub-questions:</p>
+    <p>Câu hỏi phụ:</p>
     <ul>
-        <li>What is the quality of RAG retrieval (relevance of retrieved documents) and response generation (coherence, specificity, actionability)?</li>
-        <li>How well does the chatbot personalize advice to individual student contexts (risk level, performance metrics, course module)?</li>
-        <li>What are the response latency characteristics and system scalability limits for concurrent user support?</li>
+        <li>Chất lượng truy xuất RAG (độ liên quan của tài liệu được truy xuất) và tạo phản hồi (tính mạch lạc, tính cụ thể, khả năng thực thi) như thế nào?</li>
+        <li>Chatbot cá nhân hóa lời khuyên tốt như thế nào cho bối cảnh sinh viên cá nhân (mức độ rủi ro, số liệu hiệu suất, mô-đun khóa học)?</li>
+        <li>Các đặc điểm độ trễ phản hồi và giới hạn khả năng mở rộng hệ thống cho hỗ trợ người dùng đồng thời là gì?</li>
     </ul>
     
-    <h3>RQ4: Cold-Start Problem Solution</h3>
-    <p class="no-indent"><strong>How can we handle the cold-start problem for new students without historical learning data?</strong></p>
+    <h3>CH4: Giải Pháp Vấn Đề Cold-Start</h3>
+    <p class="no-indent"><strong>Chúng ta có thể xử lý vấn đề cold-start như thế nào cho sinh viên mới không có dữ liệu học tập lịch sử?</strong></p>
     
-    <p>Sub-questions:</p>
+    <p>Câu hỏi phụ:</p>
     <ul>
-        <li>Can a demographic-based K-Nearest Neighbors (K-NN) approach provide accurate initial risk assessment using only enrollment data?</li>
-        <li>What is the prediction confidence for cold-start scenarios compared to historical data scenarios, and how can this be quantified?</li>
-        <li>How does cold-start prediction accuracy (MAE, RMSE) compare to default baseline methods such as population average risk assignment?</li>
+        <li>Cách tiếp cận K-Nearest Neighbors (K-NN) dựa trên nhân khẩu học có thể cung cấp đánh giá rủi ro ban đầu chính xác chỉ sử dụng dữ liệu ghi danh không?</li>
+        <li>Độ tin cậy dự đoán cho các kịch bản cold-start so với các kịch bản dữ liệu lịch sử là gì, và điều này có thể được định lượng như thế nào?</li>
+        <li>Độ chính xác dự đoán cold-start (MAE, RMSE) so sánh với các phương pháp baseline mặc định như phân công rủi ro trung bình dân số như thế nào?</li>
     </ul>
     
-    <h2 id="section1-4">1.4 Research Contributions</h2>
+    <h2 id="section1-4">1.4 Đóng Góp Nghiên Cứu</h2>
     
-    <p>This dissertation makes six novel contributions to the field of learning analytics and educational AI:</p>
+    <p>Luận văn này đóng góp sáu đổi mới mới cho lĩnh vực phân tích học tập và AI giáo dục:</p>
     
-    <h3>1. Complete Implementation of Susnjak's PLAF Framework</h3>
-    <p>This work presents the first end-to-end implementation of the Prescriptive Learning Analytics Framework proposed by Susnjak (2023). While Susnjak's framework provided a compelling theoretical model with eight conceptual stages, no prior work has implemented all stages in an integrated system. Our implementation spans data collection → feature engineering → predictive modeling → explainability → counterfactual analysis → recommendation generation → intervention delivery → outcome monitoring. This 8-stage pipeline is open-source and reproducible, tested on the OULAD dataset containing 32,593 student records.</p>
+    <h3>1. Triển Khai Hoàn Chỉnh Khung PLAF của Susnjak</h3>
+    <p>Công trình này trình bày việc triển khai end-to-end đầu tiên của Khung Phân Tích Học Tập Kê Đơn được đề xuất bởi Susnjak (2023). Trong khi khung của Susnjak cung cấp một mô hình lý thuyết hấp dẫn với tám giai đoạn khái niệm, không có công trình trước đó đã triển khai tất cả các giai đoạn trong một hệ thống tích hợp. Việc triển khai của chúng tôi bao gồm thu thập dữ liệu → kỹ thuật đặc trưng → mô hình hóa dự đoán → khả năng giải thích → phân tích phản thực tế → tạo khuyến nghị → phân phối can thiệp → giám sát kết quả. Pipeline 8 giai đoạn này là mã nguồn mở và có thể tái tạo, được kiểm tra trên bộ dữ liệu OULAD chứa 32,593 hồ sơ sinh viên.</p>
     
-    <h3>2. RAG-based Chatbot for Automated Intervention</h3>
-    <p>The integration of Retrieval-Augmented Generation (RAG) technology represents a significant innovation in educational chatbots. Our system combines FAISS vector search with Google Gemini 2.5 Flash to provide 24/7 student support that is simultaneously grounded in factual course content and capable of flexible, context-aware responses. Unlike previous educational chatbots that rely on either rigid rule-based logic or pure generative models prone to hallucination, our RAG approach retrieves relevant knowledge base content before generation, ensuring responses are both accurate and personalized. The chatbot personalizes advice based on student risk profiles, performance metrics, and course context, maintaining an empathetic tone that acknowledges emotional challenges while providing actionable guidance.</p>
+    <h3>2. Chatbot dựa trên RAG cho Can Thiệp Tự Động</h3>
+    <p>Việc tích hợp công nghệ Tạo Tăng Cường Truy Xuất (RAG) đại diện cho một đổi mới đáng kể trong chatbot giáo dục. Hệ thống của chúng tôi kết hợp tìm kiếm vector FAISS với Google Gemini 2.5 Flash để cung cấp hỗ trợ sinh viên 24/7 đồng thời được căn cứ vào nội dung khóa học thực tế và có khả năng phản hồi linh hoạt, nhận thức ngữ cảnh. Không giống như chatbot giáo dục trước đây dựa vào logic dựa trên quy tắc cứng nhắc hoặc mô hình tạo thuần túy dễ bị ảo giác, cách tiếp cận RAG của chúng tôi truy xuất nội dung cơ sở kiến thức có liên quan trước khi tạo, đảm bảo phản hồi vừa chính xác vừa được cá nhân hóa. Chatbot cá nhân hóa lời khuyên dựa trên hồ sơ rủi ro sinh viên, số liệu hiệu suất và ngữ cảnh khóa học, duy trì giọng điệu đồng cảm công nhận thách thức cảm xúc trong khi cung cấp hướng dẫn có thể thực hiện.</p>
     
-    <h3>3. Cold-Start Handler for New Students</h3>
-    <p>The demographic-based K-Nearest Neighbors approach for cold-start prediction enables immediate risk assessment from day one of enrollment. By using only demographic features available at registration (gender, region, age band, highest education, IMD band, disability status), the system can predict risk with quantified confidence scores even when no behavioral data exists. This innovation addresses a critical gap in existing learning analytics systems, which typically require weeks or months of learning activity before making predictions. Our cold-start handler achieves MAE = 0.23 in initial risk assessment, significantly outperforming default baseline approaches.</p>
+    <h3>3. Bộ Xử Lý Cold-Start cho Sinh Viên Mới</h3>
+    <p>Cách tiếp cận K-Nearest Neighbors dựa trên nhân khẩu học cho dự đoán cold-start cho phép đánh giá rủi ro ngay lập tức từ ngày đầu tiên ghi danh. Bằng cách chỉ sử dụng các đặc trưng nhân khẩu học có sẵn khi đăng ký (giới tính, khu vực, nhóm tuổi, giáo dục cao nhất, băng tần IMD, tình trạng khuyết tật), hệ thống có thể dự đoán rủi ro với điểm số tin cậy được định lượng ngay cả khi không có dữ liệu hành vi nào tồn tại. Đổi mới này giải quyết một khoảng trống quan trọng trong các hệ thống phân tích học tập hiện có, thường yêu cầu hàng tuần hoặc hàng tháng hoạt động học tập trước khi đưa ra dự đoán. Bộ xử lý cold-start của chúng tôi đạt MAE = 0.23 trong đánh giá rủi ro ban đầu, vượt trội đáng kể so với các cách tiếp cận baseline mặc định.</p>
     
-    <h3>4. Comprehensive XAI Integration</h3>
-    <p>We integrate three complementary explainability techniques—SHAP for feature attribution, Anchors for rule-based local explanations, and DiCE for counterfactual "what-if" scenarios—creating a multi-level explanation pipeline. Critically, our implementation distinguishes between immutable demographic features (which cannot be changed) and modifiable behavioral features (which students can influence), enabling actionable insights. For example, a counterfactual explanation might specify: "If you increase your VLE clicks by 50% and improve your assessment scores by 15 points, your risk would decrease from 78% to 32%." This level of specificity transforms opaque AI predictions into concrete behavioral targets.</p>
+    <h3>4. Tích Hợp XAI Toàn Diện</h3>
+    <p>Chúng tôi tích hợp ba kỹ thuật giải thích bổ sung—SHAP cho phân bổ đặc trưng, Anchors cho giải thích cục bộ dựa trên quy tắc, và DiCE cho các kịch bản phản thực tế "what-if"—tạo ra một pipeline giải thích đa cấp. Quan trọng, việc triển khai của chúng tôi phân biệt giữa các đặc trưng nhân khẩu học bất biến (không thể thay đổi) và các đặc trưng hành vi có thể sửa đổi (mà sinh viên có thể ảnh hưởng), cho phép thông tin có thể thực hiện. Ví dụ, một giải thích phản thực tế có thể chỉ định: "Nếu bạn tăng số lần nhấp VLE của bạn lên 50% và cải thiện điểm đánh giá của bạn lên 15 điểm, rủi ro của bạn sẽ giảm từ 78% xuống 32%." Mức độ cụ thể này biến đổi dự đoán AI mờ thành mục tiêu hành vi cụ thể.</p>
     
-    <h3>5. Dual-Interface System Design</h3>
-    <p>The system provides distinct but interconnected dashboards for students and academic advisors, recognizing that these stakeholders have different information needs and workflows. The <strong>student portal</strong> includes a personalized risk dashboard, course materials browser, AI chatbot for real-time support, and activity tracking visualizations. The <strong>advisor dashboard</strong> provides an at-risk student list with sortable/filterable views, SHAP explanation visualizations, intervention planning tools, and chat monitoring capabilities to oversee automated interactions. Real-time data synchronization ensures consistency across interfaces, with planned integration pathways to existing Learning Management Systems (LMS).</p>
+    <h3>5. Thiết Kế Hệ Thống Giao Diện Kép</h3>
+    <p>Hệ thống cung cấp bảng điều khiển riêng biệt nhưng được kết nối cho sinh viên và cố vấn học tập, nhận ra rằng các bên liên quan này có nhu cầu thông tin và quy trình làm việc khác nhau. <strong>Cổng thông tin sinh viên</strong> bao gồm bảng điều khiển rủi ro cá nhân hóa, trình duyệt tài liệu khóa học, chatbot AI để hỗ trợ thời gian thực và trực quan hóa theo dõi hoạt động. <strong>Bảng điều khiển cố vấn</strong> cung cấp danh sách sinh viên có nguy cơ với các chế độ xem có thể sắp xếp/lọc, trực quan hóa giải thích SHAP, công cụ lập kế hoạch can thiệp và khả năng giám sát trò chuyện để giám sát các tương tác tự động. Đồng bộ hóa dữ liệu thời gian thực đảm bảo tính nhất quán trên các giao diện, với các con đường tích hợp được lên kế hoạch cho Hệ Thống Quản Lý Học Tập (LMS) hiện có.</p>
     
-    <h3>6. Rigorous Evaluation Framework</h3>
-    <p>Beyond system implementation, this thesis establishes a comprehensive benchmark suite for evaluating each component: predictive model quality (AUC, precision, recall, F1), RAG retrieval relevance, LLM response quality (specificity, actionability, personalization), and cold-start prediction error (MAE, RMSE). We conduct ablation studies demonstrating the value of each component, comparing performance with and without features like RAG retrieval, SHAP explanations, and cold-start handling. This evaluation framework can serve as a template for future research in prescriptive learning analytics.</p>
+    <h3>6. Khung Đánh Giá Nghiêm Ngặt</h3>
+    <p>Ngoài việc triển khai hệ thống, luận văn này thiết lập một bộ điểm chuẩn toàn diện để đánh giá từng thành phần: chất lượng mô hình dự đoán (AUC, precision, recall, F1), độ liên quan truy xuất RAG, chất lượng phản hồi LLM (tính cụ thể, khả năng thực thi, cá nhân hóa) và lỗi dự đoán cold-start (MAE, RMSE). Chúng tôi tiến hành các nghiên cứu cắt bỏ chứng minh giá trị của từng thành phần, so sánh hiệu suất có và không có các tính năng như truy xuất RAG, giải thích SHAP và xử lý cold-start. Khung đánh giá này có thể phục vụ như một mẫu cho nghiên cứu tương lai trong phân tích học tập kê đơn.</p>
     
-    <h2 id="section1-5">1.5 Thesis Organization</h2>
+    <h2 id="section1-5">1.5 Cấu Trúc Luận Văn</h2>
     
-    <p>This dissertation is organized into seven chapters, structured to guide the reader from problem context through theoretical foundations, system design, implementation details, experimental evaluation, critical discussion, and future directions.</p>
+    <p>Luận văn này được tổ chức thành bảy chương, có cấu trúc để hướng dẫn người đọc từ bối cảnh vấn đề thông qua nền tảng lý thuyết, thiết kế hệ thống, chi tiết triển khai, đánh giá thực nghiệm, thảo luận phê bình và hướng phát triển tương lai.</p>
     
-    <h3>Chapter 2: Literature Review & Theoretical Framework</h3>
-    <p>This chapter establishes the theoretical and empirical foundation for the research. We review the evolution of learning analytics from descriptive to prescriptive approaches, with particular attention to Susnjak's PLAF framework. The chapter surveys machine learning approaches for student at-risk prediction, explainable AI techniques (SHAP, Anchors, DiCE) and their application in educational contexts, conversational AI and the RAG architecture, and solutions to the cold-start problem in recommender systems and educational AI. We conclude by identifying the specific research gaps that this thesis addresses.</p>
+    <h3>Chương 2: Tổng Quan Tài Liệu & Khung Lý Thuyết</h3>
+    <p>Chương này thiết lập nền tảng lý thuyết và thực nghiệm cho nghiên cứu. Chúng tôi xem xét sự phát triển của phân tích học tập từ cách tiếp cận mô tả đến kê đơn, với sự chú ý đặc biệt đến khung PLAF của Susnjak. Chương khảo sát các cách tiếp cận học máy cho dự đoán sinh viên có nguy cơ, các kỹ thuật AI giải thích được (SHAP, Anchors, DiCE) và ứng dụng của chúng trong bối cảnh giáo dục, AI đàm thoại và kiến trúc RAG, và giải pháp cho vấn đề cold-start trong hệ thống khuyến nghị và AI giáo dục. Chúng tôi kết thúc bằng cách xác định các khoảng trống nghiên cứu cụ thể mà luận văn này giải quyết.</p>
     
-    <h3>Chapter 3: System Architecture & Design</h3>
-    <p>We present the detailed architecture of the PLAF system across six layers: (1) Data Layer: OULAD schema, feature engineering pipeline creating 25 features with z-score standardization, (2) Predictive Analytics Layer: Model training workflow, algorithm selection rationale, (3) Explainability Layer: SHAP, Anchor, and DiCE integration, (4) Prescriptive Analytics Layer: LLM-based advice generation, RAG chatbot architecture, (5) Interface Layer: Dual dashboards for students and advisors, and (6) Integration Layer: LMS connectivity design. Design decisions are justified with reference to both technical requirements and educational theory.</p>
+    <h3>Chương 3: Kiến Trúc Hệ Thống & Thiết Kế</h3>
+    <p>Chúng tôi trình bày kiến trúc chi tiết của hệ thống PLAF qua sáu tầng: (1) Tầng Dữ Liệu: lược đồ OULAD, pipeline kỹ thuật đặc trưng tạo 25 đặc trưng với chuẩn hóa z-score, (2) Tầng Phân Tích Dự Đoán: quy trình huấn luyện mô hình, lý do lựa chọn thuật toán, (3) Tầng Giải Thích: tích hợp SHAP, Anchor và DiCE, (4) Tầng Phân Tích Kê Đơn: tạo lời khuyên dựa trên LLM, kiến trúc chatbot RAG, (5) Tầng Giao Diện: bảng điều khiển kép cho sinh viên và cố vấn, và (6) Tầng Tích Hợp: thiết kế kết nối LMS. Các quyết định thiết kế được biện minh với tham chiếu đến cả yêu cầu kỹ thuật và lý thuyết giáo dục.</p>
     
-    <h3>Chapter 4: Implementation</h3>
-    <p>This chapter provides a detailed walkthrough of the system implementation, covering: development environment setup and technology stack (Python, scikit-learn, CatBoost, SHAP, FAISS, Gemini API, Streamlit), the 8-stage pipeline implementation from data preprocessing to intervention delivery, machine learning model training with hyperparameter optimization, XAI technique implementations with visualization pipelines, RAG system construction including knowledge base creation and prompt engineering, cold-start handler algorithm with confidence scoring, and web application development with database integration. Code snippets illustrate key algorithms and design patterns.</p>
+    <h3>Chương 4: Triển Khai</h3>
+    <p>Chương này cung cấp hướng dẫn chi tiết về việc triển khai hệ thống, bao gồm: thiết lập môi trường phát triển và ngăn xếp công nghệ (Python, scikit-learn, CatBoost, SHAP, FAISS, Gemini API, Streamlit), triển khai pipeline 8 giai đoạn từ tiền xử lý dữ liệu đến phân phối can thiệp, huấn luyện mô hình học máy với tối ưu hóa siêu tham số, triển khai kỹ thuật XAI với pipeline trực quan hóa, xây dựng hệ thống RAG bao gồm tạo cơ sở kiến thức và kỹ thuật prompt, thuật toán xử lý cold-start với chấm điểm tin cậy, và phát triển ứng dụng web với tích hợp cơ sở dữ liệu. Đoạn mã minh họa các thuật toán và mẫu thiết kế chính.</p>
     
-    <h3>Chapter 5: Evaluation & Results</h3>
-    <p>We present comprehensive experimental results addressing each research question. The chapter covers: experimental setup including train/test split, cross-validation strategy, and evaluation metrics, predictive model performance comparison across five algorithms with feature importance analysis, explainability analysis demonstrating SHAP insights and counterfactual quality, RAG system quality evaluation including retrieval relevance, response latency, and advice personalization, cold-start handler effectiveness measured by MAE/RMSE compared to baselines, and system usability assessment with user feedback where available. Results are presented through tables, plots, and statistical analyses.</p>
+    <h3>Chương 5: Đánh Giá & Kết Quả</h3>
+    <p>Chúng tôi trình bày kết quả thực nghiệm toàn diện giải quyết từng câu hỏi nghiên cứu. Chương bao gồm: thiết lập thực nghiệm bao gồm chia train/test, chiến lược cross-validation và số liệu đánh giá, so sánh hiệu suất mô hình dự đoán trên năm thuật toán với phân tích tầm quan trọng đặc trưng, phân tích khả năng giải thích chứng minh thông tin SHAP và chất lượng phản thực tế, đánh giá chất lượng hệ thống RAG bao gồm độ liên quan truy xuất, độ trễ phản hồi và cá nhân hóa lời khuyên, hiệu quả xử lý cold-start được đo bằng MAE/RMSE so với baseline, và đánh giá khả năng sử dụng hệ thống với phản hồi người dùng nơi có sẵn. Kết quả được trình bày thông qua bảng, biểu đồ và phân tích thống kê.</p>
     
-    <h3>Chapter 6: Discussion</h3>
-    <p>This chapter interprets the findings in broader context, addressing: interpretation of key results in relation to research questions and hypotheses, theoretical implications for prescriptive learning analytics and educational AI, practical implications for institutions considering deployment, limitations including dataset scope (OULAD only), LLM dependency on API availability, and privacy considerations in handling student data, and ethical considerations around algorithmic bias, transparency requirements, and preserving student agency. We critically reflect on what worked, what challenges emerged, and how these inform future research.</p>
+    <h3>Chương 6: Thảo Luận</h3>
+    <p>Chương này giải thích các phát hiện trong bối cảnh rộng hơn, giải quyết: giải thích kết quả chính liên quan đến câu hỏi nghiên cứu và giả thuyết, hàm ý lý thuyết cho phân tích học tập kê đơn và AI giáo dục, hàm ý thực tiễn cho các tổ chức xem xét triển khai, hạn chế bao gồm phạm vi bộ dữ liệu (chỉ OULAD), phụ thuộc LLM vào tính sẵn sàng API và cân nhắc quyền riêng tư trong xử lý dữ liệu sinh viên, và cân nhắc đạo đức xung quanh thiên vị thuật toán, yêu cầu minh bạch và bảo tồn quyền tự chủ sinh viên. Chúng tôi phản ánh phê bình về những gì hoạt động, những thách thức nào xuất hiện và làm thế nào chúng thông báo cho nghiên cứu tương lai.</p>
     
-    <h3>Chapter 7: Conclusion & Future Work</h3>
-    <p>The final chapter synthesizes the contributions and charts future research directions: summary of the six novel contributions, definitive answers to the four research questions with supporting evidence, proposed future research including multi-modal learning (integrating text, video, forum data), reinforcement learning for adaptive interventions that improve based on student responses, and federated learning for privacy-preserving cross-institutional deployment, and concluding remarks on the potential of prescriptive LA + AI to transform student support at scale.</p>
+    <h3>Chương 7: Kết Luận & Công Việc Tương Lai</h3>
+    <p>Chương cuối tổng hợp các đóng góp và vạch ra hướng nghiên cứu tương lai: tóm tắt sáu đóng góp mới, câu trả lời rõ ràng cho bốn câu hỏi nghiên cứu với bằng chứng hỗ trợ, nghiên cứu tương lai được đề xuất bao gồm học tập đa phương thức (tích hợp văn bản, video, dữ liệu diễn đàn), học tăng cường cho can thiệp thích ứng cải thiện dựa trên phản hồi sinh viên, và học liên kết để triển khai liên tổ chức bảo vệ quyền riêng tư, và nhận xét kết luận về tiềm năng của phân tích học tập kê đơn + AI để chuyển đổi hỗ trợ sinh viên ở quy mô.</p>
     
-    <h3>Key Terminology</h3>
-    <p>Throughout this thesis, the following key terms are used with specific technical meanings:</p>
+    <h3>Thuật Ngữ Chính</h3>
+    <p>Trong suốt luận văn này, các thuật ngữ chính sau được sử dụng với ý nghĩa kỹ thuật cụ thể:</p>
     <ul>
-        <li><strong>PLAF:</strong> Prescriptive Learning Analytics Framework (Susnjak, 2023)</li>
-        <li><strong>OULAD:</strong> Open University Learning Analytics Dataset (32,593 students, 7 CSV tables)</li>
-        <li><strong>RAG:</strong> Retrieval-Augmented Generation (vector search + large language model)</li>
-        <li><strong>XAI:</strong> Explainable AI (SHAP, Anchors, DiCE techniques)</li>
-        <li><strong>VLE:</strong> Virtual Learning Environment (online course platform)</li>
-        <li><strong>At-Risk:</strong> Students with high probability of failing or withdrawing from a course</li>
-        <li><strong>Cold-Start:</strong> New students without historical learning behavioral data</li>
+        <li><strong>PLAF:</strong> Khung Phân Tích Học Tập Kê Đơn (Susnjak, 2023)</li>
+        <li><strong>OULAD:</strong> Bộ Dữ Liệu Phân Tích Học Tập Đại Học Mở (32,593 sinh viên, 7 bảng CSV)</li>
+        <li><strong>RAG:</strong> Tạo Tăng Cường Truy Xuất (tìm kiếm vector + mô hình ngôn ngữ lớn)</li>
+        <li><strong>XAI:</strong> AI Giải Thích Được (các kỹ thuật SHAP, Anchors, DiCE)</li>
+        <li><strong>VLE:</strong> Môi Trường Học Tập Ảo (nền tảng khóa học trực tuyến)</li>
+        <li><strong>Có Nguy Cơ:</strong> Sinh viên có xác suất cao thất bại hoặc rút khỏi khóa học</li>
+        <li><strong>Cold-Start:</strong> Sinh viên mới không có dữ liệu hành vi học tập lịch sử</li>
     </ul>
     
-    <h3>Thesis Metrics</h3>
-    <p>This dissertation comprises approximately 150-200 pages, includes 80-100 academic references, presents 30-40 figures and tables (architecture diagrams, results tables, SHAP plots, RAG workflow diagrams), and provides code listings in appendices for key algorithms (cold-start handler, RAG retrieval, DiCE counterfactual generation).</p>
+    <h3>Số Liệu Luận Văn</h3>
+    <p>Luận văn này bao gồm khoảng 150-200 trang, bao gồm 80-100 tài liệu tham khảo học thuật, trình bày 30-40 hình và bảng (sơ đồ kiến trúc, bảng kết quả, biểu đồ SHAP, sơ đồ quy trình RAG), và cung cấp danh sách mã trong phụ lục cho các thuật toán chính (xử lý cold-start, truy xuất RAG, tạo phản thực tế DiCE).</p>
 </div>
 
 <!-- ========== CHAPTER 2: LITERATURE REVIEW ========== -->
 <div class="page-break">
-    <h1 id="chapter2">CHAPTER 2: LITERATURE REVIEW & THEORETICAL FRAMEWORK</h1>
+    <h1 id="chapter2">CHƯƠNG 2: TỔNG QUAN TÀI LIỆU & KHUNG LÝ THUYẾT</h1>
     
-    <h2 id="section2-1">2.1 Learning Analytics Framework</h2>
+    <h2 id="section2-1">2.1 Khung Phân Tích Học Tập</h2>
     
-    <h3>2.1.1 Evolution of Learning Analytics</h3>
+    <h3>2.1.1 Sự Phát Triển của Phân Tích Học Tập</h3>
     
-    <p>The field of learning analytics has undergone a systematic evolution over the past two decades, progressing through increasingly sophisticated analytical paradigms. Each phase represents not only technological advancement but also a fundamental shift in how educational institutions conceptualize the role of data in supporting student success.</p>
+    <p>Lĩnh vực phân tích học tập đã trải qua sự phát triển hệ thống trong hai thập kỷ qua, tiến bộ qua các mô hình phân tích ngày càng tinh vi. Mỗi giai đoạn đại diện không chỉ tiến bộ công nghệ mà còn là sự thay đổi cơ bản trong cách các tổ chức giáo dục khái niệm hóa vai trò của dữ liệu trong việc hỗ trợ sự thành công của sinh viên.</p>
     
-    <h4>Descriptive Analytics: Understanding "What Happened"</h4>
+    <p><em>[Nội dung chi tiết Chapter 2 tiếp tục với Literature Review về Evolution of Learning Analytics, Student At-Risk Prediction, Explainable AI, Conversational AI, Cold-Start Problem...]</em></p>
+    
+    <h4>Phân Tích Mô Tả: Hiểu "Điều Gì Đã Xảy Ra"</h4>
     
     <p>Descriptive analytics represents the foundational tier of learning analytics, focusing on historical data analysis of student outcomes. This approach involves the collection and aggregation of data points such as final grades, attendance records, and course completion rates. The primary output consists of dashboard reporting systems that present these metrics to administrators and educators through visualization tools such as Tableau, PowerBI, or basic LMS reporting interfaces.</p>
     
@@ -738,89 +740,89 @@
     
     <p><strong>This thesis fills these gaps</strong> by presenting the first complete implementation of the PLAF framework with three novel extensions: (1) A RAG-based chatbot for automated, scalable intervention delivery, (2) A demographic K-NN cold-start handler enabling day-one risk assessment, and (3) A fully integrated open-source system tested on real student data (OULAD, 32,593 students).</p>
     
-    <p><em>[Continue with remaining sections 2.2-2.6 following the same detailed academic style...]</em></p>
+    <p><em>[Tiếp tục với các phần còn lại 2.2-2.6 theo cùng phong cách học thuật chi tiết...]</em></p>
 </div>
 
-<!-- Due to space constraints, I'm providing a condensed outline for remaining chapters -->
-<!-- You can expand each section following the same detailed format shown above -->
+<!-- Do giới hạn dung lượng, em cung cấp phần mô tả tóm tắt cho các chương còn lại -->
+<!-- Anh có thể mở rộng từng phần theo định dạng chi tiết như trên -->
 
 <div class="page-break">
-    <h1 id="chapter3">CHAPTER 3: SYSTEM ARCHITECTURE & DESIGN</h1>
-    <p><em>[Detailed content covering 6-layer architecture: Data Layer, Predictive Layer, Explainability Layer, Prescriptive Layer, Interface Layer, Integration Layer. Include architecture diagrams, ER diagrams for database, feature engineering pipeline, etc.]</em></p>
-</div>
-
-<div class="page-break">
-    <h1 id="chapter4">CHAPTER 4: IMPLEMENTATION</h1>
-    <p><em>[Detailed implementation walkthrough: Technology stack, 8-stage pipeline code, ML model training, XAI techniques, RAG system, cold-start handler, web app development. Include code listings for key algorithms.]</em></p>
+    <h1 id="chapter3">CHƯƠNG 3: KIẾN TRÚC HỆ THỐNG & THIẾT KẾ</h1>
+    <p><em>[Nội dung chi tiết bao gồm kiến trúc 6 tầng: Tầng Dữ Liệu, Tầng Dự Đoán, Tầng Giải Thích, Tầng Kê Đơn, Tầng Giao Diện, Tầng Tích Hợp. Bao gồm sơ đồ kiến trúc, sơ đồ ER cho cơ sở dữ liệu, pipeline kỹ thuật đặc trưng, v.v.]</em></p>
 </div>
 
 <div class="page-break">
-    <h1 id="chapter5">CHAPTER 5: EVALUATION & RESULTS</h1>
-    <p><em>[Experimental results: Model comparison table, SHAP plots, RAG quality metrics, cold-start MAE/RMSE, user feedback. Include statistical analyses and visualizations.]</em></p>
+    <h1 id="chapter4">CHƯƠNG 4: TRIỂN KHAI</h1>
+    <p><em>[Hướng dẫn triển khai chi tiết: Ngăn xếp công nghệ, code pipeline 8 giai đoạn, huấn luyện mô hình ML, kỹ thuật XAI, hệ thống RAG, bộ xử lý cold-start, phát triển ứng dụng web. Bao gồm danh sách mã cho các thuật toán chính.]</em></p>
 </div>
 
 <div class="page-break">
-    <h1 id="chapter6">CHAPTER 6: DISCUSSION</h1>
-    <p><em>[Interpretation of findings, theoretical/practical implications, limitations (OULAD scope, LLM dependency, privacy), ethical considerations (bias, transparency, student agency).]</em></p>
+    <h1 id="chapter5">CHƯƠNG 5: ĐÁNH GIÁ & KẾT QUẢ</h1>
+    <p><em>[Kết quả thực nghiệm: Bảng so sánh mô hình, biểu đồ SHAP, số liệu chất lượng RAG, cold-start MAE/RMSE, phản hồi người dùng. Bao gồm phân tích thống kê và trực quan hóa.]</em></p>
 </div>
 
 <div class="page-break">
-    <h1 id="chapter7">CHAPTER 7: CONCLUSION & FUTURE WORK</h1>
+    <h1 id="chapter6">CHƯƠNG 6: THẢO LUẬN</h1>
+    <p><em>[Diễn giải phát hiện, hàm ý lý thuyết/thực tiễn, hạn chế (phạm vi OULAD, phụ thuộc LLM, quyền riêng tư), cân nhắc đạo đức (thiên vị, minh bạch, quyền tự chủ sinh viên).]</em></p>
+</div>
+
+<div class="page-break">
+    <h1 id="chapter7">CHƯƠNG 7: KẾT LUẬN & CÔNG VIỆC TƯƠNG LAI</h1>
     
-    <h2 id="section7-1">7.1 Summary of Contributions</h2>
-    <p>This dissertation has presented the first complete implementation of the Prescriptive Learning Analytics Framework (PLAF), addressing the critical gap between prediction and intervention in educational AI systems. Our work makes six novel contributions...</p>
+    <h2 id="section7-1">7.1 Tóm Tắt Các Đóng Góp</h2>
+    <p>Luận văn này đã trình bày việc triển khai hoàn chỉnh đầu tiên của Khung Phân Tích Học Tập Kê Đơn (PLAF), giải quyết khoảng trống quan trọng giữa dự đoán và can thiệp trong các hệ thống AI giáo dục. Công trình của chúng tôi đóng góp sáu đổi mới mới...</p>
     
-    <h2 id="section7-2">7.2 Answers to Research Questions</h2>
+    <h2 id="section7-2">7.2 Trả Lời Các Câu Hỏi Nghiên Cứu</h2>
     
-    <h3>RQ1: Predictive Accuracy</h3>
-    <p><strong>How accurately can machine learning models predict at-risk students using the OULAD dataset?</strong></p>
-    <p>Our evaluation demonstrates that ensemble tree-based methods, particularly CatBoost, achieve state-of-the-art performance with AUC = 0.983, Precision = 0.891, and Recall = 0.945. This represents a significant improvement over baseline approaches and rivals the best reported results on OULAD in the literature...</p>
+    <h3>CH1: Độ Chính Xác Dự Đoán</h3>
+    <p><strong>Các mô hình học máy có thể dự đoán chính xác đến mức nào sinh viên có nguy cơ sử dụng bộ dữ liệu OULAD?</strong></p>
+    <p>Đánh giá của chúng tôi chứng minh rằng các phương pháp dựa trên cây ensemble, đặc biệt là CatBoost, đạt được hiệu suất tiên tiến với AUC = 0.983, Precision = 0.891 và Recall = 0.945. Điều này đại diện cho sự cải thiện đáng kể so với các cách tiếp cận baseline và cạnh tranh với kết quả tốt nhất được báo cáo trên OULAD trong tài liệu...</p>
     
-    <h3>RQ2: Explainable AI for Actionability</h3>
-    <p><strong>How can XAI techniques make risk predictions actionable for students and educators?</strong></p>
-    <p>Through integration of SHAP, Anchors, and DiCE, we demonstrate that XAI techniques can transform opaque predictions into concrete, actionable guidance. SHAP explanations identify top risk drivers (e.g., low assessment scores, minimal VLE engagement), while DiCE counterfactuals specify precise behavioral changes (e.g., "increase clicks by 50%, improve scores by 15 points") that would reduce risk...</p>
+    <h3>CH2: AI Giải Thích Được cho Khả Năng Thực Thi</h3>
+    <p><strong>Các kỹ thuật XAI có thể làm cho dự đoán rủi ro có thể thực thi như thế nào cho sinh viên và nhà giáo dục?</strong></p>
+    <p>Thông qua tích hợp SHAP, Anchors và DiCE, chúng tôi chứng minh rằng các kỹ thuật XAI có thể chuyển đổi dự đoán mờ thành hướng dẫn cụ thể, có thể thực thi. Giải thích SHAP xác định các yếu tố rủi ro hàng đầu (ví dụ: điểm đánh giá thấp, tương tác VLE tối thiểu), trong khi các phản thực tế DiCE chỉ định thay đổi hành vi chính xác (ví dụ: "tăng lần nhấp lên 50%, cải thiện điểm lên 15 điểm") sẽ giảm rủi ro...</p>
     
-    <h3>RQ3: RAG-based Chatbot Effectiveness</h3>
-    <p><strong>How effective is a Retrieval-Augmented Generation chatbot for automated intervention?</strong></p>
-    <p>Our RAG chatbot achieves 87% retrieval relevance, 2.3s average response latency, and generates highly personalized, actionable advice as validated through automated benchmarks. User feedback (where available) indicates positive reception of the empathetic tone and specific guidance. This demonstrates that RAG-based intervention can scale personalized support without sacrificing quality...</p>
+    <h3>CH3: Hiệu Quả Chatbot dựa trên RAG</h3>
+    <p><strong>Chatbot Tạo Tăng Cường Truy Xuất hiệu quả như thế nào cho can thiệp tự động?</strong></p>
+    <p>Chatbot RAG của chúng tôi đạt 87% độ liên quan truy xuất, độ trễ phản hồi trung bình 2.3s, và tạo ra lời khuyên được cá nhân hóa cao, có thể thực thi được xác thực thông qua các điểm chuẩn tự động. Phản hồi người dùng (nơi có sẵn) cho thấy tiếp nhận tích cực giọng điệu đồng cảm và hướng dẫn cụ thể. Điều này chứng minh rằng can thiệp dựa trên RAG có thể mở rộng hỗ trợ cá nhân hóa mà không hy sinh chất lượng...</p>
     
-    <h3>RQ4: Cold-Start Problem Solution</h3>
-    <p><strong>How can we handle the cold-start problem for new students without historical data?</strong></p>
-    <p>The demographic K-NN approach achieves MAE = 0.23 in cold-start scenarios, significantly outperforming default baseline methods (population average risk). While accuracy is lower than full-feature models, the cold-start handler enables day-one risk assessment with quantified confidence scores, filling a critical gap in existing systems...</p>
+    <h3>CH4: Giải Pháp Vấn Đề Cold-Start</h3>
+    <p><strong>Chúng ta có thể xử lý vấn đề cold-start như thế nào cho sinh viên mới không có dữ liệu lịch sử?</strong></p>
+    <p>Cách tiếp cận K-NN nhân khẩu học đạt MAE = 0.23 trong các kịch bản cold-start, vượt trội đáng kể so với các phương pháp baseline mặc định (rủi ro trung bình dân số). Trong khi độ chính xác thấp hơn các mô hình đầy đủ đặc trưng, bộ xử lý cold-start cho phép đánh giá rủi ro ngày một với điểm số tin cậy được định lượng, lấp đầy khoảng trống quan trọng trong các hệ thống hiện có...</p>
     
-    <h2 id="section7-3">7.3 Future Research Directions</h2>
+    <h2 id="section7-3">7.3 Hướng Nghiên Cứu Tương Lai</h2>
     
-    <h3>7.3.1 Multi-Modal Learning</h3>
-    <p>Future work should extend beyond structured behavioral data to incorporate unstructured multi-modal inputs such as forum discussion text (sentiment analysis, topic modeling), video engagement patterns (watch time, pause points, re-watch segments), and assignment submission content (writing quality, code complexity). Multi-modal fusion could capture richer student learning patterns beyond click counts and grades...</p>
+    <h3>7.3.1 Học Tập Đa Phương Thức</h3>
+    <p>Công việc tương lai nên mở rộng ngoài dữ liệu hành vi có cấu trúc để kết hợp đầu vào đa phương thức không có cấu trúc như văn bản thảo luận diễn đàn (phân tích cảm xúc, mô hình hóa chủ đề), mẫu tương tác video (thời gian xem, điểm tạm dừng, phân đoạn xem lại), và nội dung nộp bài tập (chất lượng viết, độ phức tạp mã). Sự kết hợp đa phương thức có thể nắm bắt các mẫu học tập sinh viên phong phú hơn ngoài số lần nhấp và điểm số...</p>
     
-    <h3>7.3.2 Reinforcement Learning for Adaptive Interventions</h3>
-    <p>Current recommendations are static—the same counterfactual is shown regardless of whether the student acts on it. A reinforcement learning approach could adapt interventions based on student responses, learning over time which types of recommendations are most effective for different student profiles and contexts. This would enable personalized intervention strategies that improve through interaction...</p>
+    <h3>7.3.2 Học Tăng Cường cho Can Thiệp Thích Ứng</h3>
+    <p>Khuyến nghị hiện tại là tĩnh—cùng một phản thực tế được hiển thị bất kể sinh viên có hành động theo nó hay không. Cách tiếp cận học tăng cường có thể điều chỉnh can thiệp dựa trên phản hồi sinh viên, học theo thời gian loại khuyến nghị nào hiệu quả nhất cho các hồ sơ và ngữ cảnh sinh viên khác nhau. Điều này sẽ cho phép các chiến lược can thiệp cá nhân hóa cải thiện thông qua tương tác...</p>
     
-    <h3>7.3.3 Federated Learning for Privacy-Preserving Deployment</h3>
-    <p>Cross-institutional deployment faces significant privacy challenges: student data cannot be freely shared between institutions due to FERPA, GDPR, and other regulations. Federated learning offers a solution by training models collaboratively across institutions without centralizing data. Each institution trains locally on its own data, sharing only model updates (not raw student records). This could enable more robust, generalizable models while preserving privacy...</p>
+    <h3>7.3.3 Học Liên Kết để Triển Khai Bảo Vệ Quyền Riêng Tư</h3>
+    <p>Triển khai liên tổ chức phải đối mặt với những thách thức quyền riêng tư đáng kể: dữ liệu sinh viên không thể tự do chia sẻ giữa các tổ chức do FERPA, GDPR và các quy định khác. Học liên kết cung cấp giải pháp bằng cách huấn luyện mô hình cộng tác trên các tổ chức mà không tập trung hóa dữ liệu. Mỗi tổ chức huấn luyện cục bộ trên dữ liệu riêng của mình, chỉ chia sẻ cập nhật mô hình (không phải hồ sơ sinh viên thô). Điều này có thể cho phép các mô hình mạnh mẽ, tổng quát hóa hơn trong khi bảo tồn quyền riêng tư...</p>
     
-    <h3>7.3.4 Causal Inference for Intervention Effectiveness</h3>
-    <p>Current evaluation measures correlation (students who followed recommendations improved), but not causation (recommendations caused improvement). Randomized controlled trials with control groups receiving no intervention or generic advice would establish causal effectiveness. Propensity score matching and instrumental variables could help estimate causal effects from observational data...</p>
+    <h3>7.3.4 Suy Luận Nhân Quả cho Hiệu Quả Can Thiệp</h3>
+    <p>Đánh giá hiện tại đo lường tương quan (sinh viên tuân theo khuyến nghị đã cải thiện), nhưng không phải nhân quả (khuyến nghị gây ra cải thiện). Thử nghiệm ngẫu nhiên có kiểm soát với các nhóm kiểm soát không nhận can thiệp hoặc lời khuyên chung chung sẽ thiết lập hiệu quả nhân quả. Khớp điểm xu hướng và biến công cụ có thể giúp ước tính hiệu ứng nhân quả từ dữ liệu quan sát...</p>
     
-    <h3>7.3.5 Emotional Intelligence in Chatbot Responses</h3>
-    <p>While our RAG chatbot adopts an empathetic tone, it does not explicitly detect or respond to student emotional states. Future versions could integrate sentiment analysis of student messages, adjusting response style (more encouraging vs. more directive) based on detected emotions like frustration, anxiety, or confidence. Affective computing techniques could enhance the chatbot's ability to provide emotionally intelligent support...</p>
+    <h3>7.3.5 Trí Tuệ Cảm Xúc trong Phản Hồi Chatbot</h3>
+    <p>Trong khi chatbot RAG của chúng tôi áp dụng giọng điệu đồng cảm, nó không phát hiện hoặc phản hồi một cách rõ ràng các trạng thái cảm xúc sinh viên. Phiên bản tương lai có thể tích hợp phân tích cảm xúc của tin nhắn sinh viên, điều chỉnh phong cách phản hồi (khuyến khích hơn so với chỉ đạo hơn) dựa trên cảm xúc được phát hiện như thất vọng, lo lắng hoặc tự tin. Các kỹ thuật điện toán tình cảm có thể nâng cao khả năng của chatbot để cung cấp hỗ trợ thông minh cảm xúc...</p>
     
-    <h2 id="section7-4">7.4 Concluding Remarks</h2>
+    <h2 id="section7-4">7.4 Kết Luận</h2>
     
-    <p>This dissertation demonstrates that intelligent automation can bridge the gap between prediction and intervention in educational analytics. By combining state-of-the-art machine learning, explainable AI, and retrieval-augmented generation, we have created a system that not only identifies at-risk students but automatically provides them with personalized, actionable, empathetic support at scale.</p>
+    <p>Luận văn này chứng minh rằng tự động hóa thông minh có thể thu hẹp khoảng cách giữa dự đoán và can thiệp trong phân tích giáo dục. Bằng cách kết hợp học máy tiên tiến, AI giải thích được và tạo tăng cường truy xuất, chúng tôi đã tạo ra một hệ thống không chỉ xác định sinh viên có nguy cơ mà còn tự động cung cấp cho họ hỗ trợ cá nhân hóa, có thể thực thi, đồng cảm ở quy mô.</p>
     
-    <p>The significance of this work extends beyond technical contributions. At its core, this research addresses a fundamentally human problem: how to ensure that every student receives the timely, personalized support they need to succeed, regardless of institutional resource constraints. The PLAF system shows that AI can augment—not replace—human advisors, handling routine guidance and triage while freeing advisors to focus on complex cases requiring human judgment and empathy.</p>
+    <p>Ý nghĩa của công trình này vượt ra ngoài các đóng góp kỹ thuật. Về cốt lõi, nghiên cứu này giải quyết một vấn đề cơ bản của con người: làm thế nào để đảm bảo rằng mỗi sinh viên nhận được hỗ trợ kịp thời, cá nhân hóa mà họ cần để thành công, bất kể ràng buộc nguồn lực tổ chức. Hệ thống PLAF cho thấy rằng AI có thể tăng cường—không thay thế—các cố vấn con người, xử lý hướng dẫn thường lệ và phân loại trong khi giải phóng cố vấn để tập trung vào các trường hợp phức tạp đòi hỏi phán đoán và đồng cảm của con người.</p>
     
-    <p>As educational institutions worldwide grapple with increasing enrollments, budget pressures, and demands for equitable access to support services, prescriptive learning analytics offers a path forward. The system presented here is not a theoretical prototype but a working implementation tested on real student data, open-sourced for the research community to build upon.</p>
+    <p>Khi các tổ chức giáo dục trên toàn thế giới vật lộn với tăng tuyển sinh, áp lực ngân sách và nhu cầu tiếp cận công bằng các dịch vụ hỗ trợ, phân tích học tập kê đơn cung cấp một con đường phía trước. Hệ thống được trình bày ở đây không phải là nguyên mẫu lý thuyết mà là việc triển khai hoạt động được kiểm tra trên dữ liệu sinh viên thực tế, mã nguồn mở cho cộng đồng nghiên cứu xây dựng dựa trên.</p>
     
-    <p>We envision a future where every student has access to an AI advisor available 24/7, providing immediate feedback, encouragement, and concrete guidance tailored to their unique situation. Where educators are empowered with actionable insights rather than overwhelmed with raw data. Where at-risk students are identified and supported from day one, not after it's too late to intervene. This dissertation represents a step toward that future, demonstrating both the technical feasibility and educational value of prescriptive learning analytics powered by modern AI.</p>
+    <p>Chúng tôi hình dung một tương lai nơi mỗi sinh viên có quyền truy cập vào cố vấn AI có sẵn 24/7, cung cấp phản hồi ngay lập tức, khuyến khích và hướng dẫn cụ thể được thiết kế riêng cho tình huống độc đáo của họ. Nơi các nhà giáo dục được trao quyền với thông tin có thể thực thi thay vì bị choáng ngợp với dữ liệu thô. Nơi sinh viên có nguy cơ được xác định và hỗ trợ từ ngày đầu tiên, không phải sau khi quá muộn để can thiệp. Luận văn này đại diện cho một bước hướng tới tương lai đó, chứng minh cả tính khả thi kỹ thuật và giá trị giáo dục của phân tích học tập kê đơn được hỗ trợ bởi AI hiện đại.</p>
     
-    <p>The journey from prediction to intervention is not complete—significant challenges remain in privacy, ethics, generalizability, and causal validation. But the results presented here provide empirical evidence that the gap can be bridged, and that intelligent automation can transform educational support at scale. As AI capabilities continue to advance, the potential for even more sophisticated, personalized, and effective student support systems grows. This work provides a foundation for that ongoing evolution, showing what is possible today and pointing toward what might be achieved tomorrow.</p>
+    <p>Hành trình từ dự đoán đến can thiệp chưa hoàn thành—những thách thức đáng kể vẫn còn trong quyền riêng tư, đạo đức, khả năng tổng quát hóa và xác thực nhân quả. Nhưng kết quả được trình bày ở đây cung cấp bằng chứng thực nghiệm rằng khoảng trống có thể được thu hẹp, và tự động hóa thông minh có thể chuyển đổi hỗ trợ giáo dục ở quy mô. Khi khả năng AI tiếp tục tiến bộ, tiềm năng cho các hệ thống hỗ trợ sinh viên tinh vi hơn, cá nhân hóa hơn và hiệu quả hơn tăng lên. Công trình này cung cấp nền tảng cho sự phát triển đang diễn ra đó, cho thấy những gì có thể ngày hôm nay và chỉ ra những gì có thể đạt được vào ngày mai.</p>
 </div>
 
 <!-- ========== REFERENCES ========== -->
 <div class="page-break">
-    <h1 id="references">REFERENCES</h1>
+    <h1 id="references">TÀI LIỆU THAM KHẢO</h1>
     
     <div class="reference">
         <strong>Breiman, L.</strong> (2001). Random Forests. <em>Machine Learning</em>, 45(1), 5-32. https://doi.org/10.1023/A:1010933404324
@@ -917,9 +919,9 @@
 
 <!-- ========== APPENDICES ========== -->
 <div class="page-break">
-    <h1 id="appendix">APPENDICES</h1>
+    <h1 id="appendix">PHỤ LỤC</h1>
     
-    <h2>Appendix A: Code Listings</h2>
+    <h2>Phụ Lục A: Danh Sách Mã</h2>
     
     <h3>A.1 Cold-Start Handler Algorithm</h3>
     <pre><code>class ColdStartHandler:
@@ -1001,25 +1003,25 @@ Provide empathetic, specific, actionable advice."""
             'retrieval_scores': similarities[0][top_k_indices].tolist()
         }</code></pre>
     
-    <h2>Appendix B: System Screenshots</h2>
-    <p><em>[Include screenshots of student dashboard, advisor dashboard, chatbot interface, SHAP visualizations, etc.]</em></p>
+    <h2>Phụ Lục B: Ảnh Chụp Màn Hình Hệ Thống</h2>
+    <p><em>[Bao gồm ảnh chụp màn hình bảng điều khiển sinh viên, bảng điều khiển cố vấn, giao diện chatbot, trực quan hóa SHAP, v.v.]</em></p>
     
-    <h2>Appendix C: Feature Engineering Details</h2>
-    <p><em>[Complete list of 25 engineered features with formulas and z-score standardization methodology]</em></p>
+    <h2>Phụ Lục C: Chi Tiết Kỹ Thuật Đặc Trưng</h2>
+    <p><em>[Danh sách đầy đủ 25 đặc trưng được kỹ thuật hóa với công thức và phương pháp chuẩn hóa z-score]</em></p>
     
-    <h2>Appendix D: Hyperparameter Optimization Results</h2>
-    <p><em>[Grid search results for CatBoost, Random Forest, XGBoost with final selected parameters]</em></p>
+    <h2>Phụ Lục D: Kết Quả Tối Ưu Hóa Siêu Tham Số</h2>
+    <p><em>[Kết quả tìm kiếm lưới cho CatBoost, Random Forest, XGBoost với các tham số được chọn cuối cùng]</em></p>
     
-    <h2>Appendix E: RAG Knowledge Base Sample</h2>
-    <p><em>[Example entries from the OULAD + study tips knowledge base used for retrieval]</em></p>
+    <h2>Phụ Lục E: Mẫu Cơ Sở Kiến Thức RAG</h2>
+    <p><em>[Các mục nhập ví dụ từ cơ sở kiến thức OULAD + mẹo học tập được sử dụng để truy xuất]</em></p>
 </div>
 
 <!-- ========== FOOTER ========== -->
 <div style="margin-top: 3cm; text-align: center; font-size: 11pt; color: #666;">
     <p>────────</p>
-    <p><strong>END OF THESIS REPORT</strong></p>
-    <p>PLAF: Prescriptive Learning Analytics Framework with AI-Powered Student Support</p>
-    <p>Vietnam National University, Ho Chi Minh City – University of Information Technology</p>
+    <p><strong>KẾT THÚC BÁO CÁO LUẬN VĂN</strong></p>
+    <p>PLAF: Hệ Thống Phân Tích Học Tập Kê Đơn với Hỗ Trợ Sinh Viên bằng AI</p>
+    <p>Đại Học Quốc Gia TP. Hồ Chí Minh – Trường Đại Học Công Nghệ Thông Tin</p>
     <p>2025</p>
 </div>
 
