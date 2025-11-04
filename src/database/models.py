@@ -141,6 +141,73 @@ class Database:
             )
         """)
         
+        # Courses table (for demo courses)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS courses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                thumbnail_url TEXT,
+                instructor_name TEXT,
+                instructor_title TEXT,
+                duration_hours INTEGER,
+                level TEXT,
+                category TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Lessons table (for course content)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS lessons (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                course_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT,
+                video_url TEXT,
+                lesson_type TEXT DEFAULT 'video',  -- video, reading, quiz
+                duration_minutes INTEGER,
+                lesson_order INTEGER,
+                is_free INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Student progress table (track learning progress)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS student_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                course_id INTEGER NOT NULL,
+                lesson_id INTEGER NOT NULL,
+                completed INTEGER DEFAULT 0,
+                progress_percent REAL DEFAULT 0.0,
+                time_spent_minutes INTEGER DEFAULT 0,
+                last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP,
+                FOREIGN KEY (student_id) REFERENCES students(id_student) ON DELETE CASCADE,
+                FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+                FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+                UNIQUE(student_id, lesson_id)
+            )
+        """)
+        
+        # Course enrollments table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS course_enrollments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                course_id INTEGER NOT NULL,
+                enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                progress_percent REAL DEFAULT 0.0,
+                completed_at TIMESTAMP,
+                FOREIGN KEY (student_id) REFERENCES students(id_student) ON DELETE CASCADE,
+                FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+                UNIQUE(student_id, course_id)
+            )
+        """)
+        
         conn.commit()
         logger.info("Database tables created successfully")
     

@@ -23,7 +23,7 @@ import {
   X
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { api, Student, CourseMaterial } from '@/lib/api';
+import { api, Student, CourseMaterial, Course } from '@/lib/api';
 import Link from 'next/link';
 
 export default function CoursesPage() {
@@ -31,11 +31,13 @@ export default function CoursesPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
   const [filteredMaterials, setFilteredMaterials] = useState<CourseMaterial[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedMaterial, setSelectedMaterial] = useState<CourseMaterial | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const storedStudent = localStorage.getItem('student');
@@ -47,6 +49,7 @@ export default function CoursesPage() {
     const studentData = JSON.parse(storedStudent);
     setStudent(studentData);
     loadMaterials(studentData.id_student);
+    loadCourses();
   }, [router]);
 
   useEffect(() => {
@@ -62,6 +65,15 @@ export default function CoursesPage() {
       console.error('Failed to load materials:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCourses = async () => {
+    try {
+      const data = await api.getAllCourses();
+      setCourses(data.courses || []);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
     }
   };
 
@@ -247,6 +259,88 @@ export default function CoursesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Courses Section */}
+        {courses.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Courses</h2>
+            <p className="text-gray-600 mb-6">Start learning with our interactive courses</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course) => (
+                <Card 
+                  key={course.id} 
+                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-blue-500 overflow-hidden"
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    {/* Gradient background - always visible */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500"></div>
+                    
+                    {/* Image - only if URL exists and no error */}
+                    {course.thumbnail_url && !imageErrors[course.id] ? (
+                      <img 
+                        src={course.thumbnail_url} 
+                        alt={course.title}
+                        className="relative w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 z-10"
+                        onError={() => {
+                          setImageErrors(prev => ({ ...prev, [course.id]: true }));
+                        }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      /* Icon and category - only when no image or image failed */
+                      <div className="relative w-full h-full flex flex-col items-center justify-center text-white z-10">
+                        <GraduationCap className="w-16 h-16 opacity-90 mb-2 drop-shadow-lg" />
+                        <p className="text-sm font-semibold opacity-95 drop-shadow">{course.category || 'Course'}</p>
+                      </div>
+                    )}
+                    
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all pointer-events-none z-20"></div>
+                  </div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                        {course.category || 'Course'}
+                      </Badge>
+                      <Badge variant="secondary">
+                        {course.level || 'All Levels'}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
+                      {course.title}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2 mt-2">
+                      {course.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4" />
+                        <span>{course.instructor_name || 'Instructor'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span>{course.duration_hours || 0}h</span>
+                      </div>
+                    </div>
+                    <Link href={`/dashboard/courses/${course.id}`}>
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                        Start Learning →
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Course Materials Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">📚 Course Materials</h2>
+          <p className="text-gray-600 mb-6">Access your learning resources and activities</p>
+        </div>
 
         {/* Materials Grid - Udemy Style */}
         {filteredMaterials.length > 0 ? (

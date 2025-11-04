@@ -186,7 +186,7 @@ export default function LandingPage() {
                           className="h-12"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="register-lastname">Last Name</Label>
                         <Input

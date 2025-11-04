@@ -42,6 +42,39 @@ export interface CourseMaterial {
   week_to?: number;
 }
 
+export interface Course {
+  id: number;
+  title: string;
+  description?: string;
+  thumbnail_url?: string;
+  instructor_name?: string;
+  instructor_title?: string;
+  duration_hours?: number;
+  level?: string;
+  category?: string;
+  created_at?: string;
+}
+
+export interface Lesson {
+  id: number;
+  course_id: number;
+  title: string;
+  content?: string;
+  video_url?: string;
+  lesson_type?: string;
+  duration_minutes?: number;
+  lesson_order?: number;
+  is_free?: number;
+  created_at?: string;
+}
+
+export interface LessonProgress {
+  lesson_id: number;
+  completed: number;
+  progress_percent: number;
+  time_spent_minutes: number;
+}
+
 class APIClient {
   private baseURL: string;
 
@@ -139,7 +172,52 @@ class APIClient {
       body: JSON.stringify({ student_id: studentId }),
     });
   }
+
+  // Course endpoints
+  async getAllCourses() {
+    return this.request<{ courses: Course[] }>('/api/courses');
+  }
+
+  async getCourseDetail(courseId: number, studentId?: number) {
+    const url = studentId 
+      ? `/api/courses/${courseId}?student_id=${studentId}`
+      : `/api/courses/${courseId}`;
+    return this.request<{
+      course: Course;
+      lessons: Lesson[];
+      progress: Record<number, LessonProgress>;
+      overall_progress: number;
+    }>(url);
+  }
+
+  async getLessonDetail(courseId: number, lessonId: number) {
+    return this.request<{ lesson: Lesson }>(`/api/courses/${courseId}/lessons/${lessonId}`);
+  }
+
+  async updateProgress(
+    courseId: number,
+    studentId: number,
+    lessonId: number,
+    completed: boolean = false,
+    progressPercent: number = 0.0
+  ) {
+    return this.request<{ success: boolean }>(`/api/courses/${courseId}/progress`, {
+      method: 'POST',
+      body: JSON.stringify({
+        student_id: studentId,
+        lesson_id: lessonId,
+        completed,
+        progress_percent: progressPercent,
+      }),
+    });
+  }
+
+  async enrollCourse(courseId: number, studentId: number) {
+    return this.request<{ success: boolean }>(`/api/courses/${courseId}/enroll`, {
+      method: 'POST',
+      body: JSON.stringify({ student_id: studentId }),
+    });
+  }
 }
 
 export const api = new APIClient();
-
