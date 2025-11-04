@@ -11,6 +11,48 @@
             margin: 2.54cm 3.17cm 2.54cm 3.17cm; /* Top, Right, Bottom, Left */
         }
         
+        @page {
+            @top-center {
+                content: "Trường Đại Học Công Nghệ Thông Tin";
+                font-size: 11pt;
+                font-family: 'Times New Roman', Times, serif;
+            }
+            @bottom-center {
+                content: "Luận văn tốt nghiệp - Niên khóa 2024-2025 Trang " counter(page);
+                font-size: 11pt;
+                font-family: 'Times New Roman', Times, serif;
+            }
+        }
+        
+        /* Header/Footer for standard pages */
+        .standard-page-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11pt;
+            padding-top: 1cm;
+            height: 2cm;
+        }
+        
+        .standard-page-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11pt;
+            padding-bottom: 0.5cm;
+            height: 1.5cm;
+        }
+        
+        /* No header/footer on cover page */
+        .cover-page ~ .standard-page-header,
+        .cover-page ~ .standard-page-footer {
+            display: none;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -313,9 +355,42 @@
     </div>
 </div>
 
+<!-- ========== LỜI CẢM ƠN ========== -->
+<div class="page-break">
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Lời cảm ơn</h2>
+        
+        <p style="text-indent: 0;">Lời đầu tiên, tôi xin bày tỏ lòng biết ơn sâu sắc và chân thành nhất đến với thầy/cô hướng dẫn. Cảm ơn thầy/cô đã hướng dẫn và đồng hành cùng tôi trong suốt quá trình thực hiện đề tài, từ những ý tưởng sơ khai ban đầu, từng bước từng bước xây dựng kế hoạch và hiện thực để đạt được thành quả như bây giờ. Tôi rất biết ơn sự chỉ bảo, sự giúp đỡ của thầy/cô trước những vấn đề khó khăn mà nhóm đã từng trải qua để có thể hoàn thành đề tài một cách tốt nhất.</p>
+        
+        <p style="text-indent: 0;">Tôi cũng xin gửi lời cảm ơn đến quý thầy cô trường Đại học Công Nghệ Thông Tin, ĐHQG TPHCM nói riêng và quý thầy cô Khoa Khoa học và Kỹ thuật máy tính nói chung đã tận tình chỉ bảo cho tôi nhiều kiến thức, nhiều bài học quý giá mà có lẽ tôi sẽ suốt đời không quên. Nhờ có những kiến thức, lời giảng dạy đó là hành trang để tôi có thể vận dụng vào việc hoàn thành đề tài này.</p>
+        
+        <p style="text-indent: 0;">Cuối cùng, tôi xin cảm ơn gia đình, bạn bè đã luôn ủng hộ, động viên tôi trong suốt quá trình học tập và nghiên cứu.</p>
+        
+        <p style="text-align: right; margin-top: 2cm;">Tp. Hồ Chí Minh, Tháng 11 năm 2025</p>
+        <p style="text-align: right; margin-top: 0.5cm;">Sinh viên thực hiện</p>
+        <p style="text-align: right; margin-top: 1cm;"><strong>[Họ và Tên]</strong></p>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025
+    </div>
+</div>
+
 <!-- ========== ABSTRACT ========== -->
 <div class="page-break">
-    <h1>TÓM TẮT</h1>
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Tóm tắt luận văn bằng tiếng Việt</h2>
+    </div>
     
     <div class="abstract">
         <p>Giữ chân sinh viên vẫn là một thách thức quan trọng trong giáo dục đại học, với tỷ lệ bỏ học dao động từ 30-50% trên toàn cầu. Mặc dù phân tích học tập dự đoán có thể xác định sinh viên có nguy cơ với độ chính xác cao, một khoảng trống cơ bản vẫn tồn tại giữa dự đoán và can thiệp. Các hệ thống hiện tại thiếu cơ chế tự động để cung cấp hỗ trợ cá nhân hóa, có thể thực thi được ở quy mô lớn, đặc biệt là đối với sinh viên mới không có dữ liệu học tập lịch sử.</p>
@@ -332,11 +407,77 @@
     <div class="keywords">
         <p><strong>Từ khóa:</strong> Phân Tích Học Tập Kê Đơn, Dự Đoán Sinh Viên Có Nguy Cơ, AI Giải Thích Được, Tạo Tăng Cường Truy Xuất, Chatbot Giáo Dục, Vấn Đề Cold-Start, Học Máy trong Giáo Dục, Bộ Dữ Liệu OULAD, SHAP, Giải Thích Phản Thực Tế DiCE</p>
     </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2025-2026
+    </div>
+</div>
+
+<!-- ========== ABSTRACT (English) ========== -->
+<div class="page-break">
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Abstract</h2>
+        
+        <div class="abstract">
+            <p>Student retention remains a critical challenge in higher education, with dropout rates ranging from 30-50% globally. While predictive learning analytics can identify at-risk students with high accuracy, a fundamental gap persists between prediction and intervention. Current systems lack automated mechanisms to provide personalized, actionable support at scale, particularly for new students without historical learning data.</p>
+            
+            <p>This thesis presents the first complete implementation of the Prescriptive Learning Analytics Framework (PLAF), integrating cutting-edge technologies to bridge the gap between prediction and intervention. We developed an end-to-end system including: (1) High-accuracy prediction model achieving AUC = 0.983 using CatBoost on the OULAD dataset (32,593 students), (2) Multi-level explainability through SHAP, Anchor, and DiCE counterfactual explanations, (3) Novel Retrieval-Augmented Generation (RAG) chatbot combining FAISS vector search with Google Gemini 2.5 Flash for automated and personalized student intervention, (4) Demographic-based K-NN cold-start handler enabling immediate risk assessment for new students, and (5) Dual-interface web application providing separate dashboards for students and academic advisors.</p>
+            
+            <p>Our key innovations include: integrating RAG technology for scalable 24/7 student support with empathetic, context-aware responses; a cold-start solution achieving acceptable prediction accuracy using only demographic features available at enrollment; and comprehensive XAI integration transforming opaque predictions into actionable intervention strategies. The system distinguishes between immutable demographic features and modifiable behavioral features, enabling targeted recommendations for student behavior change.</p>
+            
+            <p>Empirical evaluation demonstrates: (1) Predictive performance: CatBoost outperforms Random Forest, XGBoost, SVM, and Logistic Regression with AUC = 0.983, Precision = 0.891, Recall = 0.945, (2) RAG quality: 87% retrieval relevance, 2.3s average response latency, highly personalized and actionable advice validated through automated benchmarks, (3) Cold-start effectiveness: MAE = 0.23 using only demographics, enabling day-one risk assessment with quantified confidence scores, and (4) System usability: Streamlit-based interface tested with real student data, demonstrating practical deployment feasibility.</p>
+            
+            <p>This work advances prescriptive learning analytics research by demonstrating that intelligent automation can scale personalized learning support without sacrificing quality or empathy. The open-source implementation provides a reproducible platform for future research in AI-powered educational intervention, with potential extensions for multimodal learning, reinforcement learning for adaptive interventions, and federated learning for privacy-preserving cross-institutional deployment.</p>
+        </div>
+        
+        <div class="keywords" style="margin-top: 1cm;">
+            <strong>Keywords:</strong> Prescriptive Learning Analytics, At-Risk Student Prediction, Explainable AI, Retrieval-Augmented Generation, Educational Chatbot, Cold-Start Problem, Machine Learning in Education, OULAD Dataset, SHAP, DiCE Counterfactual Explanations
+        </div>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025
+    </div>
+</div>
+
+<!-- ========== LỜI CAM ĐOAN ========== -->
+<div class="page-break">
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Lời cam đoan</h2>
+        
+        <p style="text-indent: 0;">Tôi cam đoan đây là đề tài nghiên cứu do tôi tự nghiên cứu và thực hiện dưới sự hướng dẫn của thầy/cô hướng dẫn. Kết quả của nghiên cứu đều do tôi tự thực hiện và không sao chép từ bất cứ nguồn nào khác. Phần kiến thức liên quan và tài liệu tham khảo, tôi có tham khảo một số nguồn và đã trích dẫn rõ ràng.</p>
+        
+        <p style="text-indent: 0;">Nếu có phát hiện bất kì gian lận nào, tôi xin hoàn toàn chịu trách nhiệm về nội dung và chấp nhận mọi hình thức kỷ luật trước Ban chủ nhiệm Khoa Khoa học và Kỹ thuật máy tính và Ban Giám Hiệu Trường Đại học Công Nghệ Thông Tin - ĐHQG TPHCM.</p>
+        
+        <p style="text-align: right; margin-top: 2cm;">Tp. Hồ Chí Minh, Tháng 11 năm 2025</p>
+        <p style="text-align: right; margin-top: 0.5cm;">Sinh viên thực hiện</p>
+        <p style="text-align: right; margin-top: 1cm;"><strong>[Họ và Tên]</strong></p>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025 Trang 5
+    </div>
 </div>
 
 <!-- ========== TABLE OF CONTENTS ========== -->
 <div class="toc page-break">
-    <h1>MỤC LỤC</h1>
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h1>MỤC LỤC</h1>
     
     <div class="toc-item toc-chapter">
         <a href="#chapter1">CHƯƠNG 1: GIỚI THIỆU ................................................... 1</a>
@@ -493,11 +634,169 @@
     <div class="toc-item toc-chapter">
         <a href="#appendix">PHỤ LỤC ................................................... 132</a>
     </div>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025
+    </div>
+</div>
+
+<!-- ========== DANH SÁCH BẢNG ========== -->
+<div class="page-break">
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Danh sách bảng</h2>
+        
+        <table style="width: 100%; margin-top: 1cm;">
+            <tr>
+                <td style="width: 2cm; text-align: center;">1</td>
+                <td>So sánh các thuật toán học máy trên bộ dữ liệu OULAD</td>
+                <td style="width: 3cm; text-align: right;">50</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">2</td>
+                <td>Kết quả đánh giá mô hình CatBoost</td>
+                <td style="text-align: right;">52</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">3</td>
+                <td>Độ liên quan truy xuất RAG và độ trễ phản hồi</td>
+                <td style="text-align: right;">65</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">4</td>
+                <td>Hiệu quả bộ xử lý Cold-Start (MAE/RMSE)</td>
+                <td style="text-align: right;">68</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">5</td>
+                <td>So sánh các kỹ thuật XAI (SHAP, Anchor, DiCE)</td>
+                <td style="text-align: right;">72</td>
+            </tr>
+        </table>
+        
+        <p style="text-align: center; font-style: italic; margin-top: 1cm; text-indent: 0;">
+            <em>[Danh sách bảng sẽ được cập nhật khi có thêm bảng trong nội dung]</em>
+        </p>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025
+    </div>
+</div>
+
+<!-- ========== DANH SÁCH HÌNH VẼ ========== -->
+<div class="page-break">
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Danh sách hình vẽ</h2>
+        
+        <table style="width: 100%; margin-top: 1cm;">
+            <tr>
+                <td style="width: 2cm; text-align: center;">1</td>
+                <td>Kiến trúc tổng quan hệ thống PLAF</td>
+                <td style="width: 3cm; text-align: right;">28</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">2</td>
+                <td>Sơ đồ pipeline 8 giai đoạn của PLAF</td>
+                <td style="text-align: right;">30</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">3</td>
+                <td>Biểu đồ hiệu suất mô hình dự đoán (AUC, Precision, Recall)</td>
+                <td style="text-align: right;">53</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">4</td>
+                <td>Biểu đồ SHAP values cho các đặc trưng quan trọng</td>
+                <td style="text-align: right;">73</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">5</td>
+                <td>Kiến trúc hệ thống RAG Chatbot</td>
+                <td style="text-align: right;">62</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">6</td>
+                <td>Giao diện bảng điều khiển sinh viên</td>
+                <td style="text-align: right;">75</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">7</td>
+                <td>Giao diện bảng điều khiển cố vấn học tập</td>
+                <td style="text-align: right;">77</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">8</td>
+                <td>Ví dụ giải thích phản thực tế DiCE</td>
+                <td style="text-align: right;">74</td>
+            </tr>
+        </table>
+        
+        <p style="text-align: center; font-style: italic; margin-top: 1cm; text-indent: 0;">
+            <em>[Danh sách hình vẽ sẽ được cập nhật khi có thêm hình trong nội dung]</em>
+        </p>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025
+    </div>
+</div>
+
+<!-- ========== DANH MỤC TỪ VIẾT TẮT ========== -->
+<div class="page-break">
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h2 style="text-align: center; margin-bottom: 1cm;">Danh mục từ viết tắt</h2>
+        
+        <ul style="list-style-type: none; margin-left: 0; text-indent: 0;">
+            <li style="margin-bottom: 0.3cm;"><strong>• PLAF:</strong> Prescriptive Learning Analytics Framework (Khung Phân Tích Học Tập Kê Đơn)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• OULAD:</strong> Open University Learning Analytics Dataset (Bộ Dữ Liệu Phân Tích Học Tập Đại Học Mở)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• RAG:</strong> Retrieval-Augmented Generation (Tạo Tăng Cường Truy Xuất)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• XAI:</strong> Explainable AI (AI Giải Thích Được)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• VLE:</strong> Virtual Learning Environment (Môi Trường Học Tập Ảo)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• LMS:</strong> Learning Management System (Hệ Thống Quản Lý Học Tập)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• SHAP:</strong> SHapley Additive exPlanations</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• DiCE:</strong> Diverse Counterfactual Explanations</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• FAISS:</strong> Facebook AI Similarity Search</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• AUC:</strong> Area Under the Curve</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• MAE:</strong> Mean Absolute Error</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• RMSE:</strong> Root Mean Square Error</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• K-NN:</strong> K-Nearest Neighbors</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• LLM:</strong> Large Language Model (Mô Hình Ngôn Ngữ Lớn)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• API:</strong> Application Programming Interface</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• ML:</strong> Machine Learning (Học Máy)</li>
+            <li style="margin-bottom: 0.3cm;"><strong>• AI:</strong> Artificial Intelligence (Trí Tuệ Nhân Tạo)</li>
+        </ul>
+    </div>
+    
+    <div class="standard-page-footer">
+        Luận văn tốt nghiệp - Niên khóa 2024-2025
+    </div>
 </div>
 
 <!-- ========== CHAPTER 1: INTRODUCTION ========== -->
 <div class="page-break">
-    <h1 id="chapter1">CHƯƠNG 1: GIỚI THIỆU</h1>
+    <div class="standard-page-header">
+        Trường Đại Học Công Nghệ Thông Tin<br>
+        Khoa Khoa Học và Kỹ Thuật Máy Tính
+    </div>
+    
+    <div style="margin-top: 2cm;">
+        <h1 id="chapter1">CHƯƠNG 1: GIỚI THIỆU</h1>
     
     <h2 id="section1-1">1.1 Bối Cảnh Nghiên Cứu</h2>
     
