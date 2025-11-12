@@ -6,6 +6,8 @@ import { api, Student, Course, Lesson, LessonProgress } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import QuizPlayer from '@/components/QuizPlayer';
+import DiscussionForum from '@/components/DiscussionForum';
 import {
   ArrowLeft,
   Play,
@@ -16,6 +18,10 @@ import {
   Menu,
   X,
   GraduationCap,
+  MessageCircle,
+  Trophy,
+  BookOpen,
+  Lock,
 } from 'lucide-react';
 
 export default function CoursePlayerPage() {
@@ -32,6 +38,9 @@ export default function CoursePlayerPage() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState<'video' | 'quiz' | 'forum'>('video');
+  const [quiz, setQuiz] = useState<any>(null);
+  const [videoProgress, setVideoProgress] = useState<any>(null);
 
   useEffect(() => {
     const storedStudent = localStorage.getItem('student');
@@ -42,8 +51,19 @@ export default function CoursePlayerPage() {
 
     const studentData = JSON.parse(storedStudent);
     setStudent(studentData);
-    loadCourseData(courseId, studentData.id_student);
-  }, [courseId, router]);
+  }, []);
+
+  useEffect(() => {
+    if (student) {
+      loadCourseData(courseId, student.id_student);
+    }
+  }, [courseId, student]);
+
+  useEffect(() => {
+    if (selectedLesson) {
+      loadQuiz(selectedLesson.id);
+    }
+  }, [selectedLesson]);
 
   const loadCourseData = async (courseId: number, studentId: number) => {
     try {
@@ -100,15 +120,102 @@ export default function CoursePlayerPage() {
           lesson_id: selectedLesson.id,
           completed: 1,
           progress_percent: 100,
-          time_spent_minutes: (prev[selectedLesson.id]?.time_spent_minutes || 0) + 10,
+          time_spent_minutes: 0,
         },
       }));
 
-      await loadCourseData(courseId, student.id_student);
-    } catch (error: any) {
-      console.error('Failed to update progress:', error);
-      alert('Failed to mark lesson as complete: ' + (error.message || 'Unknown error'));
+      loadCourseData(courseId, student.id_student);
+    } catch (error) {
+      console.error('Failed to complete lesson:', error);
     }
+  };
+
+  const loadQuiz = async (lessonId: number) => {
+    try {
+      console.log(`Loading quiz for lesson ${lessonId}`);
+      const response = await fetch(`http://localhost:8000/api/lessons/${lessonId}/quiz`);
+      console.log('Quiz API response:', response.status);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Quiz data:', data);
+        setQuiz(data.quiz);
+      } else {
+        console.log('No quiz found for lesson', lessonId);
+        setQuiz(null);
+      }
+    } catch (error) {
+      console.error('Failed to load quiz:', error);
+      setQuiz(null);
+    }
+  };
+
+  const loadVideoProgress = async (lessonId: number) => {
+    if (!student) return;
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}/video-progress/${student.id_student}`);
+      if (response.ok) {
+        const data = await response.json();
+        setVideoProgress(data.progress);
+      }
+    } catch (error) {
+      console.error('Failed to load video progress:', error);
+    }
+  };
+
+  const handleVideoProgress = async (watchTime: number, duration: number, percentage: number) => {
+    if (!selectedLesson || !student) return;
+    
+    try {
+      await fetch(`/api/lessons/${selectedLesson.id}/video-progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: student.id_student,
+          watch_time: watchTime,
+          video_duration: duration,
+          watch_percentage: percentage
+        })
+      });
+    } catch (error) {
+      console.error('Failed to update video progress:', error);
+    }
+  };
+
+  const handleQuizComplete = (score: number, passed: boolean) => {
+    console.log(`Quiz completed! Score: ${score}%, Passed: ${passed}`);
+    
+    if (passed) {
+      handleCompleteLesson();
+      
+      // Auto advance to next lesson if passed
+      const nextLesson = getNextLesson();
+      if (nextLesson) {
+        setTimeout(() => {
+          handleSelectLesson(nextLesson);
+          setCurrentView('video');
+        }, 2000);
+      } else {
+        // No next lesson, just switch to video view
+        setTimeout(() => {
+          setCurrentView('video');
+        }, 2000);
+      }
+    } else {
+      // Failed quiz, stay on quiz view to allow retake
+      setTimeout(() => {
+        setCurrentView('video');
+      }, 2000);
+    }
+    
+    // Reload quiz data to show updated results
+    loadQuiz(selectedLesson?.id || 0);
+  };
+
+  const handleSelectLesson = (lesson: Lesson) => {
+    handleLessonSelect(lesson);
+    setCurrentView('video');
+    loadQuiz(lesson.id);
+    loadVideoProgress(lesson.id);
   };
 
   const getNextLesson = () => {
@@ -139,6 +246,24 @@ export default function CoursePlayerPage() {
 
   const getLessonProgress = (lessonId: number) => {
     return progress[lessonId]?.progress_percent || 0;
+  };
+
+  const canCompleteLesson = (lessonIndex: number) => {
+    // First lesson can always be completed
+    if (lessonIndex === 0) return true;
+    
+    // Check if previous lesson is completed
+    const previousLesson = lessons[lessonIndex - 1];
+    return previousLesson ? isLessonCompleted(previousLesson.id) : false;
+  };
+
+  const isLessonAccessible = (lessonIndex: number) => {
+    // First lesson is always accessible
+    if (lessonIndex === 0) return true;
+    
+    // Check if previous lesson is completed
+    const previousLesson = lessons[lessonIndex - 1];
+    return previousLesson ? isLessonCompleted(previousLesson.id) : false;
   };
 
   if (loading) {
@@ -220,13 +345,17 @@ export default function CoursePlayerPage() {
                 const isCompleted = isLessonCompleted(lesson.id);
                 const isSelected = selectedLessonId === lesson.id;
                 const lessonProgress = getLessonProgress(lesson.id);
+                const isAccessible = isLessonAccessible(index);
 
                 return (
                   <button
                     key={lesson.id}
-                    onClick={() => handleLessonSelect(lesson)}
+                    onClick={() => isAccessible ? handleSelectLesson(lesson) : null}
+                    disabled={!isAccessible}
                     className={`w-full text-left p-3 rounded-lg transition-all ${
-                      isSelected
+                      !isAccessible
+                        ? 'opacity-50 cursor-not-allowed bg-gray-800'
+                        : isSelected
                         ? 'bg-blue-600 text-white'
                         : 'hover:bg-gray-700 text-gray-300'
                     }`}
@@ -235,6 +364,8 @@ export default function CoursePlayerPage() {
                       <div className="mt-0.5">
                         {isCompleted ? (
                           <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        ) : !isAccessible ? (
+                          <Lock className="w-5 h-5 text-gray-600" />
                         ) : (
                           <Circle className="w-5 h-5 text-gray-500" />
                         )}
@@ -274,20 +405,110 @@ export default function CoursePlayerPage() {
         <div className="flex-1 overflow-y-auto">
           {selectedLesson ? (
             <div className="max-w-5xl mx-auto">
-              {/* Video/Content Area */}
-              <div className="bg-black aspect-video relative">
-                {selectedLesson.video_url ? (
+              {/* Content Tabs */}
+              <div className="bg-gray-800 border-b border-gray-700">
+                <div className="flex">
+                  <button
+                    onClick={() => setCurrentView('video')}
+                    className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${
+                      currentView === 'video'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    <Play className="w-4 h-4" />
+                    Video
+                  </button>
+                  {quiz && (
+                    <button
+                      onClick={() => setCurrentView('quiz')}
+                      className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${
+                        currentView === 'quiz'
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      <Trophy className="w-4 h-4" />
+                      Quiz
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setCurrentView('forum')}
+                    className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${
+                      currentView === 'forum'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Discussion
+                  </button>
+                </div>
+              </div>
+
+              {/* Content Area */}
+              <div className="relative bg-black aspect-video">
+                {currentView === 'video' && selectedLesson.video_url && (
                   <iframe
-                    src={selectedLesson.video_url}
+                    key={`video-${selectedLesson.id}`} // Force re-render when lesson changes
+                    src={(() => {
+                      const url = selectedLesson.video_url;
+                      let videoId = '';
+                      
+                      // Extract video ID from various YouTube URL formats
+                      if (url.includes('youtube.com/watch?v=')) {
+                        videoId = url.split('v=')[1]?.split('&')[0];
+                      } else if (url.includes('youtu.be/')) {
+                        videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                      } else if (url.includes('youtube.com/embed/')) {
+                        videoId = url.split('embed/')[1]?.split('?')[0];
+                      }
+                      
+                      console.log(`Loading video for lesson ${selectedLesson.id}:`, url, '→', videoId);
+                      
+                      return `https://www.youtube.com/embed/${videoId}`;
+                    })()}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                  ></iframe>
-                ) : (
+                    title="YouTube Video Player"
+                  />
+                )}
+                
+                {currentView === 'video' && !selectedLesson.video_url && (
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center">
                       <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-400">No video available</p>
+                    </div>
+                  </div>
+                )}
+
+                {currentView === 'quiz' && quiz && (
+                  <div className="absolute inset-0 bg-white overflow-auto">
+                    <div className="p-6">
+                      <QuizPlayer
+                        quizId={quiz.id}
+                        lessonId={selectedLesson.id}
+                        studentId={student?.id_student || 0}
+                        questions={quiz.questions}
+                        title={quiz.title}
+                        passingScore={quiz.passing_score}
+                        timeLimit={quiz.duration_minutes}
+                        onComplete={handleQuizComplete}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {currentView === 'forum' && (
+                  <div className="absolute inset-0 bg-white overflow-auto">
+                    <div className="p-6">
+                      <DiscussionForum
+                        lessonId={selectedLesson.id}
+                        studentId={student?.id_student || 0}
+                        studentName={`${student?.first_name} ${student?.last_name}` || 'Student'}
+                      />
                     </div>
                   </div>
                 )}
@@ -315,11 +536,21 @@ export default function CoursePlayerPage() {
                       <CheckCircle2 className="w-5 h-5" />
                       <span className="text-sm font-medium">Completed</span>
                     </div>
-                  ) : (
-                    <Button onClick={handleCompleteLesson} className="bg-green-600 hover:bg-green-700">
-                      Mark as Complete
-                    </Button>
-                  )}
+                  ) : (() => {
+                    const currentIndex = lessons.findIndex(l => l.id === selectedLesson.id);
+                    const canComplete = canCompleteLesson(currentIndex);
+                    
+                    return canComplete ? (
+                      <Button onClick={handleCompleteLesson} className="bg-green-600 hover:bg-green-700">
+                        Mark as Complete
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Lock className="w-4 h-4" />
+                        <span className="text-sm">Complete previous lesson first</span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {selectedLesson.content && (

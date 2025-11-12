@@ -81,9 +81,9 @@ class OULADPreprocessor:
         
         # Create binary target: 1 = at-risk (Fail/Withdrawn), 0 = safe (Pass/Distinction)
         if 'final_result' in df.columns:
-            df['is_at_risk'] = df['final_result'].apply(
-                lambda x: 1 if x in ['Fail', 'Withdrawn'] else 0
-            )
+        df['is_at_risk'] = df['final_result'].apply(
+            lambda x: 1 if x in ['Fail', 'Withdrawn'] else 0
+        )
         else:
             logger.warning("final_result column not found, creating dummy target variable")
             df['is_at_risk'] = 0  # Default to safe
@@ -113,15 +113,15 @@ class OULADPreprocessor:
             logger.warning("assessments data not found, using studentAssessment only")
             assessments = None
         else:
-            assessments = self.data['assessments']
+        assessments = self.data['assessments']
         
         # Merge to get assessment metadata
         if assessments is not None:
-            assess_merged = student_assess.merge(
-                assessments,
+        assess_merged = student_assess.merge(
+            assessments,
                 on='id_assessment',  # Only merge on id_assessment
-                how='left'
-            )
+            how='left'
+        )
         else:
             assess_merged = student_assess.copy()
         
@@ -268,33 +268,33 @@ class OULADPreprocessor:
         # Merge assessment features
         if not assess_features.empty:
             logger.info(f"Merging assessment features: {assess_features.shape}")
-            merged = merged.merge(
-                assess_features,
-                on=['id_student', 'code_module', 'code_presentation'],
-                how='left'
-            )
+        merged = merged.merge(
+            assess_features,
+            on=['id_student', 'code_module', 'code_presentation'],
+            how='left'
+        )
         else:
             logger.warning("Assessment features empty or missing merge keys")
         
         # Merge VLE features
         if not vle_features.empty:
             logger.info(f"Merging VLE features: {vle_features.shape}")
-            merged = merged.merge(
-                vle_features,
-                on=['id_student', 'code_module', 'code_presentation'],
-                how='left'
-            )
+        merged = merged.merge(
+            vle_features,
+            on=['id_student', 'code_module', 'code_presentation'],
+            how='left'
+        )
         else:
             logger.warning("VLE features empty or missing merge keys")
         
         # Merge registration features
         if not reg_features.empty:
             logger.info(f"Merging registration features: {reg_features.shape}")
-            merged = merged.merge(
-                reg_features,
-                on=['id_student', 'code_module', 'code_presentation'],
-                how='left'
-            )
+        merged = merged.merge(
+            reg_features,
+            on=['id_student', 'code_module', 'code_presentation'],
+            how='left'
+        )
         else:
             logger.warning("Registration features empty or missing merge keys")
         

@@ -315,7 +315,12 @@ export default function ChatPage() {
                       <div className="flex-1 max-w-2xl">
                         <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm p-4 shadow-sm">
                           {msg.response ? (
-                            <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{msg.response}</p>
+                            <div 
+                              className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap"
+                              dangerouslySetInnerHTML={{
+                                __html: msg.response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              }}
+                            />
                           ) : (
                             <div className="flex items-center gap-2 text-gray-500">
                               <div className="flex gap-1">
@@ -327,9 +332,15 @@ export default function ChatPage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          AI Advisor • {msg.timestamp && formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-green-600 font-medium">Online</span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            AI Advisor • {msg.timestamp && formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -545,18 +545,18 @@ def chatbot_page():
                     time_str = timestamp.strftime("%Y-%m-%d %H:%M")
                 else:
                     time_str = str(timestamp)
-                
-                st.markdown(f"""
+            
+            st.markdown(f"""
                 <div class="chat-message-container" style="margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #f8f9fa;">
                     <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">{time_str}</div>
                     <div class="chat-message user-message" style="margin-bottom: 8px;">
                         <strong>👤 You:</strong> {chat['message']}
                     </div>
-                    <div class="chat-message bot-message">
+            <div class="chat-message bot-message">
                         <strong>🤖 AI Advisor:</strong> {chat['response']}
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+            </div>
+            """, unsafe_allow_html=True)
         else:
             st.info("💬 **Start a conversation!** Ask me anything about your studies, and I'll remember our chat for better future advice.")
     
@@ -619,21 +619,21 @@ def chatbot_page():
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        st.write("💡 Suggested Questions:")
-        suggestions = [
-            "How can I improve my grades?",
-            "I'm feeling overwhelmed with assignments. What should I do?",
-            "What study techniques work best?",
-            "How can I manage my time better?",
-            "I'm struggling with the course material. Where can I get help?"
-        ]
-        
-        cols = st.columns(2)
-        for i, suggestion in enumerate(suggestions):
-            with cols[i % 2]:
-                if st.button(suggestion, key=f"suggest_{i}", use_container_width=True):
+    st.write("💡 Suggested Questions:")
+    suggestions = [
+        "How can I improve my grades?",
+        "I'm feeling overwhelmed with assignments. What should I do?",
+        "What study techniques work best?",
+        "How can I manage my time better?",
+        "I'm struggling with the course material. Where can I get help?"
+    ]
+    
+    cols = st.columns(2)
+    for i, suggestion in enumerate(suggestions):
+        with cols[i % 2]:
+            if st.button(suggestion, key=f"suggest_{i}", use_container_width=True):
                     # Manually add suggestion as a chat with context
-                    with st.spinner("AI is thinking..."):
+                with st.spinner("AI is thinking..."):
                         # Build context from previous conversations
                         conversation_context = ""
                         if st.session_state.chat_history:
@@ -648,15 +648,15 @@ def chatbot_page():
                             student_data=st.session_state.student_data,
                             conversation_context=conversation_context
                         )
-                        db.log_chat(
-                            st.session_state.student_id,
-                            suggestion,
-                            result['response'],
+                    db.log_chat(
+                        st.session_state.student_id,
+                        suggestion,
+                        result['response'],
                             context=f"suggestion_with_history_{len(st.session_state.chat_history)}"
-                        )
-                        st.session_state.chat_history.append({
-                            'message': suggestion,
-                            'response': result['response'],
+                    )
+                    st.session_state.chat_history.append({
+                        'message': suggestion,
+                        'response': result['response'],
                             'timestamp': datetime.now(),
                             'context_used': result.get('context_used', [])
                         })
@@ -672,7 +672,7 @@ def chatbot_page():
             except:
                 pass  # Method might not exist yet
             st.success("Chat history cleared!")
-            st.rerun()
+                    st.rerun()
 
 
 def main():

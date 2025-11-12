@@ -147,8 +147,8 @@ def run_pipeline(
     )
     
     if importance_df is not None:
-        logger.info("Top 10 Most Important Features:")
-        logger.info("\n" + importance_df.head(10).to_string())
+    logger.info("Top 10 Most Important Features:")
+    logger.info("\n" + importance_df.head(10).to_string())
     else:
         logger.info("Feature importance not available (SHAP disabled)")
     

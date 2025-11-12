@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 import joblib
 import sys
 import os
+import requests
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -436,6 +437,223 @@ def student_detail_page(data, model_data):
                 st.metric("Assessment Completion", f"{assessments} {assess_status}")
 
 
+def quiz_management_page():
+    """Quiz Management page for CRUD operations."""
+    st.title("🎯 Quiz Management")
+    
+    # Import database
+    from database.models import get_db
+    db = get_db()
+    
+    # Tabs for different operations
+    tab1, tab2, tab3 = st.tabs(["📋 View Quizzes", "➕ Create Quiz", "✏️ Edit Quiz"])
+    
+    with tab1:
+        st.subheader("📋 All Quizzes")
+        
+        # Get all quizzes with course and lesson info
+        conn = db.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT q.id, q.title, q.duration_minutes, q.passing_score, q.max_attempts,
+                   c.title as course_title, l.title as lesson_title,
+                   COUNT(qq.id) as question_count
+            FROM quizzes q
+            JOIN courses c ON q.course_id = c.id
+            JOIN lessons l ON q.lesson_id = l.id
+            LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
+            GROUP BY q.id
+            ORDER BY c.id, l.id
+        """)
+        
+        quizzes = cursor.fetchall()
+        
+        if quizzes:
+            # Display as dataframe
+            quiz_data = []
+            for quiz in quizzes:
+                quiz_data.append({
+                    'ID': quiz['id'],
+                    'Course': quiz['course_title'],
+                    'Lesson': quiz['lesson_title'],
+                    'Quiz Title': quiz['title'],
+                    'Duration (min)': quiz['duration_minutes'],
+                    'Passing Score (%)': quiz['passing_score'],
+                    'Max Attempts': quiz['max_attempts'],
+                    'Questions': quiz['question_count']
+                })
+            
+            df = pd.DataFrame(quiz_data)
+            st.dataframe(df, use_container_width=True)
+            
+            # Quiz statistics
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Quizzes", len(quizzes))
+            with col2:
+                avg_duration = sum(q['duration_minutes'] for q in quizzes) / len(quizzes)
+                st.metric("Avg Duration", f"{avg_duration:.1f} min")
+            with col3:
+                avg_questions = sum(q['question_count'] for q in quizzes) / len(quizzes)
+                st.metric("Avg Questions", f"{avg_questions:.1f}")
+            with col4:
+                quizzes_with_questions = sum(1 for q in quizzes if q['question_count'] > 0)
+                st.metric("With Questions", f"{quizzes_with_questions}/{len(quizzes)}")
+        else:
+            st.info("No quizzes found.")
+    
+    with tab2:
+        st.subheader("➕ Create New Quiz")
+        
+        # Get courses and lessons for dropdown
+        cursor.execute("SELECT id, title FROM courses ORDER BY title")
+        courses = cursor.fetchall()
+        
+        if courses:
+            with st.form("create_quiz_form"):
+                # Course selection
+                course_options = {f"{c['title']} (ID: {c['id']})": c['id'] for c in courses}
+                selected_course = st.selectbox("Select Course", options=list(course_options.keys()))
+                course_id = course_options[selected_course]
+                
+                # Lesson selection
+                cursor.execute("SELECT id, title FROM lessons WHERE course_id = ? ORDER BY lesson_order", (course_id,))
+                lessons = cursor.fetchall()
+                
+                if lessons:
+                    lesson_options = {f"{l['title']} (ID: {l['id']})": l['id'] for l in lessons}
+                    selected_lesson = st.selectbox("Select Lesson", options=list(lesson_options.keys()))
+                    lesson_id = lesson_options[selected_lesson]
+                    
+                    # Quiz details
+                    quiz_title = st.text_input("Quiz Title", placeholder="e.g., JavaScript Basics Quiz")
+                    quiz_description = st.text_area("Description", placeholder="Test your knowledge of JavaScript fundamentals")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        duration = st.number_input("Duration (minutes)", min_value=1, max_value=180, value=15)
+                    with col2:
+                        passing_score = st.number_input("Passing Score (%)", min_value=0.0, max_value=100.0, value=70.0, step=5.0)
+                    with col3:
+                        max_attempts = st.number_input("Max Attempts", min_value=1, max_value=10, value=3)
+                    
+                    if st.form_submit_button("🎯 Create Quiz"):
+                        if quiz_title:
+                            try:
+                                quiz_id = db.create_quiz(
+                                    course_id=course_id,
+                                    lesson_id=lesson_id,
+                                    title=quiz_title,
+                                    description=quiz_description,
+                                    duration_minutes=duration,
+                                    passing_score=passing_score,
+                                    max_attempts=max_attempts
+                                )
+                                st.success(f"✅ Quiz created successfully! Quiz ID: {quiz_id}")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Failed to create quiz: {e}")
+                        else:
+                            st.error("Please enter a quiz title")
+                else:
+                    st.warning("No lessons found for this course")
+        else:
+            st.warning("No courses found. Please create courses first.")
+    
+    with tab3:
+        st.subheader("✏️ Edit Quiz")
+        
+        # Get all quizzes for selection
+        cursor.execute("""
+            SELECT q.id, q.title, c.title as course_title, l.title as lesson_title
+            FROM quizzes q
+            JOIN courses c ON q.course_id = c.id
+            JOIN lessons l ON q.lesson_id = l.id
+            ORDER BY c.title, l.title
+        """)
+        edit_quizzes = cursor.fetchall()
+        
+        if edit_quizzes:
+            quiz_options = {f"{q['course_title']} → {q['lesson_title']} → {q['title']} (ID: {q['id']})": q['id'] for q in edit_quizzes}
+            selected_quiz = st.selectbox("Select Quiz to Edit", options=list(quiz_options.keys()))
+            quiz_id = quiz_options[selected_quiz]
+            
+            # Get quiz details
+            cursor.execute("SELECT * FROM quizzes WHERE id = ?", (quiz_id,))
+            quiz = cursor.fetchone()
+            
+            if quiz:
+                with st.form("edit_quiz_form"):
+                    st.write(f"**Editing Quiz ID: {quiz_id}**")
+                    
+                    new_title = st.text_input("Quiz Title", value=quiz['title'])
+                    new_description = st.text_area("Description", value=quiz['description'] if 'description' in quiz.keys() else '')
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        new_duration = st.number_input("Duration (minutes)", min_value=1, max_value=180, value=quiz['duration_minutes'])
+                    with col2:
+                        new_passing_score = st.number_input("Passing Score (%)", min_value=0.0, max_value=100.0, value=quiz['passing_score'], step=5.0)
+                    with col3:
+                        new_max_attempts = st.number_input("Max Attempts", min_value=1, max_value=10, value=quiz['max_attempts'])
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.form_submit_button("💾 Update Quiz"):
+                            try:
+                                cursor.execute("""
+                                    UPDATE quizzes 
+                                    SET title = ?, description = ?, duration_minutes = ?, 
+                                        passing_score = ?, max_attempts = ?
+                                    WHERE id = ?
+                                """, (new_title, new_description, new_duration, new_passing_score, new_max_attempts, quiz_id))
+                                conn.commit()
+                                st.success("✅ Quiz updated successfully!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Failed to update quiz: {e}")
+                    
+                    with col2:
+                        if st.form_submit_button("🗑️ Delete Quiz", type="secondary"):
+                            try:
+                                # Delete quiz questions first
+                                cursor.execute("DELETE FROM quiz_questions WHERE quiz_id = ?", (quiz_id,))
+                                # Delete quiz results
+                                cursor.execute("DELETE FROM quiz_results WHERE quiz_id = ?", (quiz_id,))
+                                # Delete quiz
+                                cursor.execute("DELETE FROM quizzes WHERE id = ?", (quiz_id,))
+                                conn.commit()
+                                st.success("✅ Quiz deleted successfully!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Failed to delete quiz: {e}")
+                
+                # Show quiz questions
+                st.subheader("📝 Quiz Questions")
+                cursor.execute("SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY question_order", (quiz_id,))
+                questions = cursor.fetchall()
+                
+                if questions:
+                    for i, q in enumerate(questions):
+                        with st.expander(f"Question {i+1}: {q['question_text'][:50]}..."):
+                            st.write(f"**Question:** {q['question_text']}")
+                            if q['options']:
+                                options = eval(q['options']) if isinstance(q['options'], str) else q['options']
+                                for j, option in enumerate(options):
+                                    marker = "✅" if j == q['correct_answer'] else "❌"
+                                    st.write(f"{marker} {j+1}. {option}")
+                            explanation = q['explanation'] if 'explanation' in q.keys() else 'No explanation provided'
+                            points = q['points'] if 'points' in q.keys() else 1
+                            st.write(f"**Explanation:** {explanation}")
+                            st.write(f"**Points:** {points}")
+                else:
+                    st.info("No questions found for this quiz.")
+                    st.write("💡 **Tip:** Questions are created automatically when quizzes are generated, or you can add them manually through the database.")
+        else:
+            st.info("No quizzes found to edit.")
+
+
 def main():
     """Main application."""
     
@@ -444,7 +662,7 @@ def main():
     
     page = st.sidebar.radio(
         "Go to",
-        ["Overview", "Student List", "Student Details", "About"]
+        ["Overview", "Student List", "Student Details", "Course Management", "Quiz Management", "About"]
     )
     
     # Load data
@@ -460,6 +678,12 @@ def main():
     
     elif page == "Student Details":
         student_detail_page(data, model_data)
+    
+    elif page == "Course Management":
+        course_management_page()
+    
+    elif page == "Quiz Management":
+        quiz_management_page()
     
     elif page == "About":
         st.title("ℹ️ About PLAF")
@@ -490,6 +714,376 @@ def main():
         
         **Developed for academic purposes**
         """)
+
+
+def course_management_page():
+    """Course Management CRUD interface."""
+    st.title("⚙️ Course Management")
+    st.markdown("**Admin Panel - Manage Courses, Lessons & Content**")
+    
+    # Tabs for different operations
+    tab1, tab2, tab3 = st.tabs(["📚 View Courses", "➕ Add Course", "🔧 Manage Lessons"])
+    
+    with tab1:
+        view_courses_tab()
+    
+    with tab2:
+        add_course_tab()
+    
+    with tab3:
+        manage_lessons_tab()
+
+
+def view_courses_tab():
+    """View and edit existing courses."""
+    st.subheader("📚 All Courses")
+    
+    try:
+        # Get courses from API
+        response = requests.get("http://localhost:8000/api/courses", timeout=10)
+        
+        if response.status_code == 200:
+            courses_data = response.json()
+            courses = courses_data.get('courses', [])
+            
+            if courses:
+                # Display courses in a nice format
+                for course in courses:
+                    with st.expander(f"📖 {course['title']} ({course['level']})"):
+                        col1, col2 = st.columns([2, 1])
+                        
+                        with col1:
+                            st.write(f"**Description:** {course['description']}")
+                            st.write(f"**Instructor:** {course['instructor_name']}")
+                            st.write(f"**Duration:** {course.get('duration_hours', 0)} hours")
+                            st.write(f"**Category:** {course.get('category', 'N/A')}")
+                            
+                            if course.get('thumbnail_url'):
+                                st.image(course['thumbnail_url'], width=200)
+                        
+                        with col2:
+                            st.write("**Actions:**")
+                            
+                            # Edit button
+                            if st.button(f"✏️ Edit", key=f"edit_{course['id']}"):
+                                st.session_state[f"editing_course_{course['id']}"] = True
+                            
+                            # Delete button
+                            if st.button(f"🗑️ Delete", key=f"delete_{course['id']}"):
+                                if st.session_state.get(f"confirm_delete_{course['id']}", False):
+                                    # Actually delete
+                                    delete_response = requests.delete(f"http://localhost:8000/api/admin/courses/{course['id']}")
+                                    if delete_response.status_code == 200:
+                                        st.success(f"Deleted course: {course['title']}")
+                                        st.rerun()
+                                    else:
+                                        st.error("Failed to delete course")
+                                else:
+                                    st.session_state[f"confirm_delete_{course['id']}"] = True
+                                    st.warning("Click delete again to confirm")
+                        
+                        # Edit form (if editing)
+                        if st.session_state.get(f"editing_course_{course['id']}", False):
+                            st.markdown("---")
+                            edit_course_form(course)
+            else:
+                st.info("No courses found.")
+        else:
+            st.error("Failed to load courses from API")
+            
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+
+def edit_course_form(course):
+    """Edit course form."""
+    st.subheader(f"✏️ Edit: {course['title']}")
+    
+    with st.form(f"edit_course_{course['id']}"):
+        title = st.text_input("Title", value=course['title'])
+        description = st.text_area("Description", value=course['description'])
+        instructor_name = st.text_input("Instructor Name", value=course['instructor_name'])
+        instructor_title = st.text_input("Instructor Title", value=course.get('instructor_title', ''))
+        duration_hours = st.number_input("Duration (hours)", value=course.get('duration_hours', 0), min_value=0)
+        level = st.selectbox("Level", ["Beginner", "Intermediate", "Advanced"], 
+                            index=["Beginner", "Intermediate", "Advanced"].index(course.get('level', 'Beginner')))
+        category = st.text_input("Category", value=course.get('category', ''))
+        
+        # Image upload section
+        st.markdown("**Course Thumbnail:**")
+        uploaded_file = st.file_uploader("Upload new image", type=['png', 'jpg', 'jpeg'], key=f"upload_{course['id']}")
+        thumbnail_url = st.text_input("Or paste image URL", value=course.get('thumbnail_url', ''))
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.form_submit_button("💾 Save Changes"):
+                try:
+                    # Handle image upload first
+                    final_thumbnail_url = thumbnail_url
+                    
+                    if uploaded_file is not None:
+                        # Upload to ImgBB
+                        files = {"file": uploaded_file.getvalue()}
+                        upload_response = requests.post("http://localhost:8000/api/upload-image", files=files)
+                        
+                        if upload_response.status_code == 200:
+                            upload_data = upload_response.json()
+                            final_thumbnail_url = upload_data['url']
+                            st.success(f"✅ Image uploaded: {upload_data['filename']}")
+                        else:
+                            st.warning("⚠️ Image upload failed, using existing URL")
+                    
+                    update_data = {
+                        "title": title,
+                        "description": description,
+                        "instructor_name": instructor_name,
+                        "instructor_title": instructor_title,
+                        "duration_hours": duration_hours,
+                        "level": level,
+                        "category": category,
+                        "thumbnail_url": final_thumbnail_url
+                    }
+                    
+                    response = requests.put(f"http://localhost:8000/api/admin/courses/{course['id']}", 
+                                          json=update_data)
+                    
+                    if response.status_code == 200:
+                        st.success("Course updated successfully!")
+                        st.session_state[f"editing_course_{course['id']}"] = False
+                        st.rerun()
+                    else:
+                        st.error("Failed to update course")
+                        
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        
+        with col2:
+            if st.form_submit_button("❌ Cancel"):
+                st.session_state[f"editing_course_{course['id']}"] = False
+                st.rerun()
+
+
+def add_course_tab():
+    """Add new course form."""
+    st.subheader("➕ Add New Course")
+    
+    with st.form("add_course"):
+        title = st.text_input("Course Title *", placeholder="e.g., Advanced Python Programming")
+        description = st.text_area("Description *", placeholder="Course description...")
+        instructor_name = st.text_input("Instructor Name *", placeholder="e.g., Dr. John Smith")
+        instructor_title = st.text_input("Instructor Title", placeholder="e.g., Senior Software Engineer")
+        duration_hours = st.number_input("Duration (hours)", min_value=1, value=10)
+        level = st.selectbox("Level", ["Beginner", "Intermediate", "Advanced"])
+        category = st.text_input("Category *", placeholder="e.g., Programming, Data Science")
+        
+        # Image upload
+        st.markdown("**Course Thumbnail:**")
+        uploaded_file = st.file_uploader("Upload image", type=['png', 'jpg', 'jpeg'])
+        thumbnail_url = st.text_input("Or paste image URL", placeholder="https://...")
+        
+        if st.form_submit_button("🚀 Create Course"):
+            if not all([title, description, instructor_name, category]):
+                st.error("Please fill in all required fields (*)")
+            else:
+                try:
+                    import requests
+                    
+                    # Upload image if provided
+                    final_thumbnail_url = thumbnail_url
+                    
+                    if uploaded_file is not None:
+                        # Upload to ImgBB
+                        files = {"file": uploaded_file.getvalue()}
+                        upload_response = requests.post("http://localhost:8000/api/upload-image", files=files)
+                        
+                        if upload_response.status_code == 200:
+                            upload_data = upload_response.json()
+                            final_thumbnail_url = upload_data['url']
+                            st.success(f"Image uploaded: {upload_data['filename']}")
+                        else:
+                            st.warning("Image upload failed, proceeding without image")
+                    
+                    # Create course
+                    course_data = {
+                        "title": title,
+                        "description": description,
+                        "instructor_name": instructor_name,
+                        "instructor_title": instructor_title,
+                        "duration_hours": duration_hours,
+                        "level": level,
+                        "category": category,
+                        "thumbnail_url": final_thumbnail_url
+                    }
+                    
+                    response = requests.post("http://localhost:8000/api/admin/courses", json=course_data)
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        st.success(f"✅ Course created successfully! ID: {result['course_id']}")
+                        st.balloons()
+                    else:
+                        st.error("Failed to create course")
+                        
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+
+def manage_lessons_tab():
+    """Manage lessons for courses."""
+    st.subheader("🔧 Lesson Management")
+    
+    try:
+        import requests
+        
+        # Get courses for selection
+        response = requests.get("http://localhost:8000/api/courses")
+        
+        if response.status_code == 200:
+            courses_data = response.json()
+            courses = courses_data.get('courses', [])
+            
+            if courses:
+                # Course selection
+                course_options = {f"{course['title']} (ID: {course['id']})": course['id'] 
+                                for course in courses}
+                
+                selected_course_name = st.selectbox("Select Course:", list(course_options.keys()))
+                selected_course_id = course_options[selected_course_name]
+                
+                # Find selected course info
+                selected_course = next((c for c in courses if c['id'] == selected_course_id), None)
+                
+                # Get course details with lessons
+                course_response = requests.get(f"http://localhost:8000/api/courses/{selected_course_id}")
+                
+                if course_response.status_code == 200:
+                    course_data = course_response.json()
+                    lessons = course_data.get('lessons', [])
+                    
+                    # Use course title from the courses list
+                    course_title = selected_course['title'] if selected_course else course_data.get('title', 'N/A')
+                    st.write(f"**Course:** {course_title}")
+                    st.write(f"**Total Lessons:** {len(lessons)}")
+                    
+                    # Display lessons
+                    if lessons:
+                        st.markdown("### 📝 Current Lessons:")
+                        for lesson in lessons:
+                            with st.expander(f"Lesson {lesson.get('lesson_order', '?')}: {lesson.get('title', 'Untitled')}"):
+                                col1, col2 = st.columns([3, 1])
+                                
+                                with col1:
+                                    st.write(f"**Type:** {lesson.get('lesson_type', 'N/A')}")
+                                    st.write(f"**Duration:** {lesson.get('duration_minutes', 0)} minutes")
+                                    st.write(f"**Content:** {lesson.get('content', 'No content')}")
+                                    if lesson.get('video_url'):
+                                        st.write(f"**Video:** {lesson['video_url']}")
+                                    st.write(f"**Free:** {'Yes' if lesson.get('is_free') else 'No'}")
+                                
+                                with col2:
+                                    if st.button(f"✏️ Edit", key=f"edit_lesson_{lesson.get('id')}"):
+                                        st.session_state[f"editing_lesson_{lesson.get('id')}"] = True
+                                
+                                # Edit form
+                                if st.session_state.get(f"editing_lesson_{lesson.get('id')}", False):
+                                    st.markdown("---")
+                                    edit_lesson_form(lesson, selected_course_id)
+                    else:
+                        st.info("No lessons found for this course.")
+                else:
+                    st.error("Failed to load course details")
+            else:
+                st.info("No courses available.")
+        else:
+            st.error("Failed to load courses")
+            
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+
+def edit_lesson_form(lesson, course_id):
+    """Edit lesson form with video URL and content."""
+    st.subheader(f"✏️ Edit Lesson: {lesson.get('title', 'Untitled')}")
+    
+    with st.form(f"edit_lesson_{lesson.get('id')}"):
+        title = st.text_input("Lesson Title", value=lesson.get('title', ''))
+        content = st.text_area("Content", value=lesson.get('content', ''), height=100)
+        video_url = st.text_input("Video URL (YouTube)", value=lesson.get('video_url', ''), 
+                                  help="Supports: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID")
+        
+        # Show current video preview if URL exists
+        if lesson.get('video_url'):
+            st.write("**Current Video:**")
+            video_id = None
+            url = lesson.get('video_url', '')
+            if 'youtube.com/watch?v=' in url:
+                video_id = url.split('v=')[1].split('&')[0]
+            elif 'youtu.be/' in url:
+                video_id = url.split('youtu.be/')[1].split('?')[0]
+            elif 'youtube.com/embed/' in url:
+                video_id = url.split('embed/')[1].split('?')[0]
+            
+            if video_id:
+                st.video(f"https://www.youtube.com/watch?v={video_id}")
+            else:
+                st.write(f"URL: {url}")
+        
+        st.write("**Preview New URL:**")
+        if video_url and video_url != lesson.get('video_url', ''):
+            try:
+                new_video_id = None
+                if 'youtube.com/watch?v=' in video_url:
+                    new_video_id = video_url.split('v=')[1].split('&')[0]
+                elif 'youtu.be/' in video_url:
+                    new_video_id = video_url.split('youtu.be/')[1].split('?')[0]
+                elif 'youtube.com/embed/' in video_url:
+                    new_video_id = video_url.split('embed/')[1].split('?')[0]
+                
+                if new_video_id:
+                    st.video(f"https://www.youtube.com/watch?v={new_video_id}")
+                else:
+                    st.warning("Invalid YouTube URL format")
+            except:
+                st.warning("Could not preview video")
+        duration_minutes = st.number_input("Duration (minutes)", value=lesson.get('duration_minutes', 0), min_value=0)
+        lesson_type = st.selectbox("Type", ["video", "reading", "quiz"], 
+                                  index=["video", "reading", "quiz"].index(lesson.get('lesson_type', 'video')))
+        is_free = st.checkbox("Free lesson", value=lesson.get('is_free', False))
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.form_submit_button("💾 Save Changes"):
+                try:
+                    # Update lesson via database (since we don't have lesson API endpoint)
+                    from database.models import get_db
+                    
+                    db = get_db()
+                    conn = db.connect()
+                    cursor = conn.cursor()
+                    
+                    cursor.execute("""
+                        UPDATE lessons 
+                        SET title = ?, content = ?, video_url = ?, 
+                            duration_minutes = ?, lesson_type = ?, is_free = ?
+                        WHERE id = ?
+                    """, (title, content, video_url, duration_minutes, lesson_type, is_free, lesson.get('id')))
+                    
+                    conn.commit()
+                    
+                    if cursor.rowcount > 0:
+                        st.success("✅ Lesson updated successfully!")
+                        st.session_state[f"editing_lesson_{lesson.get('id')}"] = False
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to update lesson")
+                        
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        
+        with col2:
+            if st.form_submit_button("❌ Cancel"):
+                st.session_state[f"editing_lesson_{lesson.get('id')}"] = False
+                st.rerun()
 
 
 if __name__ == "__main__":

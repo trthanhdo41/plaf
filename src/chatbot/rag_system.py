@@ -29,7 +29,7 @@ except ImportError:
 class RAGSystem:
     """RAG system for student chatbot."""
     
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None, knowledge_base_path: str = "data/knowledge_base.pkl", index_path: str = "data/faiss_index.faiss"):
         """
         Initialize RAG system.
         
@@ -174,10 +174,10 @@ class RAGSystem:
         except Exception as e:
             logger.warning(f"Failed to create semantic embedding for query: {e}")
             # Fallback
-            if hasattr(self, 'vectorizer') and self.vectorizer is not None:
-                query_embedding = self.vectorizer.transform([query]).toarray().astype('float32')
-            else:
-                query_embedding = self.create_simple_embeddings([query])
+        if hasattr(self, 'vectorizer') and self.vectorizer is not None:
+            query_embedding = self.vectorizer.transform([query]).toarray().astype('float32')
+        else:
+            query_embedding = self.create_simple_embeddings([query])
         
         # Use FAISS for fast similarity search
         if self.index is not None:
@@ -209,14 +209,16 @@ class RAGSystem:
         
         return results
     
-    def generate_response(self, query: str, context: List[str], student_data: Dict = None, conversation_context: str = None) -> str:
+    def generate_response(self, query: str, context: List[str], student_data: Dict = None, conversation_context: str = None, full_context: Dict = None) -> str:
         """
-        Generate response using RAG.
+        Generate response using RAG with comprehensive student context.
         
         Args:
             query: User query
             context: Retrieved context documents
-            student_data: Student information for personalization
+            student_data: Basic student information (deprecated, use full_context)
+            conversation_context: Previous conversation summary
+            full_context: Complete student context from database
             
         Returns:
             Generated response
@@ -224,40 +226,96 @@ class RAGSystem:
         # Build prompt with context
         context_text = "\n\n".join(context) if context else "No specific context available."
         
+        # Build comprehensive student information section
         student_info = ""
-        if student_data:
+        if full_context:
+            student = full_context.get('student', {})
+            courses = full_context.get('courses', [])
+            quiz_results = full_context.get('quiz_results', [])
+            stats = full_context.get('stats', {})
+            
+            # Basic info
             student_info = f"""
-Student Information:
-- Name: {student_data.get('first_name', '')} {student_data.get('last_name', '')}
-- Course: {student_data.get('code_module', '')}
-- At-Risk: {'Yes' if student_data.get('is_at_risk') else 'No'}
-- Risk Level: {student_data.get('risk_probability', 0)*100:.1f}%
+=== STUDENT PROFILE ===
+Name: {student.get('first_name', '')} {student.get('last_name', '')}
+Email: {student.get('email', '')}
+Student ID: {student.get('id_student', 'N/A')}
+
+=== CURRENT LEARNING STATUS ===
+Enrolled Courses: {stats.get('total_courses', 0)}
+Total Lessons: {stats.get('total_lessons', 0)}
+Completed Lessons: {stats.get('completed_lessons', 0)}
+Overall Progress: {stats.get('overall_progress', 0):.1f}%
+
+=== QUIZ PERFORMANCE ===
+Total Quizzes Taken: {stats.get('total_quizzes', 0)}
+Quizzes Passed: {stats.get('passed_quizzes', 0)}
+Average Quiz Score: {stats.get('avg_quiz_score', 0):.1f}%
+
+=== FORUM ACTIVITY ===
+Forum Posts Created: {stats.get('forum_activity', 0)}
+"""
+            
+            # Add current courses details
+            if courses:
+                student_info += "\n=== ENROLLED COURSES ===\n"
+                for course in courses:
+                    completed = course.get('completed_lessons', 0) or 0
+                    total = course.get('total_lessons', 0) or 0
+                    progress = (completed / total * 100) if total > 0 else 0
+                    student_info += f"- {course.get('course_title', 'N/A')}: {completed}/{total} lessons ({progress:.1f}% complete)\n"
+            
+            # Add recent quiz results
+            if quiz_results:
+                student_info += "\n=== RECENT QUIZ RESULTS ===\n"
+                for quiz in quiz_results[:3]:  # Show last 3 quizzes
+                    status = "✅ PASSED" if quiz.get('passed') else "❌ FAILED"
+                    student_info += f"- {quiz.get('course_title', 'N/A')} - {quiz.get('title', 'Quiz')}: {quiz.get('score', 0):.1f}% {status}\n"
+        
+        elif student_data:
+            # Fallback to basic student data
+            student_info = f"""
+=== STUDENT PROFILE ===
+Name: {student_data.get('first_name', '')} {student_data.get('last_name', '')}
+Course: {student_data.get('code_module', '')}
+At-Risk: {'Yes' if student_data.get('is_at_risk') else 'No'}
+Risk Level: {student_data.get('risk_probability', 0)*100:.1f}%
 """
         
         # Add conversation context if available
         conversation_info = ""
         if conversation_context:
             conversation_info = f"""
-Previous Conversation Context:
+=== PREVIOUS CONVERSATION CONTEXT ===
 {conversation_context}
 
 Use this context to provide more personalized and consistent advice. Reference previous discussions when relevant.
 """
         
-        prompt = f"""You are a friendly and supportive AI academic advisor for students. You have memory of previous conversations with this student.
+        prompt = f"""You are an experienced AI academic advisor helping students succeed in their online learning journey. You have access to comprehensive data about this student's learning behavior, progress, and performance.
 
 {student_info}
 
 {conversation_info}
 
-Context from knowledge base:
+=== KNOWLEDGE BASE CONTEXT ===
 {context_text}
 
-Student Question: {query}
+=== STUDENT QUESTION ===
+{query}
 
-Please provide a helpful, encouraging, and actionable response. Be specific and reference the context when relevant.
-If this relates to previous conversations, acknowledge that and build upon the previous advice.
-Keep the response concise (2-3 paragraphs maximum).
+=== INSTRUCTIONS ===
+Based on the student's complete profile above, provide:
+1. A personalized, data-driven response that references their specific situation
+2. Concrete, actionable advice tailored to their progress and performance
+3. Encouragement and motivation appropriate to their current status
+4. Specific next steps they should take
+
+If the student is at-risk, be especially supportive and provide clear guidance on improvement.
+If they're doing well, acknowledge their progress and suggest ways to maintain momentum.
+Reference specific metrics from their profile when relevant (e.g., "I see you've completed X lessons...").
+
+Keep the response conversational, encouraging, and focused (2-3 paragraphs).
 
 Response:"""
         
@@ -289,15 +347,16 @@ Response:"""
         result = self.chat(query, student_data=student_context, top_k=top_k)
         return result['response']
     
-    def chat(self, query: str, student_data: Dict = None, top_k: int = 3, conversation_context: str = None) -> Dict:
+    def chat(self, query: str, student_data: Dict = None, top_k: int = 3, conversation_context: str = None, full_context: Dict = None) -> Dict:
         """
-        Complete RAG chat workflow with conversation history.
+        Complete RAG chat workflow with comprehensive student context.
         
         Args:
             query: User query
-            student_data: Student information
+            student_data: Basic student information (deprecated)
             top_k: Number of context documents to retrieve
             conversation_context: Previous conversation context
+            full_context: Complete student context from database
             
         Returns:
             Dictionary with response and metadata
@@ -306,15 +365,22 @@ Response:"""
         search_results = self.search(query, top_k=top_k)
         context_docs = [doc for doc, score in search_results]
         
-        # Generate response with conversation context
-        response = self.generate_response(query, context_docs, student_data, conversation_context)
+        # Generate response with full context
+        response = self.generate_response(
+            query, 
+            context_docs, 
+            student_data=student_data,
+            conversation_context=conversation_context,
+            full_context=full_context
+        )
         
         return {
             'query': query,
             'response': response,
             'context_used': context_docs,
             'num_contexts': len(context_docs),
-            'has_conversation_context': conversation_context is not None
+            'has_conversation_context': conversation_context is not None,
+            'has_full_context': full_context is not None
         }
     
     def save_index(self, path: str = "data/rag_index.pkl"):
@@ -441,7 +507,7 @@ def initialize_knowledge_base() -> RAGSystem:
     # Load dynamic content from database
     dynamic_docs = load_course_materials_from_db()
     course_docs.extend(dynamic_docs)
-    
+        
     # Note: VLE content is now loaded dynamically via load_course_materials_from_db()
     
     rag.add_documents(course_docs)
@@ -452,9 +518,7 @@ def initialize_knowledge_base() -> RAGSystem:
         rag.save_index()
     except Exception as e:
         logger.warning(f"Could not save index: {e}")
-    
-    return rag
-
+        return rag
 
 if __name__ == "__main__":
     # Test RAG system

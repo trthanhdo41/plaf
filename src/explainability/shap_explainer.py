@@ -56,7 +56,7 @@ class SHAPExplainer:
         if not SHAP_AVAILABLE:
             logger.warning("SHAP not available, skipping explainer creation")
             return
-            
+        
         try:
             if use_tree_explainer:
                 # For tree-based models (RF, XGBoost, CatBoost)

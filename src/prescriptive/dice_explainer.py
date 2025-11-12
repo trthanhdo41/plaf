@@ -7,8 +7,8 @@ This module generates counterfactual explanations using DiCE.
 import pandas as pd
 import numpy as np
 try:
-    import dice_ml
-    from dice_ml import Dice
+import dice_ml
+from dice_ml import Dice
     DICE_AVAILABLE = True
 except ImportError:
     DICE_AVAILABLE = False

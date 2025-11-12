@@ -269,9 +269,9 @@ export default function CoursesPage() {
               {courses.map((course) => (
                 <Card 
                   key={course.id} 
-                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-blue-500 overflow-hidden"
+                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-blue-500 overflow-hidden flex flex-col h-full"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative h-48 overflow-hidden flex-shrink-0">
                     {/* Gradient background - always visible */}
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500"></div>
                     
@@ -297,39 +297,46 @@ export default function CoursesPage() {
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all pointer-events-none z-20"></div>
                   </div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                        {course.category || 'Course'}
-                      </Badge>
-                      <Badge variant="secondary">
-                        {course.level || 'All Levels'}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
-                      {course.title}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2 mt-2">
-                      {course.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4" />
-                        <span>{course.instructor_name || 'Instructor'}</span>
+                  
+                  <div className="flex flex-col flex-grow">
+                    <CardHeader className="pb-3 flex-shrink-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                          {course.category || 'Course'}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {course.level || 'All Levels'}
+                        </Badge>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        <span>{course.duration_hours || 0}h</span>
+                      <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3.5rem]">
+                        {course.title}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-3 mt-2 min-h-[4.5rem]">
+                        {course.description}
+                      </CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="pt-0 flex flex-col flex-grow">
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-4 flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4" />
+                          <span>{course.instructor_name || 'Instructor'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{course.duration_hours || 0}h</span>
+                        </div>
                       </div>
-                    </div>
-                    <Link href={`/dashboard/courses/${course.id}`}>
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                        Start Learning →
-                      </Button>
-                    </Link>
-                  </CardContent>
+                      
+                      <div className="mt-auto">
+                        <Link href={`/dashboard/courses/${course.id}`}>
+                          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                            Start Learning →
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>
