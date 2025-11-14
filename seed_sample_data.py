@@ -29,7 +29,8 @@ def seed_courses():
             'instructor_title': 'Senior Software Engineer',
             'duration_hours': 40,
             'level': 'Beginner',
-            'category': 'Programming'
+            'category': 'Programming',
+            'code_module': 'CCC',  # Map to OULAD module CCC
         },
         {
             'title': 'Web Development with React',
@@ -39,7 +40,8 @@ def seed_courses():
             'instructor_title': 'Full Stack Developer',
             'duration_hours': 35,
             'level': 'Intermediate',
-            'category': 'Web Development'
+            'category': 'Web Development',
+            'code_module': 'DDD',  # Map to OULAD module DDD
         },
         {
             'title': 'Data Science Fundamentals',
@@ -49,7 +51,8 @@ def seed_courses():
             'instructor_title': 'Data Science Lead',
             'duration_hours': 50,
             'level': 'Intermediate',
-            'category': 'Data Science'
+            'category': 'Data Science',
+            'code_module': 'EEE',  # Map to OULAD module EEE
         }
     ]
     
@@ -57,12 +60,13 @@ def seed_courses():
     for course in courses:
         cursor.execute("""
             INSERT INTO courses (title, description, thumbnail_url, instructor_name, 
-                               instructor_title, duration_hours, level, category)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                               instructor_title, duration_hours, level, category, code_module)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             course['title'], course['description'], course['thumbnail_url'],
             course['instructor_name'], course['instructor_title'],
-            course['duration_hours'], course['level'], course['category']
+            course['duration_hours'], course['level'], course['category'],
+            course.get('code_module'),
         ))
         course_ids.append(cursor.lastrowid)
         logger.info(f"✅ Created course: {course['title']}")
