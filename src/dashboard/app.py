@@ -757,6 +757,7 @@ def view_courses_tab():
                             st.write(f"**Instructor:** {course['instructor_name']}")
                             st.write(f"**Duration:** {course.get('duration_hours', 0)} hours")
                             st.write(f"**Category:** {course.get('category', 'N/A')}")
+                            st.write(f"**Dataset Module Code:** {course.get('code_module') or 'Not linked'}")
                             
                             if course.get('thumbnail_url'):
                                 st.image(course['thumbnail_url'], width=200)
@@ -808,6 +809,24 @@ def edit_course_form(course):
         level = st.selectbox("Level", ["Beginner", "Intermediate", "Advanced"], 
                             index=["Beginner", "Intermediate", "Advanced"].index(course.get('level', 'Beginner')))
         category = st.text_input("Category", value=course.get('category', ''))
+
+        # Dataset module mapping (code_module from OULAD)
+        try:
+            from database.models import get_db
+            db = get_db()
+            conn = db.connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT code_module FROM students WHERE code_module != '' ORDER BY code_module")
+            modules = [row["code_module"] for row in cursor.fetchall()]
+        except Exception:
+            modules = []
+
+        module_options = ["(None)"] + modules if modules else ["(None)"]
+        current_module = course.get('code_module') or "(None)"
+        if current_module not in module_options:
+            module_options.append(current_module)
+        code_module = st.selectbox("Dataset Module Code (optional)", module_options,
+                                   index=module_options.index(current_module) if current_module in module_options else 0)
         
         # Image upload section
         st.markdown("**Course Thumbnail:**")
@@ -841,7 +860,8 @@ def edit_course_form(course):
                         "duration_hours": duration_hours,
                         "level": level,
                         "category": category,
-                        "thumbnail_url": final_thumbnail_url
+                        "thumbnail_url": final_thumbnail_url,
+                        "code_module": None if code_module == "(None)" else code_module,
                     }
                     
                     response = requests.put(f"http://localhost:8000/api/admin/courses/{course['id']}", 
@@ -875,6 +895,20 @@ def add_course_tab():
         duration_hours = st.number_input("Duration (hours)", min_value=1, value=10)
         level = st.selectbox("Level", ["Beginner", "Intermediate", "Advanced"])
         category = st.text_input("Category *", placeholder="e.g., Programming, Data Science")
+
+        # Dataset module mapping (from OULAD)
+        try:
+            from database.models import get_db
+            db = get_db()
+            conn = db.connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT code_module FROM students WHERE code_module != '' ORDER BY code_module")
+            modules = [row["code_module"] for row in cursor.fetchall()]
+        except Exception:
+            modules = []
+
+        module_options = ["(None)"] + modules if modules else ["(None)"]
+        code_module = st.selectbox("Dataset Module Code (optional)", module_options)
         
         # Image upload
         st.markdown("**Course Thumbnail:**")
@@ -912,7 +946,8 @@ def add_course_tab():
                         "duration_hours": duration_hours,
                         "level": level,
                         "category": category,
-                        "thumbnail_url": final_thumbnail_url
+                        "thumbnail_url": final_thumbnail_url,
+                        "code_module": None if code_module == "(None)" else code_module,
                     }
                     
                     response = requests.post("http://localhost:8000/api/admin/courses", json=course_data)
@@ -964,7 +999,74 @@ def manage_lessons_tab():
                     course_title = selected_course['title'] if selected_course else course_data.get('title', 'N/A')
                     st.write(f"**Course:** {course_title}")
                     st.write(f"**Total Lessons:** {len(lessons)}")
-                    
+
+                    # Add new lesson form
+                    st.markdown("### ➕ Add New Lesson")
+                    with st.form(f"add_lesson_{selected_course_id}"):
+                        new_title = st.text_input("Lesson Title *", placeholder="e.g., Introduction")
+                        new_type = st.selectbox("Type", ["video", "reading", "quiz"], index=0)
+                        new_video_url = st.text_input(
+                            "Video URL (YouTube)",
+                            placeholder="https://www.youtube.com/watch?v=...",
+                            help="Supports: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID"
+                        )
+                        new_content = st.text_area(
+                            "Content",
+                            placeholder="Lesson content or description",
+                            height=100
+                        )
+                        new_duration = st.number_input("Duration (minutes)", min_value=0, value=15)
+                        new_is_free = st.checkbox("Free lesson", value=False)
+
+                        if st.form_submit_button("🚀 Create Lesson"):
+                            if not new_title:
+                                st.error("Please enter a lesson title")
+                            else:
+                                try:
+                                    from database.models import get_db
+
+                                    db = get_db()
+                                    conn = db.connect()
+                                    cursor = conn.cursor()
+
+                                    # Determine next lesson order
+                                    existing_orders = [
+                                        l.get('lesson_order') for l in lessons
+                                        if l.get('lesson_order') is not None
+                                    ]
+                                    next_order = max(existing_orders) + 1 if existing_orders else 1
+
+                                    cursor.execute(
+                                        """
+                                        INSERT INTO lessons (
+                                            course_id,
+                                            title,
+                                            content,
+                                            video_url,
+                                            lesson_type,
+                                            duration_minutes,
+                                            lesson_order,
+                                            is_free
+                                        )
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                        """,
+                                        (
+                                            selected_course_id,
+                                            new_title,
+                                            new_content,
+                                            new_video_url,
+                                            new_type,
+                                            new_duration,
+                                            next_order,
+                                            int(new_is_free),
+                                        ),
+                                    )
+                                    conn.commit()
+                                    st.success("✅ Lesson created successfully!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error creating lesson: {e}")
+
                     # Display lessons
                     if lessons:
                         st.markdown("### 📝 Current Lessons:")

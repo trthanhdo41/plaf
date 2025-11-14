@@ -153,9 +153,17 @@ class Database:
                 duration_hours INTEGER,
                 level TEXT,
                 category TEXT,
+                code_module TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+
+        # Ensure code_module column exists for existing databases
+        try:
+            cursor.execute("ALTER TABLE courses ADD COLUMN code_module TEXT")
+        except Exception:
+            # Column already exists or table just created
+            pass
         
         # Lessons table (for course content)
         cursor.execute("""

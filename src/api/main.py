@@ -106,6 +106,7 @@ class CourseCreate(BaseModel):
     duration_hours: Optional[int] = None
     level: str = "Beginner"
     category: str
+    code_module: Optional[str] = None
 
 class CourseUpdate(BaseModel):
     title: Optional[str] = None
@@ -116,6 +117,7 @@ class CourseUpdate(BaseModel):
     duration_hours: Optional[int] = None
     level: Optional[str] = None
     category: Optional[str] = None
+    code_module: Optional[str] = None
 
 # API Endpoints
 @app.get("/")
@@ -873,12 +875,13 @@ async def create_course(course_data: CourseCreate):
         
         cursor.execute("""
             INSERT INTO courses (title, description, thumbnail_url, instructor_name, 
-                               instructor_title, duration_hours, level, category)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                               instructor_title, duration_hours, level, category, code_module)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             course_data.title, course_data.description, course_data.thumbnail_url,
             course_data.instructor_name, course_data.instructor_title,
-            course_data.duration_hours, course_data.level, course_data.category
+            course_data.duration_hours, course_data.level, course_data.category,
+            course_data.code_module
         ))
         
         course_id = cursor.lastrowid
