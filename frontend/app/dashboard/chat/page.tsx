@@ -58,7 +58,11 @@ export default function ChatPage() {
   const loadChatHistory = async (studentId: number) => {
     try {
       const data = await api.getChatHistory(studentId, 50);
-      setMessages(data.history || []);
+      // Sort messages by timestamp ascending (oldest first, newest last)
+      const history = (data.history || []).sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      setMessages(history);
     } catch (error) {
       console.error('Failed to load chat history:', error);
     } finally {
@@ -288,7 +292,9 @@ export default function ChatPage() {
               </div>
             ) : (
               <>
-                {messages.map((msg, idx) => (
+                {messages
+                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                  .map((msg, idx) => (
                   <div key={idx} className="space-y-4">
                     {/* User Message */}
                     <div className="flex items-start gap-3 justify-end">
@@ -323,12 +329,12 @@ export default function ChatPage() {
                             />
                           ) : (
                             <div className="flex items-center gap-2 text-gray-500">
+                              <span className="text-sm">AI is thinking</span>
                               <div className="flex gap-1">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                               </div>
-                              <span className="text-sm">AI is thinking...</span>
                             </div>
                           )}
                         </div>

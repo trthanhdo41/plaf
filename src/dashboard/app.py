@@ -758,6 +758,7 @@ def view_courses_tab():
                             st.write(f"**Duration:** {course.get('duration_hours', 0)} hours")
                             st.write(f"**Category:** {course.get('category', 'N/A')}")
                             st.write(f"**Dataset Module Code:** {course.get('code_module') or 'Not linked'}")
+                            st.write(f"**Course Code (unique):** {course.get('course_code') or 'N/A'}")
                             
                             if course.get('thumbnail_url'):
                                 st.image(course['thumbnail_url'], width=200)
@@ -809,6 +810,9 @@ def edit_course_form(course):
         level = st.selectbox("Level", ["Beginner", "Intermediate", "Advanced"], 
                             index=["Beginner", "Intermediate", "Advanced"].index(course.get('level', 'Beginner')))
         category = st.text_input("Category", value=course.get('category', ''))
+
+        # Unique course code (editable)
+        course_code = st.text_input("Course Code (unique)", value=course.get('course_code') or "")
 
         # Dataset module mapping (code_module from OULAD)
         try:
@@ -862,6 +866,7 @@ def edit_course_form(course):
                         "category": category,
                         "thumbnail_url": final_thumbnail_url,
                         "code_module": None if code_module == "(None)" else code_module,
+                        "course_code": course_code or None,
                     }
                     
                     response = requests.put(f"http://localhost:8000/api/admin/courses/{course['id']}", 
@@ -895,6 +900,9 @@ def add_course_tab():
         duration_hours = st.number_input("Duration (hours)", min_value=1, value=10)
         level = st.selectbox("Level", ["Beginner", "Intermediate", "Advanced"])
         category = st.text_input("Category *", placeholder="e.g., Programming, Data Science")
+
+        # Optional unique course code (auto-generated on server if left blank)
+        course_code_input = st.text_input("Course Code (unique, optional)", placeholder="Leave blank to auto-generate")
 
         # Dataset module mapping (from OULAD)
         try:
@@ -948,6 +956,7 @@ def add_course_tab():
                         "category": category,
                         "thumbnail_url": final_thumbnail_url,
                         "code_module": None if code_module == "(None)" else code_module,
+                        "course_code": course_code_input or None,
                     }
                     
                     response = requests.post("http://localhost:8000/api/admin/courses", json=course_data)

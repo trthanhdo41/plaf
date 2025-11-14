@@ -154,6 +154,7 @@ class Database:
                 level TEXT,
                 category TEXT,
                 code_module TEXT,
+                course_code TEXT UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -163,6 +164,16 @@ class Database:
             cursor.execute("ALTER TABLE courses ADD COLUMN code_module TEXT")
         except Exception:
             # Column already exists or table just created
+            pass
+        
+        # Ensure course_code column exists and is unique for existing databases
+        try:
+            cursor.execute("ALTER TABLE courses ADD COLUMN course_code TEXT")
+        except Exception:
+            pass
+        try:
+            cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_courses_course_code ON courses(course_code)")
+        except Exception:
             pass
         
         # Lessons table (for course content)
@@ -888,10 +899,13 @@ class Database:
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT * FROM chat_history
-            WHERE id_student = ?
-            ORDER BY timestamp DESC
-            LIMIT ?
+            SELECT * FROM (
+                SELECT * FROM chat_history
+                WHERE id_student = ?
+                ORDER BY timestamp DESC
+                LIMIT ?
+            ) AS recent
+            ORDER BY timestamp ASC
         """, (student_id, limit))
         
         return [dict(row) for row in cursor.fetchall()]

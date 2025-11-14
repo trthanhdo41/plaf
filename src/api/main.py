@@ -107,6 +107,7 @@ class CourseCreate(BaseModel):
     level: str = "Beginner"
     category: str
     code_module: Optional[str] = None
+    course_code: Optional[str] = None
 
 class CourseUpdate(BaseModel):
     title: Optional[str] = None
@@ -118,6 +119,7 @@ class CourseUpdate(BaseModel):
     level: Optional[str] = None
     category: Optional[str] = None
     code_module: Optional[str] = None
+    course_code: Optional[str] = None
 
 # API Endpoints
 @app.get("/")
@@ -872,22 +874,40 @@ async def create_course(course_data: CourseCreate):
     try:
         conn = db.connect()
         cursor = conn.cursor()
-        
+
+        # Auto-generate unique course_code if not provided
+        course_code = course_data.course_code
+        if not course_code:
+            import re, random
+            # Build initial code from title initials (e.g., Machine Learning Fundamentals -> MLF)
+            initials = ''.join([w[0] for w in re.findall(r"[A-Za-z0-9]+", course_data.title)])[:6].upper()
+            base = initials or "COURSE"
+            # Ensure uniqueness by checking existing records
+            attempt = 0
+            candidate = base
+            while True:
+                cursor.execute("SELECT 1 FROM courses WHERE course_code = ?", (candidate,))
+                if not cursor.fetchone():
+                    break
+                attempt += 1
+                candidate = f"{base}-{attempt}"
+            course_code = candidate
+
         cursor.execute("""
             INSERT INTO courses (title, description, thumbnail_url, instructor_name, 
-                               instructor_title, duration_hours, level, category, code_module)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               instructor_title, duration_hours, level, category, code_module, course_code)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             course_data.title, course_data.description, course_data.thumbnail_url,
             course_data.instructor_name, course_data.instructor_title,
             course_data.duration_hours, course_data.level, course_data.category,
-            course_data.code_module
+            course_data.code_module, course_code
         ))
         
         course_id = cursor.lastrowid
         conn.commit()
         
-        return {"success": True, "course_id": course_id, "message": "Course created successfully"}
+        return {"success": True, "course_id": course_id, "course_code": course_code, "message": "Course created successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

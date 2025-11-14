@@ -525,7 +525,7 @@ def chatbot_page():
     # Load chat history with context
     if not st.session_state.chat_history:
         history = db.get_chat_history(st.session_state.student_id, limit=10)
-        st.session_state.chat_history = list(reversed(history))
+        st.session_state.chat_history = history
     
     # Display chat history with better formatting
     st.subheader("💬 Conversation History")
@@ -538,25 +538,47 @@ def chatbot_page():
     
     with chat_container:
         if st.session_state.chat_history:
-            for i, chat in enumerate(st.session_state.chat_history):
+            # Ensure chronological order (oldest first, newest last) using parsed datetime
+            try:
+                from datetime import datetime
+                parsed = []
+                for chat in st.session_state.chat_history:
+                    ts = chat.get('timestamp')
+                    dt = None
+                    try:
+                        if hasattr(ts, 'isoformat'):
+                            dt = ts
+                        elif isinstance(ts, str):
+                            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                    except:
+                        pass
+                    if dt is None:
+                        dt = datetime.min
+                    parsed.append((dt, chat))
+                parsed.sort(key=lambda x: x[0])
+                chats_sorted = [c for _, c in parsed]
+            except Exception:
+                chats_sorted = st.session_state.chat_history
+
+            for i, chat in enumerate(chats_sorted):
                 # Show timestamp
                 timestamp = chat.get('timestamp', 'Unknown time')
                 if hasattr(timestamp, 'strftime'):
                     time_str = timestamp.strftime("%Y-%m-%d %H:%M")
                 else:
                     time_str = str(timestamp)
-            
-            st.markdown(f"""
-                <div class="chat-message-container" style="margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #f8f9fa;">
-                    <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">{time_str}</div>
-                    <div class="chat-message user-message" style="margin-bottom: 8px;">
-                        <strong>👤 You:</strong> {chat['message']}
+                
+                st.markdown(f"""
+                    <div class="chat-message-container" style="margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #f8f9fa;">
+                        <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">{time_str}</div>
+                        <div class="chat-message user-message" style="margin-bottom: 8px;">
+                            <strong>👤 You:</strong> {chat['message']}
+                        </div>
+                        <div class="chat-message bot-message">
+                            <strong>🤖 AI Advisor:</strong> {chat['response']}
+                        </div>
                     </div>
-            <div class="chat-message bot-message">
-                        <strong>🤖 AI Advisor:</strong> {chat['response']}
-                    </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
         else:
             st.info("💬 **Start a conversation!** Ask me anything about your studies, and I'll remember our chat for better future advice.")
     
@@ -600,11 +622,13 @@ def chatbot_page():
                 context=f"conversation_history_{len(st.session_state.chat_history)}"
             )
             
-            # Add to session with timestamp
+            # Add to session with normalized timestamp (ISO, UTC+7)
+            from datetime import datetime, timezone, timedelta
+            vietnam_tz = timezone(timedelta(hours=7))
             st.session_state.chat_history.append({
                 'message': user_input,
                 'response': result['response'],
-                'timestamp': datetime.now(),
+                'timestamp': datetime.now(vietnam_tz).isoformat(),
                 'context_used': result.get('context_used', [])
             })
             
@@ -654,12 +678,14 @@ def chatbot_page():
                         result['response'],
                             context=f"suggestion_with_history_{len(st.session_state.chat_history)}"
                     )
+                    from datetime import datetime, timezone, timedelta
+                    vietnam_tz = timezone(timedelta(hours=7))
                     st.session_state.chat_history.append({
                         'message': suggestion,
                         'response': result['response'],
-                            'timestamp': datetime.now(),
-                            'context_used': result.get('context_used', [])
-                        })
+                        'timestamp': datetime.now(vietnam_tz).isoformat(),
+                        'context_used': result.get('context_used', [])
+                    })
                         st.rerun()
     
     with col2:
