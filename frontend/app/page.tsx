@@ -13,6 +13,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
@@ -28,16 +29,21 @@ export default function LandingPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const result = await api.login(loginEmail, loginPassword);
       
       if (result.success) {
+        setSuccess('Login successful! Redirecting...');
         localStorage.setItem('student', JSON.stringify(result.student));
-        router.push('/dashboard');
+        setTimeout(() => router.push('/dashboard'), 1000);
+      } else {
+        setError('Login failed. Please check your credentials.');
       }
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', err);
+      setError(err.message || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -47,6 +53,7 @@ export default function LandingPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const result = await api.register(
@@ -57,8 +64,9 @@ export default function LandingPage() {
       );
       
       if (result.success) {
+        setSuccess('Account created successfully! Redirecting...');
         localStorage.setItem('student', JSON.stringify(result.student));
-        router.push('/dashboard');
+        setTimeout(() => router.push('/dashboard'), 1000);
       }
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
@@ -123,7 +131,11 @@ export default function LandingPage() {
                         type="email"
                         placeholder="Enter your email"
                         value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
+                        onChange={(e) => {
+                          setLoginEmail(e.target.value);
+                          setError('');
+                          setSuccess('');
+                        }}
                         required
                         disabled={isLoading}
                         className="h-12"
@@ -137,7 +149,11 @@ export default function LandingPage() {
                         type="password"
                         placeholder="Enter your password"
                         value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
+                        onChange={(e) => {
+                          setLoginPassword(e.target.value);
+                          setError('');
+                          setSuccess('');
+                        }}
                         required
                         disabled={isLoading}
                         className="h-12"
@@ -145,8 +161,14 @@ export default function LandingPage() {
                     </div>
 
                     {error && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                        {error}
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 font-medium">
+                        ⚠️ {error}
+                      </div>
+                    )}
+
+                    {success && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 font-medium">
+                        ✅ {success}
                       </div>
                     )}
 
@@ -162,9 +184,21 @@ export default function LandingPage() {
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Demo Account:</strong>
                       </p>
-                      <p className="text-xs text-gray-500 font-mono">
-                        student11391@ou.ac.uk / demo123
+                      <p className="text-xs text-gray-500 font-mono mb-2">
+                        student650515@ou.ac.uk / demo123
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginEmail('student650515@ou.ac.uk');
+                          setLoginPassword('demo123');
+                          setError('');
+                          setSuccess('');
+                        }}
+                        className="text-xs text-purple-600 hover:text-purple-700 underline"
+                      >
+                        Click to fill demo credentials
+                      </button>
                     </div>
                   </form>
                 </TabsContent>
@@ -231,8 +265,14 @@ export default function LandingPage() {
                     </div>
 
                     {error && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                        {error}
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 font-medium">
+                        ⚠️ {error}
+                      </div>
+                    )}
+
+                    {success && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 font-medium">
+                        ✅ {success}
                       </div>
                     )}
 
