@@ -222,7 +222,10 @@ export default function CoursesPage() {
               Back to Dashboard
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Course Materials 📚</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <BookOpen className="w-8 h-8 text-blue-600" />
+            Course Materials
+          </h1>
           <p className="text-gray-600">Access your learning resources and activities</p>
         </div>
 
@@ -345,7 +348,10 @@ export default function CoursesPage() {
 
         {/* Course Materials Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">📚 Course Materials</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-blue-600" />
+            Course Materials
+          </h2>
           <p className="text-gray-600 mb-6">Access your learning resources and activities</p>
         </div>
 

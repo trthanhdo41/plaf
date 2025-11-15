@@ -19,11 +19,18 @@ import {
   Target,
   Activity,
   LogOut,
-  Menu
+  Menu,
+  Trophy,
+  User
 } from 'lucide-react';
 import { api, Student } from '@/lib/api';
 import Link from 'next/link';
 import { RadialBarChart, RadialBar, Legend, ResponsiveContainer, PolarAngleAxis, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import ProactiveInterventionAlert from '@/components/ProactiveInterventionAlert';
+import RiskExplanation from '@/components/RiskExplanation';
+import StudentJourney from '@/components/StudentJourney';
+import InterventionPlan from '@/components/InterventionPlan';
+import NotificationCenter from '@/components/NotificationCenter';
 
 // Custom hook for animating numbers
 function useCountUp(end: number, duration: number = 2000, startOnMount: boolean = false) {
@@ -73,12 +80,16 @@ export default function DashboardPage() {
   const avgScore = student?.avg_score || 0;
   const daysActive = student?.num_days_active || 0;
   const totalClicks = student?.total_clicks || 0;
+  const passRate = (student as any)?.pass_rate || 0;
+  const quizCompleted = (student as any)?.quiz_completed || 0;
 
   // Animated counters - must be called unconditionally
   const animatedRisk = useCountUp(riskPercentage, 2000, startAnimation);
   const animatedScore = useCountUp(avgScore, 2000, startAnimation);
   const animatedDays = useCountUp(daysActive, 1800, startAnimation);
   const animatedClicks = useCountUp(totalClicks, 2200, startAnimation);
+  const animatedPassRate = useCountUp(passRate, 2000, startAnimation);
+  const animatedQuizCompleted = useCountUp(quizCompleted, 1500, startAnimation);
 
   useEffect(() => {
     // Get student from localStorage
@@ -163,6 +174,7 @@ export default function DashboardPage() {
 
             {/* User Menu */}
             <div className="flex items-center gap-4">
+              <NotificationCenter student={student} />
               <Link href="/dashboard/profile" className="hidden md:flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <Avatar className="cursor-pointer">
                   <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white">
@@ -209,40 +221,22 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Banner */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {student.first_name}! <span className="inline-block animate-wave">👋</span>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            Welcome back, {student.first_name}!
+            <User className="w-8 h-8 text-blue-600" />
           </h1>
           <p className="text-gray-600">
             Here's your learning progress and personalized insights
           </p>
         </div>
 
-        {/* Risk Alert Card */}
-        {isAtRisk && (
-          <Card className={`mb-6 border-l-4 ${riskColor.border} ${riskColor.bg}`}>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-white rounded-full">
-                  <AlertTriangle className="w-6 h-6 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Academic Support Recommended</h3>
-                  <p className="text-gray-700 mb-3">
-                    Our AI has detected you might benefit from additional support. Don't worry - we're here to help!
-                  </p>
-                  <Link href="/dashboard/chat">
-                    <Button size="sm" className="bg-white hover:bg-gray-50 text-gray-900 border">
-                      Talk to AI Advisor
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Proactive Intervention Alert */}
+        <div className="mb-6">
+          <ProactiveInterventionAlert student={student} />
+        </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
           {/* Risk Level Card */}
           <Card className="transform transition-all duration-500 hover:scale-105 hover:shadow-lg">
             <CardHeader className="pb-3">
@@ -318,6 +312,46 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Pass Rate Card */}
+          <Card className="transform transition-all duration-500 hover:scale-105 hover:shadow-lg">
+            <CardHeader className="pb-3">
+              <CardDescription>Pass Rate</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-3xl font-bold animate-fade-in">
+                  {quizCompleted > 0 ? `${Math.round(animatedPassRate)}%` : 'N/A'}
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-600 animate-pulse" />
+              </div>
+              <div className="relative h-2 mb-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-2000 ease-out"
+                  style={{ width: `${startAnimation && quizCompleted > 0 ? animatedPassRate : 0}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-600 animate-fade-in">
+                {quizCompleted === 0 ? 'No quizzes yet' : passRate >= 70 ? 'Great job!' : 'Keep trying!'}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Quiz Completed Card */}
+          <Card className="transform transition-all duration-500 hover:scale-105 hover:shadow-lg">
+            <CardHeader className="pb-3">
+              <CardDescription>Quiz Completed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-3xl font-bold animate-fade-in">{animatedQuizCompleted}</div>
+                <Trophy className="w-8 h-8 text-yellow-500 animate-bounce" />
+              </div>
+              <p className="text-sm text-gray-600 mt-2 animate-fade-in">
+                {quizCompleted === 0 ? 'Start a quiz!' : `${quizCompleted} quiz${quizCompleted !== 1 ? 'zes' : ''} done`}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Charts Section */}
@@ -354,15 +388,32 @@ export default function DashboardPage() {
                   </RadialBarChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center" style={{ top: '20%' }}>
-                  <div className="text-5xl font-bold text-gray-900">
-                    {Math.round(animatedRisk)}%
+                  <div className="text-center">
+                    <div className="text-5xl font-bold text-gray-900 mb-1">
+                      {Math.round(animatedRisk)}%
+                    </div>
+                    <div className="text-sm text-gray-500 font-medium">
+                      Risk Level
+                    </div>
                   </div>
                 </div>
               </div>
               <div className="text-center mt-4">
-                <Badge variant={isAtRisk ? "destructive" : "default"} className="text-sm">
-                  {isAtRisk ? '⚠️ Needs Attention' : '✅ On Track'}
-                </Badge>
+                <div className="flex justify-center">
+                  <Badge variant={isAtRisk ? "destructive" : "default"} className="text-sm flex items-center gap-1">
+                    {isAtRisk ? (
+                      <>
+                        <AlertTriangle className="w-3 h-3" />
+                        Needs Attention
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3 h-3" />
+                        On Track
+                      </>
+                    )}
+                  </Badge>
+                </div>
                 <p className="text-sm text-gray-600 mt-2">
                   {isAtRisk 
                     ? 'Consider talking to your AI Advisor for personalized support'
@@ -414,6 +465,29 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Risk Explanation Section */}
+        {isAtRisk && (
+          <div className="mb-8">
+            <RiskExplanation student={student} />
+          </div>
+        )}
+
+        {/* Intervention Plan Section */}
+        {isAtRisk && (
+          <div className="mb-8">
+            <InterventionPlan 
+              student={student} 
+              riskFactors={[]} 
+              strategies={[]} 
+            />
+          </div>
+        )}
+
+        {/* Student Journey Timeline */}
+        <div className="mb-8">
+          <StudentJourney student={student} />
         </div>
 
         {/* Bottom Grid */}

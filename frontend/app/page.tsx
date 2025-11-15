@@ -7,13 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
+import { 
+  CheckCircle, 
+  AlertCircle, 
+  User, 
+  Mail, 
+  Lock, 
+  UserPlus,
+  LogIn,
+  Lightbulb,
+  MessageCircle,
+  BarChart3,
+  Users,
+  Clock,
+  Award
+} from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function LandingPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
@@ -28,22 +43,32 @@ export default function LandingPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
-    setSuccess('');
 
     try {
       const result = await api.login(loginEmail, loginPassword);
       
       if (result.success) {
-        setSuccess('Login successful! Redirecting...');
+        toast({
+          variant: "success",
+          title: "Login Successful",
+          description: "Welcome back! Redirecting to your dashboard...",
+        });
         localStorage.setItem('student', JSON.stringify(result.student));
-        setTimeout(() => router.push('/dashboard'), 1000);
+        setTimeout(() => router.push('/dashboard'), 1500);
       } else {
-        setError('Login failed. Please check your credentials.');
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Please check your credentials and try again.",
+        });
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Invalid email or password. Please try again.');
+      toast({
+        variant: "destructive",
+        title: "Login Error",
+        description: err.message || 'Invalid email or password. Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +77,6 @@ export default function LandingPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
-    setSuccess('');
 
     try {
       const result = await api.register(
@@ -64,12 +87,20 @@ export default function LandingPage() {
       );
       
       if (result.success) {
-        setSuccess('Account created successfully! Redirecting...');
+        toast({
+          variant: "success",
+          title: "Account Created",
+          description: "Welcome to PLAF! Redirecting to your dashboard...",
+        });
         localStorage.setItem('student', JSON.stringify(result.student));
-        setTimeout(() => router.push('/dashboard'), 1000);
+        setTimeout(() => router.push('/dashboard'), 1500);
       }
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: err.message || 'Please check your information and try again.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -98,17 +129,26 @@ export default function LandingPage() {
                 Get personalized insights and academic support 24/7.
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
-                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
-                  <div className="text-2xl font-bold">32,000+</div>
-                  <div className="text-sm text-gray-200">Students Tracked</div>
+                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-white" />
+                  <div>
+                    <div className="text-2xl font-bold">32,000+</div>
+                    <div className="text-sm text-gray-200">Students Tracked</div>
+                  </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
-                  <div className="text-2xl font-bold">85%</div>
-                  <div className="text-sm text-gray-200">Prediction Accuracy</div>
+                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-white" />
+                  <div>
+                    <div className="text-2xl font-bold">85%</div>
+                    <div className="text-sm text-gray-200">Prediction Accuracy</div>
+                  </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
-                  <div className="text-2xl font-bold">24/7</div>
-                  <div className="text-sm text-gray-200">AI Support</div>
+                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-white" />
+                  <div>
+                    <div className="text-2xl font-bold">24/7</div>
+                    <div className="text-sm text-gray-200">AI Support</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -131,11 +171,7 @@ export default function LandingPage() {
                         type="email"
                         placeholder="Enter your email"
                         value={loginEmail}
-                        onChange={(e) => {
-                          setLoginEmail(e.target.value);
-                          setError('');
-                          setSuccess('');
-                        }}
+                        onChange={(e) => setLoginEmail(e.target.value)}
                         required
                         disabled={isLoading}
                         className="h-12"
@@ -149,35 +185,29 @@ export default function LandingPage() {
                         type="password"
                         placeholder="Enter your password"
                         value={loginPassword}
-                        onChange={(e) => {
-                          setLoginPassword(e.target.value);
-                          setError('');
-                          setSuccess('');
-                        }}
+                        onChange={(e) => setLoginPassword(e.target.value)}
                         required
                         disabled={isLoading}
                         className="h-12"
                       />
                     </div>
 
-                    {error && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 font-medium">
-                        ⚠️ {error}
-                      </div>
-                    )}
-
-                    {success && (
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 font-medium">
-                        ✅ {success}
-                      </div>
-                    )}
-
                     <Button 
                       type="submit" 
                       className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-semibold"
                       disabled={isLoading}
                     >
-                      {isLoading ? 'Logging in...' : 'Log In'}
+                      {isLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Logging in...
+                        </>
+                      ) : (
+                        <>
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Log In
+                        </>
+                      )}
                     </Button>
 
                     <div className="pt-4 border-t text-center">
@@ -192,8 +222,10 @@ export default function LandingPage() {
                         onClick={() => {
                           setLoginEmail('student650515@ou.ac.uk');
                           setLoginPassword('demo123');
-                          setError('');
-                          setSuccess('');
+                          toast({
+                            title: "Demo Credentials Filled",
+                            description: "You can now click 'Log In' to access the demo account.",
+                          });
                         }}
                         className="text-xs text-purple-600 hover:text-purple-700 underline"
                       >
@@ -264,24 +296,22 @@ export default function LandingPage() {
                       />
                     </div>
 
-                    {error && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 font-medium">
-                        ⚠️ {error}
-                      </div>
-                    )}
-
-                    {success && (
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 font-medium">
-                        ✅ {success}
-                      </div>
-                    )}
-
                     <Button 
                       type="submit" 
                       className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-semibold"
                       disabled={isLoading}
                     >
-                      {isLoading ? 'Creating Account...' : 'Sign Up'}
+                      {isLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Creating Account...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Sign Up
+                        </>
+                      )}
                     </Button>
                   </form>
                 </TabsContent>
@@ -307,9 +337,7 @@ export default function LandingPage() {
             {/* Feature Card 1 */}
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
               <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+                <Lightbulb className="w-8 h-8 text-purple-600" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">AI-Powered Insights</h3>
               <p className="text-gray-600 leading-relaxed">
@@ -320,9 +348,7 @@ export default function LandingPage() {
             {/* Feature Card 2 */}
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
               <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+                <MessageCircle className="w-8 h-8 text-blue-600" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">24/7 AI Advisor</h3>
               <p className="text-gray-600 leading-relaxed">
@@ -333,9 +359,7 @@ export default function LandingPage() {
             {/* Feature Card 3 */}
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
               <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+                <BarChart3 className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Track Your Progress</h3>
               <p className="text-gray-600 leading-relaxed">

@@ -188,6 +188,19 @@ async def get_student(student_id: int):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
         
+        # Get quiz performance data
+        quiz_perf = db.get_student_quiz_performance(student_id)
+        
+        # Calculate pass rate (only if there are quizzes taken)
+        total_quizzes = quiz_perf.get('total_quizzes_taken', 0)
+        quizzes_passed = quiz_perf.get('quizzes_passed', 0)
+        pass_rate = (quizzes_passed / total_quizzes * 100) if total_quizzes > 0 else 0
+        
+        # Add quiz stats to student object
+        student['quiz_completed'] = total_quizzes
+        student['pass_rate'] = pass_rate
+        student['avg_quiz_score'] = quiz_perf.get('avg_score', 0)
+        
         # Get activity data (simplified for now)
         activities = []
         assessments = []
@@ -972,6 +985,204 @@ async def delete_course(course_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# PROACTIVE INTERVENTION ENDPOINTS
+# ============================================================================
+
+class InterventionRequest(BaseModel):
+    student_id: int
+    intervention_type: str
+    risk_level: str
+    triggered_by: str
+    metadata: Optional[Dict] = None
+
+class InterventionResponse(BaseModel):
+    student_id: int
+    intervention_id: str
+    action_taken: str
+    timestamp: str
+
+@app.post("/api/interventions/trigger")
+async def trigger_intervention(request: InterventionRequest):
+    """
+    Trigger a proactive intervention for a student
+    Implementation of Proactive Intervention from SYSTEM_IMPROVEMENT_ANALYSIS.md
+    """
+    try:
+        conn = db.connect()
+        cursor = conn.cursor()
+        
+        # Log the intervention trigger
+        cursor.execute("""
+            INSERT INTO intervention_logs (
+                student_id, intervention_type, risk_level, 
+                triggered_by, metadata, created_at
+            ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+        """, (
+            request.student_id,
+            request.intervention_type,
+            request.risk_level,
+            request.triggered_by,
+            str(request.metadata) if request.metadata else None
+        ))
+        
+        intervention_id = cursor.lastrowid
+        
+        # Generate intervention strategy based on risk level and student data
+        student_data = cursor.execute("""
+            SELECT * FROM students WHERE id_student = ?
+        """, (request.student_id,)).fetchone()
+        
+        if not student_data:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        # Convert Row to dict
+        student_dict = dict(student_data)
+        
+        # Create intervention response based on risk level
+        intervention_strategy = generate_intervention_strategy(
+            student_dict, request.risk_level, request.intervention_type
+        )
+        
+        conn.commit()
+        
+        return {
+            "success": True,
+            "intervention_id": intervention_id,
+            "strategy": intervention_strategy,
+            "timestamp": "now"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/interventions/student/{student_id}")
+async def get_student_interventions(student_id: int, limit: int = 10):
+    """Get intervention history for a student"""
+    try:
+        conn = db.connect()
+        cursor = conn.cursor()
+        
+        interventions = cursor.execute("""
+            SELECT * FROM intervention_logs 
+            WHERE student_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT ?
+        """, (student_id, limit)).fetchall()
+        
+        return {
+            "interventions": [dict(row) for row in interventions]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/interventions/feedback")
+async def record_intervention_feedback(
+    intervention_id: int,
+    effectiveness: int,  # 1-5 scale
+    student_response: str,
+    outcome: Optional[str] = None
+):
+    """
+    Record feedback on intervention effectiveness
+    Implementation of Closed-Loop Feedback from SYSTEM_IMPROVEMENT_ANALYSIS.md
+    """
+    try:
+        conn = db.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT INTO intervention_feedback (
+                intervention_id, effectiveness_rating, 
+                student_response, outcome, created_at
+            ) VALUES (?, ?, ?, ?, datetime('now'))
+        """, (intervention_id, effectiveness, student_response, outcome))
+        
+        conn.commit()
+        
+        return {"success": True, "message": "Feedback recorded"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def generate_intervention_strategy(student_data, risk_level: str, intervention_type: str) -> Dict:
+    """
+    Generate intervention strategy based on student data and risk level
+    Implementation of Multi-Level Intervention from SYSTEM_IMPROVEMENT_ANALYSIS.md
+    """
+    risk_probability = student_data.get('risk_probability', 0)
+    avg_score = student_data.get('avg_score', 0)
+    num_days_active = student_data.get('num_days_active', 0)
+    
+    strategies = []
+    
+    # High Risk (70-85%+)
+    if risk_probability >= 0.7:
+        strategies.extend([
+            {
+                "type": "urgent_advisor",
+                "title": "Immediate AI Advisor Support",
+                "description": "High risk detected. Immediate personalized guidance recommended.",
+                "priority": "critical",
+                "action": "chat_now"
+            },
+            {
+                "type": "human_escalation",
+                "title": "Human Advisor Notification",
+                "description": "Academic advisor has been notified for additional support.",
+                "priority": "high",
+                "action": "advisor_contact"
+            }
+        ])
+        
+        if avg_score and avg_score < 50:
+            strategies.append({
+                "type": "intensive_study",
+                "title": "Intensive Study Plan",
+                "description": "Customized study plan with additional resources.",
+                "priority": "high",
+                "action": "study_plan"
+            })
+    
+    # Medium Risk (40-70%)
+    elif risk_probability >= 0.4:
+        strategies.extend([
+            {
+                "type": "preventive_support",
+                "title": "Preventive Academic Support",
+                "description": "Early intervention to prevent risk escalation.",
+                "priority": "medium",
+                "action": "preventive_chat"
+            },
+            {
+                "type": "progress_review",
+                "title": "Progress Review Session",
+                "description": "Review current progress and identify improvement areas.",
+                "priority": "medium",
+                "action": "progress_review"
+            }
+        ])
+    
+    # Low engagement specific interventions
+    if num_days_active and num_days_active < 30:
+        strategies.append({
+            "type": "engagement_boost",
+            "title": "Engagement Recovery Program",
+            "description": "Structured plan to increase learning engagement.",
+            "priority": "high" if risk_probability >= 0.7 else "medium",
+            "action": "engagement_plan"
+        })
+    
+    return {
+        "risk_level": risk_level,
+        "strategies": strategies,
+        "auto_generated": True,
+        "timestamp": "now"
+    }
 
 if __name__ == "__main__":
     import uvicorn

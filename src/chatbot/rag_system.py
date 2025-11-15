@@ -234,23 +234,54 @@ class RAGSystem:
             quiz_results = full_context.get('quiz_results', [])
             stats = full_context.get('stats', {})
             
+            # Check if we have OULAD data (from students table)
+            has_oulad_data = stats.get('has_oulad_data', False)
+            
             # Basic info
             student_info = f"""
 === STUDENT PROFILE ===
 Name: {student.get('first_name', '')} {student.get('last_name', '')}
 Email: {student.get('email', '')}
 Student ID: {student.get('id_student', 'N/A')}
+Course Module: {student.get('code_module', 'N/A')}
+"""
+            
+            if has_oulad_data:
+                # Use OULAD data (real academic performance data)
+                risk_prob = stats.get('risk_probability', 0) * 100
+                avg_score = stats.get('avg_score', 0)
+                days_active = stats.get('days_active', 0)
+                total_engagement = stats.get('total_engagement', 0)
+                is_at_risk = stats.get('is_at_risk', 0)
+                
+                student_info += f"""
+=== ACADEMIC PERFORMANCE (OULAD Data) ===
+Risk Level: {risk_prob:.1f}% ({'HIGH RISK - Needs Attention' if is_at_risk else 'On Track'})
+Average Score: {avg_score:.1f}% ({'Excellent' if avg_score >= 80 else 'Good' if avg_score >= 60 else 'Needs Improvement'})
+Days Active: {days_active} days ({'Highly Engaged' if days_active >= 40 else 'Moderate' if days_active >= 20 else 'Low Engagement'})
+Total Interactions: {total_engagement:,} clicks ({'Very Active' if total_engagement >= 1000 else 'Active' if total_engagement >= 500 else 'Limited Activity'})
 
+=== LEARNING INSIGHTS ===
+Academic Status: {'At-Risk Student - Requires Support' if is_at_risk else 'Performing Well'}
+Engagement Level: {'High' if days_active >= 40 and total_engagement >= 1000 else 'Moderate' if days_active >= 20 else 'Low'}
+Performance Trend: {'Strong Performance' if avg_score >= 70 else 'Needs Academic Support'}
+"""
+            else:
+                # Use course enrollment data
+                student_info += f"""
 === CURRENT LEARNING STATUS ===
 Enrolled Courses: {stats.get('total_courses', 0)}
 Total Lessons: {stats.get('total_lessons', 0)}
 Completed Lessons: {stats.get('completed_lessons', 0)}
-Overall Progress: {stats.get('overall_progress', 0):.1f}%
-
+Overall Progress: {stats.get('course_progress', 0):.1f}%
+"""
+            
+            # Always show quiz and forum data if available
+            student_info += f"""
 === QUIZ PERFORMANCE ===
 Total Quizzes Taken: {stats.get('total_quizzes', 0)}
 Quizzes Passed: {stats.get('passed_quizzes', 0)}
-Average Quiz Score: {stats.get('avg_quiz_score', 0):.1f}%
+Average Quiz Score: {stats.get('quiz_avg_score', 0):.1f}%
 
 === FORUM ACTIVITY ===
 Forum Posts Created: {stats.get('forum_activity', 0)}

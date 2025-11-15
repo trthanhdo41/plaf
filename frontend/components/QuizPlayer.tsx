@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, XCircle, Clock, Trophy, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Trophy, AlertCircle, Award, AlertTriangle } from 'lucide-react';
 
 interface QuizQuestion {
   id: number;
@@ -211,7 +211,17 @@ export default function QuizPlayer({
               {score.toFixed(1)}%
             </div>
             <div className={`text-lg ${passed ? 'text-green-600' : 'text-red-600'}`}>
-              {passed ? '🎉 Congratulations! You passed!' : '😔 You need to score at least ' + passingScore + '% to pass'}
+              {passed ? (
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-green-600" />
+                  Congratulations! You passed!
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  You need to score at least {passingScore}% to pass
+                </div>
+              )}
             </div>
           </div>
           

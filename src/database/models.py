@@ -858,32 +858,54 @@ class Database:
             
             chat_history = cursor.fetchall()
             
-            # Calculate overall stats
+            # Calculate overall stats from course enrollments
             total_courses = len(courses)
             total_completed_lessons = sum(course['completed_lessons'] or 0 for course in courses)
             total_lessons = sum(course['total_lessons'] or 0 for course in courses)
-            overall_progress = (total_completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
+            course_progress = (total_completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
             
-            # Quiz performance
+            # Quiz performance from quiz results
             quiz_scores = [quiz['score'] for quiz in quiz_results if quiz['score'] is not None]
-            avg_quiz_score = sum(quiz_scores) / len(quiz_scores) if quiz_scores else 0
+            quiz_avg_score = sum(quiz_scores) / len(quiz_scores) if quiz_scores else 0
             passed_quizzes = sum(1 for quiz in quiz_results if quiz['passed'])
             
+            # Use student table data as primary source (for OULAD demo data)
+            student_dict = dict(student)
+            primary_avg_score = student_dict.get('avg_score', 0) or quiz_avg_score
+            primary_progress = course_progress if total_courses > 0 else 0
+            risk_probability = student_dict.get('risk_probability', 0) or 0
+            days_active = student_dict.get('num_days_active', 0) or 0
+            total_clicks = student_dict.get('total_clicks', 0) or 0
+            
             return {
-                'student': dict(student),
+                'student': student_dict,
                 'courses': [dict(course) for course in courses],
                 'quiz_results': [dict(quiz) for quiz in quiz_results],
                 'forum_posts_count': forum_posts,
                 'recent_chats': [dict(chat) for chat in chat_history],
                 'stats': {
+                    # Course-based stats
                     'total_courses': total_courses,
                     'total_lessons': total_lessons,
                     'completed_lessons': total_completed_lessons,
-                    'overall_progress': overall_progress,
+                    'course_progress': course_progress,
                     'total_quizzes': len(quiz_results),
                     'passed_quizzes': passed_quizzes,
-                    'avg_quiz_score': avg_quiz_score,
-                    'forum_activity': forum_posts
+                    'quiz_avg_score': quiz_avg_score,
+                    'forum_activity': forum_posts,
+                    
+                    # Primary stats (from student table or calculated)
+                    'overall_progress': primary_progress,
+                    'avg_score': primary_avg_score,
+                    'risk_probability': risk_probability,
+                    'days_active': days_active,
+                    'total_engagement': total_clicks,
+                    'is_at_risk': student_dict.get('is_at_risk', 0),
+                    
+                    # Academic status
+                    'has_course_data': total_courses > 0,
+                    'has_quiz_data': len(quiz_results) > 0,
+                    'has_oulad_data': bool(primary_avg_score or days_active or total_clicks)
                 }
             }
             

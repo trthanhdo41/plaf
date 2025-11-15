@@ -18,6 +18,8 @@ import {
   GraduationCap,
   Calendar,
   Award,
+  AlertTriangle,
+  CheckCircle,
   TrendingUp
 } from 'lucide-react';
 import { Student } from '@/lib/api';
@@ -163,8 +165,18 @@ export default function ProfilePage() {
                   {student.first_name} {student.last_name}
                 </h2>
                 <p className="text-gray-600 mb-4">{student.email}</p>
-                <Badge variant={isAtRisk ? "destructive" : "default"} className="mb-4">
-                  {isAtRisk ? '⚠️ At-Risk' : '✅ On Track'}
+                <Badge variant={isAtRisk ? "destructive" : "default"} className="mb-4 flex items-center gap-1 w-fit">
+                  {isAtRisk ? (
+                    <>
+                      <AlertTriangle className="w-3 h-3" />
+                      At-Risk
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3 h-3" />
+                      On Track
+                    </>
+                  )}
                 </Badge>
               </div>
             </CardContent>
