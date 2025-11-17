@@ -218,6 +218,31 @@ class APIClient {
       body: JSON.stringify({ student_id: studentId }),
     });
   }
+
+  async getExplainability(studentId: number) {
+    return this.request<{
+      shap_explanation: {
+        risk_probability: number;
+        top_factors: Array<{
+          feature: string;
+          value: any;
+          shap_value: number;
+          impact_percentage: number;
+        }>;
+        interpretation: string;
+      };
+      dice_counterfactuals: {
+        current_risk: number;
+        target_risk: number;
+        recommendations: string[];
+        required_changes: Record<string, {
+          current: any;
+          target: any;
+          change_needed: string;
+        }>;
+      };
+    }>(`/api/explainability/${studentId}`);
+  }
 }
 
 export const api = new APIClient();

@@ -20,6 +20,7 @@ if project_root not in sys.path:
 from src.database.models import get_db
 from src.chatbot.rag_system import RAGSystem
 from src.prescriptive.llm_advisor import LLMAdvisor
+from src.explainability.explainability_bridge import get_explainability_bridge
 
 app = FastAPI(title="PLAF LMS API", version="1.0.0")
 
@@ -535,7 +536,7 @@ async def enroll_course(course_id: int, student_id: int):
 
 @app.post("/api/chat")
 async def chat_with_ai(request: ChatRequest):
-    """Chat with AI advisor using comprehensive student context"""
+    """Chat with AI advisor using comprehensive student context with explainability"""
     try:
         if not rag_system:
             raise HTTPException(status_code=503, detail="AI service not available")
@@ -554,12 +555,23 @@ async def chat_with_ai(request: ChatRequest):
                 recent_topics.append(f"Q: {chat.get('message', '')[:100]}... A: {chat.get('response', '')[:100]}...")
             conversation_summary = "\n".join(recent_topics)
         
-        # Chat with RAG system using full context
+        # Get explainability insights if student is at risk
+        explainability_data = None
+        stats = full_context.get('stats', {})
+        if stats.get('is_at_risk') or stats.get('risk_probability', 0) > 0.4:
+            try:
+                bridge = get_explainability_bridge()
+                explainability_data = bridge.get_student_explainability(request.student_id)
+            except Exception as e:
+                print(f"Warning: Could not get explainability data: {e}")
+        
+        # Chat with RAG system using full context + explainability
         result = rag_system.chat(
             request.message,
             student_data=full_context['student'],  # Keep for backward compatibility
             conversation_context=request.conversation_context or conversation_summary,
-            full_context=full_context  # Pass complete context
+            full_context=full_context,  # Pass complete context
+            explainability_data=explainability_data  # NEW: Pass SHAP/DiCE insights
         )
         
         # Save chat history
@@ -1040,9 +1052,18 @@ async def trigger_intervention(request: InterventionRequest):
         # Convert Row to dict
         student_dict = dict(student_data)
         
-        # Create intervention response based on risk level
+        # Get explainability insights for targeted interventions
+        explainability_data = None
+        if student_dict.get('is_at_risk') or student_dict.get('risk_probability', 0) > 0.4:
+            try:
+                bridge = get_explainability_bridge()
+                explainability_data = bridge.get_student_explainability(request.student_id)
+            except Exception as e:
+                print(f"Warning: Could not get explainability data for intervention: {e}")
+        
+        # Create intervention response based on risk level + explainability
         intervention_strategy = generate_intervention_strategy(
-            student_dict, request.risk_level, request.intervention_type
+            student_dict, request.risk_level, request.intervention_type, explainability_data
         )
         
         conn.commit()
@@ -1080,6 +1101,26 @@ async def get_student_interventions(student_id: int, limit: int = 10):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/explainability/{student_id}")
+async def get_student_explainability(student_id: int):
+    """
+    Get SHAP/DiCE explainability data for a student
+    Implementation of Explainability-to-Intervention Bridge from SYSTEM_IMPROVEMENT_ANALYSIS.md
+    """
+    try:
+        bridge = get_explainability_bridge()
+        explainability_data = bridge.get_student_explainability(student_id)
+        
+        if not explainability_data:
+            raise HTTPException(status_code=404, detail="Explainability data not available for this student")
+        
+        return explainability_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting explainability data: {str(e)}")
+
 @app.post("/api/interventions/feedback")
 async def record_intervention_feedback(
     intervention_id: int,
@@ -1109,16 +1150,38 @@ async def record_intervention_feedback(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def generate_intervention_strategy(student_data, risk_level: str, intervention_type: str) -> Dict:
+def generate_intervention_strategy(student_data, risk_level: str, intervention_type: str, explainability_data: Dict = None) -> Dict:
     """
-    Generate intervention strategy based on student data and risk level
-    Implementation of Multi-Level Intervention from SYSTEM_IMPROVEMENT_ANALYSIS.md
+    Generate intervention strategy based on student data, risk level, and explainability insights
+    Implementation of Multi-Level Intervention + Explainability Bridge from SYSTEM_IMPROVEMENT_ANALYSIS.md
     """
     risk_probability = student_data.get('risk_probability', 0)
     avg_score = student_data.get('avg_score', 0)
     num_days_active = student_data.get('num_days_active', 0)
     
     strategies = []
+    
+    # Add explainability-driven strategies first (highest priority)
+    if explainability_data:
+        shap_data = explainability_data.get('shap_explanation', {})
+        dice_data = explainability_data.get('dice_counterfactuals', {})
+        
+        top_factors = shap_data.get('top_factors', [])
+        recommendations = dice_data.get('recommendations', [])
+        
+        if top_factors or recommendations:
+            strategies.append({
+                "type": "data_driven_intervention",
+                "title": "🎯 Targeted Risk Reduction Plan",
+                "description": f"Based on predictive analysis, we've identified specific areas for improvement.",
+                "priority": "critical" if risk_probability >= 0.7 else "high",
+                "action": "view_plan",
+                "details": {
+                    "top_risk_factors": [f"{f.get('feature')}: {f.get('impact_percentage', 0):.1f}% impact" for f in top_factors[:3]],
+                    "recommendations": recommendations[:3],
+                    "explainability_available": True
+                }
+            })
     
     # High Risk (70-85%+)
     if risk_probability >= 0.7:

@@ -209,9 +209,9 @@ class RAGSystem:
         
         return results
     
-    def generate_response(self, query: str, context: List[str], student_data: Dict = None, conversation_context: str = None, full_context: Dict = None) -> str:
+    def generate_response(self, query: str, context: List[str], student_data: Dict = None, conversation_context: str = None, full_context: Dict = None, explainability_data: Dict = None) -> str:
         """
-        Generate response using RAG with comprehensive student context.
+        Generate response using RAG with comprehensive student context and explainability.
         
         Args:
             query: User query
@@ -219,6 +219,7 @@ class RAGSystem:
             student_data: Basic student information (deprecated, use full_context)
             conversation_context: Previous conversation summary
             full_context: Complete student context from database
+            explainability_data: SHAP/DiCE explanations for targeted interventions
             
         Returns:
             Generated response
@@ -323,11 +324,52 @@ Risk Level: {student_data.get('risk_probability', 0)*100:.1f}%
 Use this context to provide more personalized and consistent advice. Reference previous discussions when relevant.
 """
         
-        prompt = f"""You are an experienced AI academic advisor helping students succeed in their online learning journey. You have access to comprehensive data about this student's learning behavior, progress, and performance.
+        # Add explainability insights for targeted interventions
+        explainability_info = ""
+        if explainability_data:
+            shap_data = explainability_data.get('shap_explanation', {})
+            dice_data = explainability_data.get('dice_counterfactuals', {})
+            
+            explainability_info = "\n=== RISK ANALYSIS & INTERVENTION INSIGHTS ===\n"
+            
+            # Add SHAP top risk factors
+            top_factors = shap_data.get('top_factors', [])
+            if top_factors:
+                explainability_info += "**Key Risk Factors Identified:**\n"
+                for i, factor in enumerate(top_factors[:3], 1):
+                    feature = factor.get('feature', 'Unknown')
+                    impact = factor.get('impact_percentage', 0)
+                    value = factor.get('value', 'N/A')
+                    explainability_info += f"{i}. {feature}: {value} (Impact: {impact:.1f}%)\n"
+                
+                explainability_info += "\n**What This Means:**\n"
+                explainability_info += shap_data.get('interpretation', 'Analysis of key factors affecting student risk.')
+                explainability_info += "\n"
+            
+            # Add DiCE counterfactual recommendations
+            recommendations = dice_data.get('recommendations', [])
+            if recommendations:
+                explainability_info += "\n**Targeted Improvement Strategies (Data-Driven):**\n"
+                for i, rec in enumerate(recommendations[:3], 1):
+                    explainability_info += f"{i}. {rec}\n"
+                
+                changes = dice_data.get('required_changes', {})
+                if changes:
+                    explainability_info += "\n**Specific Goals to Reduce Risk:**\n"
+                    for feature, change_info in list(changes.items())[:3]:
+                        current = change_info.get('current', 'N/A')
+                        target = change_info.get('target', 'N/A')
+                        explainability_info += f"- {feature}: Current {current} → Target {target}\n"
+            
+            explainability_info += "\n**IMPORTANT:** Use these data-driven insights to provide SPECIFIC, TARGETED advice that addresses the exact factors contributing to this student's risk. Don't give generic advice - focus on the identified risk factors above.\n"
+        
+        prompt = f"""You are an experienced AI academic advisor helping students succeed in their online learning journey. You have access to comprehensive data about this student's learning behavior, progress, and performance, including advanced predictive analytics.
 
 {student_info}
 
 {conversation_info}
+
+{explainability_info}
 
 === KNOWLEDGE BASE CONTEXT ===
 {context_text}
@@ -339,12 +381,14 @@ Use this context to provide more personalized and consistent advice. Reference p
 Based on the student's complete profile above, provide:
 1. A personalized, data-driven response that references their specific situation
 2. Concrete, actionable advice tailored to their progress and performance
-3. Encouragement and motivation appropriate to their current status
-4. Specific next steps they should take
+3. If explainability insights are provided, DIRECTLY ADDRESS the identified risk factors with specific strategies
+4. Encouragement and motivation appropriate to their current status
+5. Specific next steps they should take
 
 If the student is at-risk, be especially supportive and provide clear guidance on improvement.
 If they're doing well, acknowledge their progress and suggest ways to maintain momentum.
 Reference specific metrics from their profile when relevant (e.g., "I see you've completed X lessons...").
+If risk factors are identified, explain how addressing them will improve their outcomes.
 
 Keep the response conversational, encouraging, and focused (2-3 paragraphs).
 
@@ -378,9 +422,9 @@ Response:"""
         result = self.chat(query, student_data=student_context, top_k=top_k)
         return result['response']
     
-    def chat(self, query: str, student_data: Dict = None, top_k: int = 3, conversation_context: str = None, full_context: Dict = None) -> Dict:
+    def chat(self, query: str, student_data: Dict = None, top_k: int = 3, conversation_context: str = None, full_context: Dict = None, explainability_data: Dict = None) -> Dict:
         """
-        Complete RAG chat workflow with comprehensive student context.
+        Complete RAG chat workflow with comprehensive student context and explainability.
         
         Args:
             query: User query
@@ -388,21 +432,66 @@ Response:"""
             top_k: Number of context documents to retrieve
             conversation_context: Previous conversation context
             full_context: Complete student context from database
+            explainability_data: SHAP/DiCE explanations for targeted interventions
             
         Returns:
             Dictionary with response and metadata
         """
-        # Search for relevant context
-        search_results = self.search(query, top_k=top_k)
+        # Enhanced search with explainability-derived queries
+        search_queries = [query]
+        
+        # Add explanation-derived search queries for better targeting
+        if explainability_data:
+            shap_data = explainability_data.get('shap_explanation', {})
+            dice_data = explainability_data.get('dice_counterfactuals', {})
+            
+            # Extract top risk factors from SHAP
+            top_factors = shap_data.get('top_factors', [])
+            for factor in top_factors[:2]:  # Top 2 risk factors
+                feature_name = factor.get('feature', '')
+                # Convert feature names to search queries
+                if 'score' in feature_name.lower():
+                    search_queries.append("improve assessment scores study strategies")
+                elif 'click' in feature_name.lower() or 'engagement' in feature_name.lower():
+                    search_queries.append("increase VLE engagement participation tips")
+                elif 'submission' in feature_name.lower():
+                    search_queries.append("assignment submission time management")
+            
+            # Add DiCE recommendations as queries
+            recommendations = dice_data.get('recommendations', [])
+            for rec in recommendations[:2]:  # Top 2 recommendations
+                if 'score' in rec.lower():
+                    search_queries.append("boost grades academic performance")
+                elif 'engagement' in rec.lower():
+                    search_queries.append("active learning engagement strategies")
+        
+        # Search with multiple queries and combine results
+        all_results = []
+        for search_query in search_queries:
+            results = self.search(search_query, top_k=top_k)
+            all_results.extend(results)
+        
+        # Deduplicate and get top results
+        seen_docs = set()
+        unique_results = []
+        for doc, score in all_results:
+            if doc not in seen_docs:
+                seen_docs.add(doc)
+                unique_results.append((doc, score))
+        
+        # Sort by score and take top_k
+        unique_results.sort(key=lambda x: x[1], reverse=True)
+        search_results = unique_results[:top_k * 2]  # Get more context when using explainability
         context_docs = [doc for doc, score in search_results]
         
-        # Generate response with full context
+        # Generate response with full context + explainability
         response = self.generate_response(
             query, 
             context_docs, 
             student_data=student_data,
             conversation_context=conversation_context,
-            full_context=full_context
+            full_context=full_context,
+            explainability_data=explainability_data
         )
         
         return {
@@ -411,7 +500,8 @@ Response:"""
             'context_used': context_docs,
             'num_contexts': len(context_docs),
             'has_conversation_context': conversation_context is not None,
-            'has_full_context': full_context is not None
+            'has_full_context': full_context is not None,
+            'has_explainability': explainability_data is not None
         }
     
     def save_index(self, path: str = "data/rag_index.pkl"):
