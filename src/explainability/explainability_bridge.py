@@ -72,12 +72,17 @@ class ExplainabilityBridge:
             return self._generate_mock_shap_explanation(student_data)
     
     def _generate_mock_shap_explanation(self, student_data: Dict) -> Dict:
-        """Generate SHAP-like explanation based on student data patterns"""
+        """Generate SHAP-like explanation based on REAL student data patterns"""
         
         risk_factors = []
+        risk_probability = student_data.get('risk_probability', 0)
         
-        # Analyze average score
-        avg_score = student_data.get('avg_score', 0)
+        # Get REAL values from student data
+        avg_score = float(student_data.get('avg_score', 0))
+        days_active = int(student_data.get('num_days_active', 0))
+        total_clicks = int(student_data.get('total_clicks', 0))
+        
+        # Analyze average score with REAL data
         if avg_score < 70:
             impact = (70 - avg_score) / 70 * 0.3  # Up to 30% impact
             risk_factors.append({
@@ -86,84 +91,103 @@ class ExplainabilityBridge:
                 'value': avg_score,
                 'shap_value': impact,
                 'impact_direction': 'increases_risk',
-                'explanation': f'Low average score ({avg_score}%) significantly increases risk',
+                'explanation': f'Low average score ({avg_score:.1f}%) significantly increases risk',
                 'recommendation': 'Focus on improving assessment performance through targeted study'
             })
-        elif avg_score >= 80:
-            impact = -(avg_score - 80) / 20 * 0.15  # Up to -15% impact (protective)
+        elif avg_score >= 70:
+            # Even high scores can have risk if other factors are bad
+            impact = -(avg_score - 70) / 30 * 0.1  # Protective but limited
             risk_factors.append({
                 'feature': 'avg_score',
                 'feature_name': 'Average Assessment Score',
                 'value': avg_score,
                 'shap_value': impact,
                 'impact_direction': 'decreases_risk',
-                'explanation': f'Strong performance ({avg_score}%) helps reduce risk',
-                'recommendation': 'Continue current study approach'
+                'explanation': f'Good performance ({avg_score:.1f}%) helps, but other factors may still indicate risk',
+                'recommendation': 'Maintain performance while addressing other risk factors'
             })
         
-        # Analyze engagement
-        days_active = student_data.get('num_days_active', 0)
+        # Analyze engagement with REAL data
         if days_active < 30:
-            impact = (30 - days_active) / 30 * 0.25  # Up to 25% impact
+            impact = (30 - days_active) / 30 * 0.35  # Up to 35% impact - MAJOR factor
             risk_factors.append({
                 'feature': 'num_days_active',
                 'feature_name': 'Days Active on Platform',
                 'value': days_active,
                 'shap_value': impact,
                 'impact_direction': 'increases_risk',
-                'explanation': f'Low engagement ({days_active} days) increases dropout risk',
-                'recommendation': 'Establish consistent daily study routine'
+                'explanation': f'Low engagement ({days_active} days) is a MAJOR risk factor',
+                'recommendation': 'Establish consistent daily study routine - this is critical'
             })
-        elif days_active >= 40:
-            impact = -(days_active - 40) / 20 * 0.12
+        elif days_active >= 30:
+            impact = -(days_active - 30) / 40 * 0.15
             risk_factors.append({
                 'feature': 'num_days_active',
                 'feature_name': 'Days Active on Platform',
                 'value': days_active,
                 'shap_value': impact,
                 'impact_direction': 'decreases_risk',
-                'explanation': f'High engagement ({days_active} days) is protective',
+                'explanation': f'Good engagement ({days_active} days) helps reduce risk',
                 'recommendation': 'Maintain consistent engagement pattern'
             })
         
-        # Analyze activity level
-        total_clicks = student_data.get('total_clicks', 0)
+        # Analyze activity level with REAL data
         if total_clicks < 500:
-            impact = (500 - total_clicks) / 500 * 0.20
+            impact = (500 - total_clicks) / 500 * 0.30  # Up to 30% - MAJOR factor
             risk_factors.append({
                 'feature': 'total_clicks',
                 'feature_name': 'Total Platform Interactions',
                 'value': total_clicks,
                 'shap_value': impact,
                 'impact_direction': 'increases_risk',
-                'explanation': f'Limited activity ({total_clicks} clicks) suggests low engagement',
-                'recommendation': 'Increase interaction with course materials and resources'
+                'explanation': f'Very limited activity ({total_clicks:,} clicks) is a MAJOR risk indicator',
+                'recommendation': 'Significantly increase interaction with course materials - this is critical'
             })
-        elif total_clicks >= 1000:
-            impact = -(total_clicks - 1000) / 1000 * 0.10
+        elif total_clicks >= 500:
+            impact = -(total_clicks - 500) / 1500 * 0.12
             risk_factors.append({
                 'feature': 'total_clicks',
                 'feature_name': 'Total Platform Interactions',
                 'value': total_clicks,
                 'shap_value': impact,
                 'impact_direction': 'decreases_risk',
-                'explanation': f'High activity ({total_clicks} clicks) shows strong engagement',
+                'explanation': f'Reasonable activity ({total_clicks:,} clicks) helps reduce risk',
                 'recommendation': 'Continue active learning approach'
             })
+        
+        # Add interpretation based on REAL risk probability
+        interpretation = f"Student has {risk_probability*100:.1f}% risk probability. "
+        if risk_probability > 0.7:
+            interpretation += "HIGH RISK: Despite some positive factors, critical issues need immediate attention. "
+            interpretation += "Focus on the factors with highest impact above."
+        elif risk_probability > 0.4:
+            interpretation += "MODERATE RISK: Some concerning patterns detected. Address key risk factors proactively."
+        else:
+            interpretation += "LOW RISK: Student is performing well overall. Continue current approach."
         
         # Sort by absolute impact
         risk_factors.sort(key=lambda x: abs(x['shap_value']), reverse=True)
         
+        # Add impact percentages
+        total_impact = sum(abs(f['shap_value']) for f in risk_factors)
+        for factor in risk_factors:
+            if total_impact > 0:
+                factor['impact_percentage'] = (abs(factor['shap_value']) / total_impact) * 100
+            else:
+                factor['impact_percentage'] = 0
+        
         return {
-            'top_risk_factors': risk_factors[:5],  # Top 5 factors
+            'risk_probability': risk_probability,
+            'top_factors': risk_factors[:5],  # Top 5 factors
             'total_factors': len(risk_factors),
+            'interpretation': interpretation,
             'explanation_type': 'shap_based',
             'model_type': 'risk_prediction'
         }
     
     def get_dice_counterfactuals(self, student_data: Dict) -> Dict:
         """
-        Get DiCE counterfactual explanations for a student
+        Get DiCE counterfactual explanations based on REAL student data
         
         Args:
             student_data: Student features dictionary
@@ -171,44 +195,85 @@ class ExplainabilityBridge:
         Returns:
             Dictionary with counterfactual scenarios
         """
+        recommendations = []
+        required_changes = {}
+        
+        # Get REAL values
+        current_risk = float(student_data.get('risk_probability', 0))
+        avg_score = float(student_data.get('avg_score', 0))
+        days_active = int(student_data.get('num_days_active', 0))
+        total_clicks = int(student_data.get('total_clicks', 0))
+        
+        target_risk = 0.3  # Target: reduce to 30% risk
+        
+        # Analyze what needs to change based on REAL data
+        
+        # 1. If low engagement - THIS IS CRITICAL
+        if days_active < 30:
+            target_days = 40
+            recommendations.append(
+                f"Increase platform engagement from {days_active} to {target_days} days active (CRITICAL)"
+            )
+            required_changes['num_days_active'] = {
+                'current': days_active,
+                'target': target_days,
+                'change_needed': f'+{target_days - days_active} days'
+            }
+        
+        # 2. If low activity
+        if total_clicks < 500:
+            target_clicks = 800
+            recommendations.append(
+                f"Increase platform interactions from {total_clicks:,} to {target_clicks:,} clicks (CRITICAL)"
+            )
+            required_changes['total_clicks'] = {
+                'current': total_clicks,
+                'target': target_clicks,
+                'change_needed': f'+{target_clicks - total_clicks:,} clicks'
+            }
+        
+        # 3. If low score
+        if avg_score < 70:
+            target_score = 75
+            recommendations.append(
+                f"Improve assessment scores from {avg_score:.1f}% to {target_score}%"
+            )
+            required_changes['avg_score'] = {
+                'current': f"{avg_score:.1f}%",
+                'target': f"{target_score}%",
+                'change_needed': f'+{target_score - avg_score:.1f}%'
+            }
+        
+        # If no major issues found but still at risk
+        if not recommendations and current_risk > 0.4:
+            recommendations.append(
+                "Maintain current performance while monitoring progress closely"
+            )
+        
+        return {
+            'current_risk': current_risk,
+            'target_risk': target_risk,
+            'recommendations': recommendations,
+            'required_changes': required_changes,
+            'explanation_type': 'dice_based',
+            'feasibility': 'high' if len(recommendations) <= 2 else 'medium'
+        }
+    
+    def _generate_old_dice_format(self, student_data: Dict) -> Dict:
+        """Old DiCE format - kept for compatibility"""
         counterfactuals = []
         
         # Scenario 1: Improve assessment performance
         if student_data.get('avg_score', 0) < 70:
             target_score = 75
             current_score = student_data.get('avg_score', 0)
-            improvement = target_score - current_score
-            
-            counterfactuals.append({
-                'scenario_id': 'improve_score',
-                'scenario_name': 'Improve Assessment Performance',
-                'current_value': current_score,
-                'target_value': target_score,
-                'change_required': improvement,
-                'feature': 'avg_score',
-                'feature_name': 'Average Score',
-                'expected_risk_reduction': 0.25,  # 25% risk reduction
-                'feasibility': 'high' if improvement < 15 else 'medium',
-                'action_plan': [
-                    'Review past assessment feedback',
-                    'Focus on weak topic areas',
-                    'Complete practice quizzes',
-                    'Seek clarification on difficult concepts'
-                ],
-                'timeframe': '2-4 weeks'
-            })
-        
-        # Scenario 2: Increase engagement
-        if student_data.get('num_days_active', 0) < 30:
-            target_days = 35
-            current_days = student_data.get('num_days_active', 0)
-            increase = target_days - current_days
+            increase = target_score - current_score
             
             counterfactuals.append({
                 'scenario_id': 'increase_engagement',
                 'scenario_name': 'Increase Platform Engagement',
-                'current_value': current_days,
-                'target_value': target_days,
+                'current_value': current_score,
+                'target_value': target_score,
                 'change_required': increase,
                 'feature': 'num_days_active',
                 'feature_name': 'Days Active',

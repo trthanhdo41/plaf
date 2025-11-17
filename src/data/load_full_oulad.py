@@ -46,8 +46,9 @@ def load_full_oulad(dataset_path="OULAD dataset"):
                     INSERT OR REPLACE INTO students (
                         id_student, email, password_hash, first_name, last_name,
                         code_module, code_presentation, gender, region,
-                        highest_education, imd_band, age_band, disability, final_result
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        highest_education, imd_band, age_band, num_of_prev_attempts,
+                        studied_credits, disability, final_result
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     row['id_student'],
                     f"student{row['id_student']}@ou.ac.uk",  # Generate email
@@ -61,6 +62,8 @@ def load_full_oulad(dataset_path="OULAD dataset"):
                     row.get('highest_education', 'Unknown'),
                     row.get('imd_band', 'Unknown'),
                     row.get('age_band', 'Unknown'),
+                    int(row.get('num_of_prev_attempts', 0)),
+                    int(row.get('studied_credits', 0)),
                     row.get('disability', 'N'),
                     row.get('final_result', 'Unknown')
                 ))
@@ -99,9 +102,14 @@ def load_full_oulad(dataset_path="OULAD dataset"):
         vle_df = pd.read_csv(os.path.join(dataset_path, "vle.csv"))
         print(f"   Found {len(vle_df):,} VLE resources")
         
+        # Convert week_from and week_to to INTEGER (fix TEXT issue)
+        vle_df['week_from'] = pd.to_numeric(vle_df['week_from'], errors='coerce').fillna(0).astype(int)
+        vle_df['week_to'] = pd.to_numeric(vle_df['week_to'], errors='coerce').fillna(0).astype(int)
+        
         cursor.execute("DROP TABLE IF EXISTS vle")
         vle_df.to_sql('vle', conn, if_exists='replace', index=False)
         print(f"   ✅ Loaded {len(vle_df):,} VLE resources successfully")
+        print(f"   ✅ Fixed week_from/week_to to INTEGER type")
         
     except Exception as e:
         print(f"   ❌ Error loading vle.csv: {e}")
@@ -121,29 +129,55 @@ def load_full_oulad(dataset_path="OULAD dataset"):
         print(f"   ❌ Error loading assessments.csv: {e}")
     
     
-    # 5. Load studentAssessment.csv
+    # 5. Load studentAssessment.csv with proper merge
     print("\n[5/7] Loading studentAssessment.csv...")
     try:
         student_assessment = pd.read_csv(os.path.join(dataset_path, "studentAssessment.csv"))
         print(f"   Found {len(student_assessment):,} assessment submissions")
         
+        # Load assessment_info for merge
+        assessments_df = pd.read_csv(os.path.join(dataset_path, "assessments.csv"))
+        
+        # Merge to get assessment details (code_module, code_presentation, type, weight, date)
+        merged = student_assessment.merge(
+            assessments_df,
+            on='id_assessment',
+            how='left'
+        )
+        
+        print(f"   Merged with assessment info: {len(merged):,} records")
+        
         # Clear existing assessments first
         cursor.execute("DELETE FROM assessments")
         conn.commit()
         
-        # Insert into assessments table
+        # Insert into assessments table with full data
         inserted = 0
-        for index, row in student_assessment.iterrows():
+        for index, row in merged.iterrows():
             try:
+                # Calculate if late
+                date_submitted = int(row.get('date_submitted', 0)) if pd.notna(row.get('date_submitted')) else None
+                date_due = int(row.get('date', 0)) if pd.notna(row.get('date')) else None
+                is_late = 1 if (date_submitted and date_due and date_submitted > date_due) else 0
+                
                 cursor.execute("""
                     INSERT INTO assessments (
-                        id_student, id_assessment, submission_date, score
-                    ) VALUES (?, ?, ?, ?)
+                        id_student, id_assessment, code_module, code_presentation,
+                        assessment_type, date_due, weight, score, date_submitted,
+                        is_banked, is_late
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     int(row['id_student']),
                     int(row['id_assessment']),
-                    int(row.get('date_submitted', 0)) if pd.notna(row.get('date_submitted')) else None,
-                    float(row.get('score', 0)) if pd.notna(row.get('score')) else None
+                    row.get('code_module'),
+                    row.get('code_presentation'),
+                    row.get('assessment_type'),
+                    date_due,
+                    float(row.get('weight', 0)) if pd.notna(row.get('weight')) else None,
+                    float(row.get('score', 0)) if pd.notna(row.get('score')) else None,
+                    date_submitted,
+                    int(row.get('is_banked', 0)) if pd.notna(row.get('is_banked')) else 0,
+                    is_late
                 ))
                 inserted += 1
                 
