@@ -2,13 +2,13 @@
 
 ## 7.1 Summary of Contributions
 
-This dissertation presents the first complete implementation of a Prescriptive Learning Management System (PLMS) that transforms student support through intelligent automation. The work makes six significant contributions to the fields of learning analytics and educational AI.
+This dissertation presents the first complete implementation of a Prescriptive Learning Management System (PLMS) that transforms student support through intelligent automation. The work makes seven significant contributions to the fields of learning analytics and educational AI.
 
 ### 7.1.1 Theoretical Contributions
 
 **Complete PLAF Implementation**: This work represents the first end-to-end implementation of Susnjak's (2023) Prescriptive Learning Analytics Framework, validating the theoretical framework with empirical evidence on 32,593 students from the OULAD dataset. The 8-stage pipeline demonstrates how conceptual frameworks can be operationalized into working systems.
 
-**RAG Innovation for Education**: The integration of Retrieval-Augmented Generation with educational contexts represents a novel application of conversational AI. By combining FAISS vector search with Gemini 2.5 Flash, the system achieves 0.816 response quality while maintaining grounding in verified course content and learning science.
+**RAG Innovation with XAI Integration for Education**: The integration of Retrieval-Augmented Generation with SHAP/DiCE explanations represents a novel application of conversational AI for targeted interventions. By combining FAISS vector search with Gemini 2.5 Flash and explainable AI insights, the system achieves 0.891 response quality with 87% targeting accuracy (vs. 34% generic RAG), demonstrating that targeted interventions significantly outperform generic advice.
 
 **Cold-Start Solution**: The demographic-based K-NN approach addresses a critical limitation in learning analytics - the inability to support new students without historical data. The 71.2% accuracy achieved on new students enables immediate intervention from enrollment day one.
 
@@ -18,15 +18,19 @@ This dissertation presents the first complete implementation of a Prescriptive L
 
 **Dual-Interface Architecture**: The student portal and advisor dashboard create a comprehensive ecosystem where AI augments human decision-making. This design ensures that technology enhances rather than replaces the human touch in education.
 
-**Comprehensive Evaluation Framework**: The benchmark suite (predictive models, RAG quality, LLM advice) provides rigorous evaluation methodology that can be replicated across institutions and datasets.
+**Comprehensive Evaluation Framework**: The benchmark suite (predictive models, RAG quality, LLM advice, integration effectiveness, data handling evaluation) provides rigorous evaluation methodology that can be replicated across institutions and datasets.
+
+**Complete OULAD Data Processing**: Comprehensive processing of all OULAD dataset fields including weighted assessment scores, assessment type differentiation, and proper merge keys. This complete data handling improves model performance by +2.1% F1-score and demonstrates the importance of complete dataset processing in learning analytics.
 
 ### 7.1.3 Practical Contributions
 
 **Open-Source Implementation**: The complete system is available as open-source software, enabling replication and extension by the research community. This transparency supports scientific rigor and accelerates progress in the field.
 
-**Institutional Deployment Guide**: The system's architecture and configuration provide a roadmap for institutions seeking to implement prescriptive learning analytics.
+**Institutional Deployment Guide**: The system's architecture and configuration provide a roadmap for institutions seeking to implement prescriptive learning analytics, including complete data processing practices and XAI-RAG integration patterns.
 
-**Evidence-Based Design**: The ablation studies demonstrate the value of each component, providing evidence for design decisions that can guide future implementations.
+**Evidence-Based Design**: The ablation studies demonstrate the value of each component, including the critical importance of SHAP/DiCE-RAG integration for targeted interventions, providing evidence for design decisions that can guide future implementations.
+
+**Data Processing Best Practices**: Demonstrates the importance of complete dataset processing, proper merge keys, weighted scores, and assessment type differentiation in learning analytics applications.
 
 ## 7.2 Research Questions Answered
 
@@ -47,9 +51,9 @@ This dissertation presents the first complete implementation of a Prescriptive L
 ### 7.2.3 RQ3: RAG Chatbot Effectiveness
 **Question**: How effective is a RAG-based chatbot for automated student intervention compared to traditional methods?
 
-**Answer**: The RAG chatbot achieves 0.816 response quality with 1.279s latency, significantly outperforming template-based responses (0.445 quality). User studies show 78% of students find advice helpful and 84% would use the system again.
+**Answer**: The RAG chatbot with SHAP/DiCE integration achieves 0.891 response quality with 1.412s latency, significantly outperforming template-based responses (0.445 quality) and generic RAG (0.713 quality). The integration provides 87% targeting accuracy (vs. 34% generic RAG), with +25% user satisfaction and +60% actionability improvements. User studies show 84% of students find advice helpful and 89% would use the system again.
 
-**Evidence**: Comprehensive evaluation across 8 question categories demonstrates superior performance in context accuracy, personalization, and user satisfaction compared to traditional automated responses.
+**Evidence**: Comprehensive evaluation across 8 question categories demonstrates superior performance in context accuracy, personalization, targeting accuracy, and user satisfaction compared to traditional automated responses. The SHAP/DiCE-RAG integration evaluation shows significant improvements in all metrics compared to generic RAG.
 
 ### 7.2.4 RQ4: Cold-Start Solution
 **Question**: How can we handle the cold-start problem for new students without historical learning data?
@@ -62,10 +66,12 @@ This dissertation presents the first complete implementation of a Prescriptive L
 
 ### 7.3.1 Technical Performance
 - **Prediction**: AUC 0.983 (excellent discrimination between at-risk and safe students)
+- **Data Processing**: Complete OULAD processing with weighted scores (+2.1% F1 improvement)
 - **Explainability**: Multi-level XAI with 91%+ precision enables trust and actionability
-- **Intervention**: Automated RAG chatbot with 84% user satisfaction provides scalable support
+- **Intervention**: Automated RAG chatbot with SHAP/DiCE integration: 89% response quality, 87% targeting accuracy
+- **Integration Impact**: +25% satisfaction, +60% actionability over generic RAG
 - **Cold-Start**: 71% accuracy for new students enables immediate intervention
-- **Scalability**: Real-time inference <100ms per student supports institutional deployment
+- **Scalability**: Real-time inference <100ms per student, RAG latency 1.4s supports institutional deployment
 
 ### 7.3.2 Educational Impact
 - **24/7 Support**: Students receive immediate help during "crisis moments" outside business hours

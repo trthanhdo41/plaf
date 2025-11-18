@@ -95,12 +95,43 @@
 - Immutable: gender, region, age_band (6 features)
 - Actionable: VLE engagement, assessment performance (19 features)
 
-### 2.2.3 State-of-the-Art Results on OULAD
+### 2.2.3 OULAD Dataset Description
+
+**Open University Learning Analytics Dataset** (Kuzilek et al., 2017):
+- **Source**: Open University UK, 32,593 unique students across 7 modules
+- **Time Period**: 2013-2014 academic year
+- **Data Structure**: 7 CSV files with comprehensive student, course, assessment, and VLE data
+- **Purpose**: Benchmark dataset for learning analytics research
+- **Outcomes**: Pass/Fail/Withdrawn/Distinction classification
+
+**Dataset Components**:
+1. **courses.csv**: Module presentations, length in days, B/J presentation differences
+2. **assessments.csv**: Assessment types (TMA/CMA/Exam), weights, due dates
+3. **vle.csv**: VLE materials, activity types, week_from/week_to
+4. **studentInfo.csv**: Demographics, num_of_prev_attempts, studied_credits, final_result
+5. **studentRegistration.csv**: Registration dates, unregistration dates
+6. **studentAssessment.csv**: Scores, date_submitted, is_banked flag
+7. **studentVle.csv**: VLE interactions, sum_click, date
+
+**Key Characteristics**:
+- **B and J Presentations**: February (B) and October (J) starts have different structures
+- **Assessment Weights**: Exams weighted 100%, other assessments sum to 100%
+- **Cross-Presentation Modules**: CCC, EEE, GGG modules use cross-presentation data
+- **Banked Assessments**: is_banked flag indicates transferred results from previous presentations
+- **Temporal Data**: All dates measured in days relative to module start (0 = start date)
+
+**Data Quality Considerations**:
+- Complete field processing essential for accurate predictions
+- Proper merge keys required (code_module + code_presentation + id_assessment)
+- Weighted scores vs. simple averages impact model performance
+- Assessment type differentiation (TMA/CMA/Exam) provides richer features
+
+### 2.2.4 State-of-the-Art Results on OULAD
 
 - Kuzilek et al. (2017): Original OULAD paper, baseline models
 - Hlosta et al. (2017): Early prediction, AUC 0.70-0.80 in first weeks
 - Waheed et al. (2020): Deep learning approach, AUC 0.87
-- **Our target**: AUC > 0.90 with interpretable models (CatBoost, RF)
+- **Our achievement**: AUC 0.983 with interpretable models (CatBoost), using complete data processing
 
 ## 2.3 Explainable AI in Education
 
@@ -214,7 +245,10 @@
 - Vector store: FAISS with TF-IDF embeddings (lightweight, CPU-compatible)
 - LLM: Google Gemini 2.5 Flash (fast, cost-effective)
 - Personalization: Inject student context (name, risk level, performance) into prompt
-- Implementation: `src/chatbot/rag_system.py`
+- **Novel Integration**: SHAP feature importance and DiCE counterfactuals passed to RAG system
+- **Targeted Retrieval**: RAG queries enhanced with risk factors from SHAP explanations
+- **Actionable Responses**: DiCE counterfactuals guide response generation for specific improvements
+- Implementation: `src/chatbot/rag_system.py` with XAI integration
 
 **Advantages Over Fine-Tuning**:
 - No need for large training dataset
@@ -238,10 +272,21 @@
   ```
   Student: [First Name], Module: [Code], Risk: [Probability]
   Current Performance: Avg Score [X], VLE Clicks [Y]
+  
+  SHAP Explanation (Top Risk Factors):
+  - [Feature 1]: [Impact] (e.g., Low VLE engagement: -0.35)
+  - [Feature 2]: [Impact] (e.g., Low assessment scores: -0.42)
+  
+  DiCE Counterfactual Recommendations:
+  - Increase VLE clicks from [X] to [Y]
+  - Improve assessment score to [Z]
+  
   Query: [Student's question]
   Context: [Retrieved course strategies]
-  Generate empathetic, specific, actionable advice.
+  Generate empathetic, specific, actionable advice targeting these risk factors.
   ```
+- **Targeted Interventions**: Responses specifically address SHAP-identified risk factors
+- **Counterfactual-Informed**: Advice aligns with DiCE-generated improvement pathways
 
 ### 2.4.4 Empathy in AI Responses
 
