@@ -832,28 +832,42 @@ class Database:
             courses = cursor.fetchall()
             
             # Get quiz results
-            cursor.execute("""
-                SELECT q.title, qr.score, qr.passed,
-                       c.title as course_title, l.title as lesson_title
-                FROM quiz_results qr
-                JOIN quizzes q ON qr.quiz_id = q.id
-                JOIN lessons l ON q.lesson_id = l.id
-                JOIN courses c ON l.course_id = c.id
-                WHERE qr.student_id = ?
-                ORDER BY qr.id DESC
-                LIMIT 10
-            """, (student_id,))
-            
-            quiz_results = cursor.fetchall()
+            quiz_results = []
+            try:
+                cursor.execute("""
+                    SELECT 
+                        sqa.score,
+                        sqa.passed,
+                        sqa.attempt_number,
+                        sqa.time_spent,
+                        q.title as quiz_title,
+                        c.title as course_title,
+                        l.title as lesson_title
+                    FROM student_quiz_attempts sqa
+                    JOIN quizzes q ON sqa.quiz_id = q.id
+                    LEFT JOIN lessons l ON q.lesson_id = l.id
+                    LEFT JOIN courses c ON l.course_id = c.id
+                    WHERE sqa.student_id = ?
+                    ORDER BY sqa.submitted_at DESC, sqa.id DESC
+                    LIMIT 10
+                """, (student_id,))
+                quiz_results = cursor.fetchall()
+            except sqlite3.Error as e:
+                logger.warning(f"Quiz results not available: {e}")
+                quiz_results = []
             
             # Get forum activity
-            cursor.execute("""
-                SELECT COUNT(*) as posts_count
-                FROM forum_posts
-                WHERE author_id = ?
-            """, (student_id,))
-            
-            forum_posts = cursor.fetchone()['posts_count']
+            forum_posts = 0
+            try:
+                cursor.execute("""
+                    SELECT COUNT(*) as posts_count
+                    FROM forum_posts
+                    WHERE student_id = ?
+                """, (student_id,))
+                row = cursor.fetchone()
+                forum_posts = row['posts_count'] if row else 0
+            except sqlite3.Error as e:
+                logger.warning(f"Forum data not available: {e}")
             
             # Get recent chat history
             cursor.execute("""
@@ -877,13 +891,47 @@ class Database:
             quiz_avg_score = sum(quiz_scores) / len(quiz_scores) if quiz_scores else 0
             passed_quizzes = sum(1 for quiz in quiz_results if quiz['passed'])
             
-            # Use student table data as primary source (for OULAD demo data)
+            # Get OULAD activity and assessment data (calculate from activities/assessments tables)
+            # This is the ground truth data for students
+            cursor.execute("""
+                SELECT COUNT(DISTINCT date) as days_active,
+                       SUM(clicks) as total_clicks,
+                       COUNT(*) as total_activities
+                FROM activities
+                WHERE id_student = ?
+            """, (student_id,))
+            activity_data = cursor.fetchone()
+            days_active = activity_data['days_active'] if activity_data else 0
+            total_clicks = activity_data['total_clicks'] if activity_data else 0
+            
+            # Calculate weighted average score from assessments
+            # Note: Exams (weight=100) are handled separately in OULAD
+            cursor.execute("""
+                SELECT 
+                    SUM(score * weight) / SUM(weight) as weighted_avg_score,
+                    AVG(score) as simple_avg_score,
+                    COUNT(*) as total_assessments,
+                    SUM(CASE WHEN assessment_type = 'Exam' THEN score ELSE NULL END) as exam_score
+                FROM assessments
+                WHERE id_student = ?
+                AND score IS NOT NULL
+                AND weight IS NOT NULL
+                AND weight > 0
+            """, (student_id,))
+            assessment_data = cursor.fetchone()
+            
+            # Use weighted average if available, otherwise fall back to simple average
+            weighted_avg = assessment_data['weighted_avg_score'] if assessment_data else None
+            simple_avg = assessment_data['simple_avg_score'] if assessment_data else None
+            assessment_avg_score = weighted_avg if weighted_avg is not None else (simple_avg if simple_avg is not None else 0)
+            total_assessments = assessment_data['total_assessments'] if assessment_data else 0
+            exam_score = assessment_data['exam_score'] if assessment_data and assessment_data['exam_score'] else None
+            
+            # Use student table data as fallback (for backward compatibility)
             student_dict = dict(student)
-            primary_avg_score = student_dict.get('avg_score', 0) or quiz_avg_score
+            primary_avg_score = assessment_avg_score or quiz_avg_score
             primary_progress = course_progress if total_courses > 0 else 0
             risk_probability = student_dict.get('risk_probability', 0) or 0
-            days_active = student_dict.get('num_days_active', 0) or 0
-            total_clicks = student_dict.get('total_clicks', 0) or 0
             
             return {
                 'student': student_dict,
@@ -907,7 +955,9 @@ class Database:
                     'avg_score': primary_avg_score,
                     'risk_probability': risk_probability,
                     'days_active': days_active,
-                    'total_engagement': total_clicks,
+                    'num_days_active': days_active,  # Alias for compatibility
+                    'total_clicks': total_clicks,  # Original name from activities
+                    'total_engagement': total_clicks,  # Alias for compatibility
                     'is_at_risk': student_dict.get('is_at_risk', 0),
                     
                     # Academic status
@@ -1054,6 +1104,44 @@ class Database:
             **lesson_stats,
             'recent_activities': recent_activities
         }
+    
+    def get_student_activity_stats(self, student_id: int) -> Dict:
+        """Aggregate VLE activity stats for a student."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_activities,
+                COALESCE(SUM(clicks), 0) as total_clicks,
+                COUNT(DISTINCT date) as active_days
+            FROM activities
+            WHERE id_student = ?
+        """, (student_id,))
+        
+        row = cursor.fetchone()
+        if not row:
+            return {'total_activities': 0, 'total_clicks': 0, 'active_days': 0}
+        return dict(row)
+    
+    def get_student_assessment_stats(self, student_id: int) -> Dict:
+        """Aggregate assessment stats for a student."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_assessments,
+                COALESCE(AVG(score), 0) as avg_score,
+                COALESCE(SUM(score), 0) as total_score
+            FROM assessments
+            WHERE id_student = ?
+        """, (student_id,))
+        
+        row = cursor.fetchone()
+        if not row:
+            return {'total_assessments': 0, 'avg_score': 0, 'total_score': 0}
+        return dict(row)
     
     def get_student_quiz_performance(self, student_id: int) -> Dict:
         """Get student's quiz performance summary."""

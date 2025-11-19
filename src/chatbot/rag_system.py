@@ -405,6 +405,37 @@ Response:"""
             return response_text
         except Exception as e:
             logger.error(f"Error generating response: {e}")
+            
+            # Check if it's a quota error - use fallback advisor
+            error_str = str(e)
+            if '429' in error_str or 'quota' in error_str.lower() or 'rate limit' in error_str.lower():
+                logger.info("Using fallback advisor due to API quota limit")
+                
+                try:
+                    from src.chatbot.fallback_advisor import get_fallback_advisor
+                    fallback = get_fallback_advisor()
+                    fallback_response = fallback.generate_response(
+                        query=query,
+                        full_context=full_context,
+                        explainability_data=explainability_data
+                    )
+                    
+                    # Add note about fallback
+                    fallback_response = (
+                        "**Note:** AI service is temporarily at capacity (daily quota reached). "
+                        "Using simplified advisor until tomorrow. For full AI features, please check back in 24 hours.\n\n---\n\n"
+                        + fallback_response
+                    )
+                    
+                    return fallback_response
+                except Exception as fallback_error:
+                    logger.error(f"Fallback advisor also failed: {fallback_error}")
+                    return (
+                        "I apologize, but the AI service has reached its daily usage limit (Gemini API quota). "
+                        "This limit resets every 24 hours. Please try again later, or contact your administrator "
+                        "to upgrade the API plan. In the meantime, you can still view your dashboard and course materials."
+                    )
+            
             return "I'm sorry, I encountered an error. Please try asking your question again."
     
     def query(self, query: str, student_context: Dict = None, top_k: int = 3) -> str:

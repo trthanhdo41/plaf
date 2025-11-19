@@ -109,6 +109,13 @@ export default function DashboardPage() {
   const loadStudentData = async (studentId: number) => {
     try {
       const data = await api.getStudent(studentId);
+      if (data.student) {
+        setStudent((prev) => {
+          const updated = { ...(prev || {}), ...data.student };
+          localStorage.setItem('student', JSON.stringify(updated));
+          return updated as Student;
+        });
+      }
       setActivities(data.activities || []);
       setAssessments(data.assessments || []);
     } catch (error) {

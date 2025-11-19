@@ -189,6 +189,18 @@ async def get_student(student_id: int):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
         
+        # Aggregate assessment & activity statistics
+        activity_stats = db.get_student_activity_stats(student_id)
+        assessment_stats = db.get_student_assessment_stats(student_id)
+        
+        student['total_activities'] = activity_stats.get('total_activities', 0)
+        student['total_clicks'] = activity_stats.get('total_clicks', 0)
+        student['num_days_active'] = activity_stats.get('active_days', 0)
+        student['total_engagement'] = activity_stats.get('total_clicks', 0)
+        
+        student['total_assessments'] = assessment_stats.get('total_assessments', 0)
+        student['avg_score'] = assessment_stats.get('avg_score', 0)
+        
         # Get quiz performance data
         quiz_perf = db.get_student_quiz_performance(student_id)
         

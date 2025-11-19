@@ -342,24 +342,21 @@ class ExplainabilityBridge:
         Returns:
             Dictionary with shap_explanation and dice_counterfactuals
         """
-        import sqlite3
+        # Use get_student_full_context to get aggregated data
+        # This includes calculated avg_score, num_days_active, total_clicks
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         
-        # Get student data from database
-        db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data', 'lms.db')
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        from src.database.models import get_db
+        db = get_db()
+        full_context = db.get_student_full_context(student_id)
         
-        student_row = cursor.execute("""
-            SELECT * FROM students WHERE id_student = ?
-        """, (student_id,)).fetchone()
-        
-        conn.close()
-        
-        if not student_row:
+        if not full_context:
             return None
         
-        student_data = dict(student_row)
+        # Merge student data with stats for explainability
+        student_data = {**full_context['student'], **full_context['stats']}
         
         # Get SHAP explanation
         shap_explanation = self.get_student_shap_explanation(student_data)

@@ -81,9 +81,9 @@ class OULADPreprocessor:
         
         # Create binary target: 1 = at-risk (Fail/Withdrawn), 0 = safe (Pass/Distinction)
         if 'final_result' in df.columns:
-        df['is_at_risk'] = df['final_result'].apply(
-            lambda x: 1 if x in ['Fail', 'Withdrawn'] else 0
-        )
+            df['is_at_risk'] = df['final_result'].apply(
+                lambda x: 1 if x in ['Fail', 'Withdrawn'] else 0
+            )
         else:
             logger.warning("final_result column not found, creating dummy target variable")
             df['is_at_risk'] = 0  # Default to safe
@@ -113,15 +113,15 @@ class OULADPreprocessor:
             logger.warning("assessments data not found, using studentAssessment only")
             assessments = None
         else:
-        assessments = self.data['assessments']
+            assessments = self.data['assessments']
         
         # Merge to get assessment metadata
         if assessments is not None:
-        assess_merged = student_assess.merge(
-            assessments,
+            assess_merged = student_assess.merge(
+                assessments,
                 on='id_assessment',  # Only merge on id_assessment
-            how='left'
-        )
+                how='left'
+            )
         else:
             assess_merged = student_assess.copy()
         
@@ -130,6 +130,25 @@ class OULADPreprocessor:
         if not all(col in assess_merged.columns for col in required_cols):
             logger.warning(f"Missing required columns: {required_cols}")
             return pd.DataFrame()
+        
+        # Calculate weighted average if weight column exists
+        if 'weight' in assess_merged.columns:
+            logger.info("Calculating weighted assessment averages...")
+            
+            # Calculate weighted average per student
+            def weighted_avg(group):
+                # Filter out rows with missing score or weight
+                valid = group.dropna(subset=['score', 'weight'])
+                if len(valid) == 0 or valid['weight'].sum() == 0:
+                    return pd.Series({'weighted_avg_score': None})
+                return pd.Series({
+                    'weighted_avg_score': (valid['score'] * valid['weight']).sum() / valid['weight'].sum()
+                })
+            
+            weighted_scores = assess_merged.groupby(required_cols).apply(weighted_avg).reset_index()
+        else:
+            weighted_scores = None
+            logger.warning("Weight column not found, using simple average")
         
         # Aggregate by student
         agg_features = assess_merged.groupby(required_cols).agg({
@@ -141,9 +160,18 @@ class OULADPreprocessor:
         agg_features.columns = ['_'.join(col).strip('_') if col[1] else col[0] 
                                 for col in agg_features.columns.values]
         
+        # Merge weighted scores if available
+        if weighted_scores is not None:
+            agg_features = agg_features.merge(weighted_scores, on=required_cols, how='left')
+            # Use weighted average as primary, fall back to simple mean
+            agg_features['avg_score_final'] = agg_features['weighted_avg_score'].fillna(agg_features['score_mean'])
+        else:
+            agg_features['avg_score_final'] = agg_features['score_mean']
+        
         # Rename for clarity
         agg_features.rename(columns={
-            'score_mean': 'avg_score',
+            'score_mean': 'simple_avg_score',
+            'avg_score_final': 'avg_score',  # This is the primary score to use
             'score_std': 'score_std',
             'score_min': 'min_score',
             'score_max': 'max_score',
@@ -227,18 +255,37 @@ class OULADPreprocessor:
             logger.warning(f"Missing required columns in registration data: {required_cols}")
             return pd.DataFrame()
         
-        # Group by student
+        # Group by student and create registration features
         reg_features = student_reg.groupby(required_cols).agg({
             'date_registration': 'first',
             'date_unregistration': lambda x: x.notna().sum()  # Count unregistrations
         }).reset_index()
         
+        # Create early/late registration features
+        # Negative dates = early registration (before course start)
+        # Positive dates = late registration (after course start)
+        reg_features['registration_date'] = reg_features['date_registration']
+        reg_features['registered_early'] = (reg_features['date_registration'] < 0).astype(int)
+        reg_features['days_before_start'] = reg_features['date_registration'].apply(
+            lambda x: abs(x) if x < 0 else 0
+        )
+        reg_features['days_after_start'] = reg_features['date_registration'].apply(
+            lambda x: x if x > 0 else 0
+        )
+        
+        # Rename columns
         reg_features.rename(columns={
-            'date_registration': 'registration_date',
             'date_unregistration': 'num_unregistrations'
         }, inplace=True)
         
+        # Drop original date_registration column (we have registration_date now)
+        if 'date_registration' in reg_features.columns and 'registration_date' in reg_features.columns:
+            reg_features = reg_features.drop(columns=['date_registration'])
+        
         logger.info(f"Registration features created: {reg_features.shape}")
+        logger.info(f"  - Students registered early: {reg_features['registered_early'].sum()}")
+        logger.info(f"  - Average days before start (early): {reg_features['days_before_start'].mean():.1f}")
+        logger.info(f"  - Average days after start (late): {reg_features['days_after_start'].mean():.1f}")
         
         return reg_features
     
@@ -268,33 +315,33 @@ class OULADPreprocessor:
         # Merge assessment features
         if not assess_features.empty:
             logger.info(f"Merging assessment features: {assess_features.shape}")
-        merged = merged.merge(
-            assess_features,
-            on=['id_student', 'code_module', 'code_presentation'],
-            how='left'
-        )
+            merged = merged.merge(
+                assess_features,
+                on=['id_student', 'code_module', 'code_presentation'],
+                how='left'
+            )
         else:
             logger.warning("Assessment features empty or missing merge keys")
         
         # Merge VLE features
         if not vle_features.empty:
             logger.info(f"Merging VLE features: {vle_features.shape}")
-        merged = merged.merge(
-            vle_features,
-            on=['id_student', 'code_module', 'code_presentation'],
-            how='left'
-        )
+            merged = merged.merge(
+                vle_features,
+                on=['id_student', 'code_module', 'code_presentation'],
+                how='left'
+            )
         else:
             logger.warning("VLE features empty or missing merge keys")
         
         # Merge registration features
         if not reg_features.empty:
             logger.info(f"Merging registration features: {reg_features.shape}")
-        merged = merged.merge(
-            reg_features,
-            on=['id_student', 'code_module', 'code_presentation'],
-            how='left'
-        )
+            merged = merged.merge(
+                reg_features,
+                on=['id_student', 'code_module', 'code_presentation'],
+                how='left'
+            )
         else:
             logger.warning("Registration features empty or missing merge keys")
         

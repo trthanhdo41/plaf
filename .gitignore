@@ -89,4 +89,31 @@ site/
 
 # Keep directory structure but ignore contents
 !.gitkeep
+
+# Database files
 data/lms.db
+data/*.db
+*.db
+plaf_complete_database.sql
+*_complete_database.sql
+
+# Process ID files
+.backend.pid
+.frontend.pid
+*.pid
+
+# CatBoost training logs
+catboost_info/
+
+# RAG cache files
+data/rag_index.faiss
+data/rag_index.pkl
+data/faiss_index.*
+data/knowledge_base.*
+
+# Generated data files
+data/demo_accounts.csv
+data/enhanced_knowledge_base.txt
+
+# Evaluation plots
+plots/evaluation/

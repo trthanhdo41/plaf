@@ -40,19 +40,25 @@ echo ""
 # Activate virtual environment
 source venv/bin/activate
 
+# Load environment variables from .env file if it exists
+if [ -f ".env" ]; then
+    echo "📝 Loading environment variables from .env file..."
+    set -a
+    source .env
+    set +a
+    echo "✅ Environment variables loaded"
+fi
+
 # Check if API key is set
 if [ -z "$GEMINI_API_KEY" ]; then
     echo "⚠️  Warning: GEMINI_API_KEY not set!"
     echo "AI features (chatbot, advisor) will not work."
     echo ""
-    read -p "Enter your Gemini API key (or press Enter to skip): " api_key
-    
-    if [ ! -z "$api_key" ]; then
-        export GEMINI_API_KEY="$api_key"
-        echo "✅ API key set!"
-    else
-        echo "⚠️  Continuing without API key..."
-    fi
+    echo "To set it, either:"
+    echo "  1. Create a .env file with: GEMINI_API_KEY=your_key_here"
+    echo "  2. Or export it: export GEMINI_API_KEY=your_key_here"
+    echo ""
+    echo "⚠️  Continuing without API key..."
     echo ""
 fi
 
