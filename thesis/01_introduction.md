@@ -37,41 +37,193 @@ Despite advances in predictive learning analytics, a critical gap exists between
 
 **Core Research Problem**: How can we design an end-to-end prescriptive learning analytics system that not only predicts student risk but automatically provides personalized, explainable, and empathetic interventions at scale?
 
-## 1.3 Research Questions
+## 1.2. Mục tiêu đề tài
 
-### RQ1: Predictive Accuracy
-**How accurately can machine learning models predict at-risk students using the OULAD dataset?**
+### 1.2.1. Mục tiêu tổng quát
 
-- Sub-questions:
-  - Which ML algorithms (Random Forest, CatBoost, XGBoost, SVM, Logistic Regression) perform best?
-  - What features are most predictive of student risk?
-  - How does the model generalize across different courses and presentations?
+Xây dựng hệ thống Prescriptive Learning Analytics end-to-end tích hợp Machine Learning, Explainable AI, và RAG-based Chatbot để:
+- Dự đoán sinh viên có nguy cơ với độ chính xác cao
+- Giải thích nguyên nhân dự đoán một cách minh bạch
+- Tự động can thiệp qua chatbot AI 24/7 với lời khuyên cá nhân hóa
+- Xử lý vấn đề cold-start cho sinh viên mới
 
-### RQ2: Explainable AI for Actionability
-**How can XAI techniques make risk predictions actionable for students and educators?**
+### 1.2.2. Mục tiêu cụ thể
 
-- Sub-questions:
-  - What insights do SHAP explanations provide about feature importance?
-  - How can DiCE counterfactual explanations guide student behavior change?
-  - How do Anchor rules provide interpretable decision boundaries?
+**Mục tiêu 1: Xây dựng mô hình dự đoán chính xác**
+- Huấn luyện và đánh giá 5 thuật toán ML (Random Forest, CatBoost, XGBoost, SVM, Logistic Regression)
+- Đạt AUC-ROC ≥ 0.95 và Recall ≥ 90%
+- Xác định top features quan trọng nhất cho dự đoán
+- Đảm bảo mô hình generalize tốt across courses và presentations
 
-### RQ3: RAG-based Chatbot Intervention Effectiveness
-**How effective is a Retrieval-Augmented Generation (RAG) chatbot for automated student intervention compared to traditional methods?**
+**Mục tiêu 2: Tích hợp Explainable AI**
+- Triển khai SHAP explanations cho global và local interpretability
+- Triển khai DiCE counterfactual explanations cho actionable recommendations
+- Triển khai Anchor rules cho interpretable decision boundaries
+- Đảm bảo explanations understandable cho non-technical users
 
-- Sub-questions:
-  - What is the quality of RAG retrieval and response generation?
-  - How well does the chatbot personalize advice to individual student contexts?
-  - What is the response latency and system scalability?
+**Mục tiêu 3: Xây dựng RAG-based Chatbot**
+- Xây dựng knowledge base từ OULAD data và learning strategies
+- Triển khai FAISS vector search cho retrieval
+- Tích hợp Gemini 2.5 Flash LLM cho response generation
+- Đạt latency < 2s và response quality ≥ 80%
+- Cá nhân hóa responses dựa trên student context và XAI insights
 
-### RQ4: Cold-Start Problem Solution
-**How can we handle the cold-start problem for new students without historical learning data?**
+**Mục tiêu 4: Giải quyết Cold-Start Problem**
+- Triển khai K-NN demographic-based prediction cho sinh viên mới
+- Cung cấp confidence scoring cho predictions
+- Đảm bảo prediction available từ ngày đầu enrollment
+- So sánh accuracy với baseline methods
 
-- Sub-questions:
-  - Can demographic-based K-NN prediction provide accurate initial risk assessment?
-  - What is the prediction confidence for cold-start vs. historical data scenarios?
-  - How does cold-start prediction accuracy compare to default baseline methods?
+**Mục tiêu 5: Xây dựng hệ thống hoàn chỉnh**
+- Triển khai đầy đủ 8 giai đoạn PLAF framework
+- Xây dựng dual-interface (Student portal + Advisor dashboard)
+- Đảm bảo scalability cho 10,000+ students
+- Mã nguồn mở và reproducible trên OULAD dataset
 
-## 1.4 Research Contributions
+## 1.3. Phạm vi đề tài
+
+### 1.3.1. Giới hạn về dữ liệu
+
+**Nguồn dữ liệu:**
+- Sử dụng OULAD dataset (Open University Learning Analytics Dataset)
+- 32,593 sinh viên, 7 modules, năm học 2013-2014
+- 7 CSV files: courses, assessments, vle, studentInfo, studentRegistration, studentAssessment, studentVle
+
+**Giới hạn:**
+- Chỉ sử dụng OULAD dataset (không tích hợp real-time LMS data)
+- Historical data (2013-2014), không có streaming updates
+- Không có forum interaction data (OULAD không cung cấp)
+- Không có video watching behavior (OULAD không cung cấp)
+
+### 1.3.2. Giới hạn về công nghệ/thuật toán
+
+**Tập trung vào:**
+- Interpretable ML models: CatBoost, XGBoost, Random Forest, SVM, Logistic Regression
+- XAI techniques: SHAP, DiCE, Anchors
+- RAG architecture: FAISS + Gemini 2.5 Flash
+- Cold-start: K-NN demographic approach
+
+**Không bao gồm:**
+- Deep Learning models (LSTM, Transformers) - do black-box nature
+- Reinforcement Learning - out of scope
+- Multi-modal learning (video, audio) - OULAD không có
+- Federated Learning - không cần thiết cho single dataset
+
+### 1.3.3. Giới hạn chức năng hệ thống
+
+**Chức năng có:**
+- At-risk prediction với explanations
+- AI chatbot cho student support
+- Advisor dashboard cho intervention planning
+- Cold-start prediction cho sinh viên mới
+- SHAP/DiCE visualizations
+
+**Chức năng không có:**
+- Real-time LMS integration (chỉ demo với OULAD)
+- Email/SMS notifications (chỉ in-app)
+- Mobile app (chỉ web-based)
+- Multi-language support (chỉ English)
+- Peer comparison features (privacy concerns)
+
+### 1.3.4. Giới hạn về deployment
+
+**Môi trường:**
+- Local deployment (không require cloud)
+- CPU-only (không cần GPU)
+- SQLite cho demo (PostgreSQL cho production)
+
+**External dependencies:**
+- Gemini API cho LLM (external service)
+- Internet connection cho API calls
+
+**Không bao gồm:**
+- Production deployment tại tổ chức giáo dục thực tế
+- Long-term user studies (chỉ evaluation trên OULAD)
+- A/B testing với real students
+
+## 1.4. Ý nghĩa đề tài
+
+### 1.4.1. Ý nghĩa thực tiễn
+
+**1. Giảm tỷ lệ bỏ học**
+- Can thiệp sớm và cá nhân hóa giúp sinh viên có nguy cơ cải thiện kết quả học tập
+- Dự đoán chính xác (95% accuracy) cho phép tập trung resources vào đúng đối tượng
+- Hệ thống 24/7 đảm bảo hỗ trợ kịp thời
+
+**2. Tự động hóa tư vấn học tập**
+- Giảm workload cho advisors (không cần tư vấn thủ công từng sinh viên)
+- Scale đến hàng nghìn sinh viên mà không tăng nhân sự
+- Chatbot AI cung cấp immediate support, không cần chờ appointment
+
+**3. Minh bạch và giải thích được**
+- SHAP explanations giúp sinh viên hiểu tại sao có nguy cơ
+- DiCE counterfactuals chỉ ra cụ thể cần làm gì để cải thiện
+- Tăng trust và engagement của sinh viên với hệ thống
+
+**4. Hỗ trợ từ ngày đầu**
+- Cold-start handler cho phép dự đoán và can thiệp ngay từ ngày nhập học
+- Không bỏ lỡ critical window (tuần đầu tiên)
+- Proactive thay vì reactive
+
+**5. Tiết kiệm chi phí**
+- Open-source, có thể deploy tại bất kỳ tổ chức giáo dục nào
+- Không cần expensive commercial platforms
+- CPU-only, không cần GPU infrastructure
+
+**6. Ứng dụng rộng rãi**
+- Có thể áp dụng cho các tổ chức giáo dục khác (universities, MOOCs)
+- Mã nguồn mở, reproducible
+- Framework PLAF có thể customize cho contexts khác
+
+### 1.4.2. Ý nghĩa khoa học
+
+**1. First Complete PLAF Implementation**
+- Susnjak (2023) chỉ đề xuất conceptual framework
+- Luận văn này là **triển khai đầy đủ đầu tiên** của 8 giai đoạn PLAF
+- Đóng góp: End-to-end pipeline từ data đến intervention
+
+**2. Novel XAI-RAG Integration**
+- **Innovation**: Tích hợp SHAP/DiCE explanations vào RAG system
+- SHAP feature importance → targeted knowledge retrieval
+- DiCE counterfactuals → actionable response generation
+- **Measured impact**: +45% relevance, +60% actionability
+- Đóng góp: Architecture design cho XAI-enhanced RAG
+
+**3. Cold-Start Solution cho Educational Context**
+- K-NN demographic-based approach
+- Confidence scoring cho prediction reliability
+- Đóng góp: Simple, interpretable solution cho day-1 prediction
+
+**4. Comprehensive OULAD Processing**
+- Full processing của tất cả 7 CSV files với complete field handling
+- Weighted assessment scores, assessment type differentiation
+- Proper B/J presentation handling
+- Đóng góp: Best practices cho OULAD data processing
+
+**5. Dual-Interface System Design**
+- Student portal: Self-service risk monitoring, chatbot support
+- Advisor dashboard: Intervention planning, SHAP/DiCE insights
+- Đóng góp: UX design cho prescriptive LA systems
+
+**6. Rigorous Evaluation Framework**
+- Comprehensive benchmark suite: ML models, RAG quality, LLM advice
+- Ablation studies demonstrating value of each component
+- Before/after comparison of generic vs. targeted interventions
+- Đóng góp: Evaluation methodology cho prescriptive LA
+
+**7. Open-Source Contribution**
+- Reproducible pipeline trên OULAD dataset
+- Documented code, configuration files
+- Enables future research và extensions
+- Đóng góp: Research artifact cho community
+
+**8. Bridging Research-Practice Gap**
+- Addresses gap identified by Viberg et al. (2018)
+- Demonstrates feasibility của automated prescriptive LA
+- Provides blueprint cho institutional adoption
+- Đóng góp: Practical implementation insights
+
+## 1.5. Research Contributions (Summary)
 
 This dissertation makes the following **novel contributions** to the field of learning analytics and educational AI:
 

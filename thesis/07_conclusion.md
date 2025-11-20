@@ -1,4 +1,4 @@
-# Chapter 7: Conclusion & Future Work
+# Chương 7: Kết luận (Conclusion)
 
 ## 7.1 Summary of Contributions
 

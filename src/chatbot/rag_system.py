@@ -659,6 +659,28 @@ def initialize_knowledge_base() -> RAGSystem:
     # Load dynamic content from database
     dynamic_docs = load_course_materials_from_db()
     course_docs.extend(dynamic_docs)
+    
+    # Load enhanced data-driven knowledge base
+    enhanced_kb_path = 'data/enhanced_knowledge_base.txt'
+    if os.path.exists(enhanced_kb_path):
+        try:
+            with open(enhanced_kb_path, 'r') as f:
+                content = f.read()
+            
+            # Parse the numbered documents
+            import re
+            # Split by numbered items (e.g., "1. ", "2. ", etc.)
+            pattern = r'\d+\.\s+'
+            enhanced_docs = re.split(pattern, content)
+            # Remove empty strings and header
+            enhanced_docs = [doc.strip() for doc in enhanced_docs if doc.strip() and not doc.startswith('#')]
+            
+            course_docs.extend(enhanced_docs)
+            logger.info(f"Loaded {len(enhanced_docs)} data-driven documents from enhanced knowledge base")
+        except Exception as e:
+            logger.warning(f"Could not load enhanced knowledge base: {e}")
+    else:
+        logger.warning(f"Enhanced knowledge base not found at {enhanced_kb_path}. Run enhance_knowledge_base.py to generate it.")
         
     # Note: VLE content is now loaded dynamically via load_course_materials_from_db()
     
@@ -670,7 +692,8 @@ def initialize_knowledge_base() -> RAGSystem:
         rag.save_index()
     except Exception as e:
         logger.warning(f"Could not save index: {e}")
-        return rag
+    
+    return rag
 
 if __name__ == "__main__":
     # Test RAG system
