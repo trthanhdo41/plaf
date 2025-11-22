@@ -1,0 +1,139 @@
+=============================================================================
+                    GIT COMMIT INSTRUCTIONS
+=============================================================================
+
+📊 CURRENT STATUS:
+- 20 modified files
+- 9 new files  
+- Several deleted database files (already removed)
+
+=============================================================================
+STEP 1: Clean up files that should NOT be in git
+=============================================================================
+
+# Reset training logs (will be ignored in future)
+git checkout -- catboost_info/
+
+# Reset generated data
+git checkout -- data/demo_accounts.csv
+
+# The SQL file is 1.1GB - now in .gitignore, won't be tracked
+
+=============================================================================
+STEP 2: Add important code changes
+=============================================================================
+
+# Core fixes
+git add .gitignore
+git add src/database/models.py
+git add src/explainability/explainability_bridge.py
+git add src/chatbot/rag_system.py
+git add src/chatbot/fallback_advisor.py
+
+# Data processing improvements
+git add src/data/preprocessing.py
+git add src/data/seed_demo_courses.py
+git add src/prescriptive/dice_explainer.py
+
+# API and frontend
+git add src/api/main.py
+git add frontend/app/dashboard/page.tsx
+
+# Scripts
+git add restart_backend.sh
+git add start_plaf.sh
+git add setup_database.py
+git add requirements.txt
+
+# Utility scripts (optional but recommended)
+git add enhance_knowledge_base.py
+git add generate_evaluation_report.py
+git add reset_system.sh
+
+# Documentation (optional but recommended)
+git add COMPREHENSIVE_SYSTEM_REVIEW.md
+git add IMMEDIATE_ACTION_PLAN.md
+git add OULAD_DATA_HANDLING_REVIEW.md
+git add SYSTEM_VERIFICATION_REPORT.md
+
+=============================================================================
+STEP 3: Commit with descriptive message
+=============================================================================
+
+git commit -m "Fix: Student data aggregation and explainability system
+
+Major fixes:
+- Fix weighted assessment score calculation in preprocessing
+- Add early/late registration features for ML model
+- Fix explainability bridge to use aggregated data (not raw table)
+- Add fallback advisor for API quota exceeded errors
+- Fix data flow: database -> backend -> frontend
+
+Infrastructure improvements:
+- Update restart_backend.sh to load API key from .env (security)
+- Add .gitignore for generated files (1.1GB SQL, logs, cache)
+- Fix indentation errors in dice_explainer and seed_demo_courses
+
+New features:
+- Fallback advisor provides rule-based responses when API unavailable
+- Enhanced knowledge base generation from OULAD statistics
+- Comprehensive evaluation report generator
+
+Bug fixes:
+- Student 650515 now shows correct data (40 days, 302 clicks, 34.6%)
+- AI chatbot now explains risk factors accurately
+- Explainability uses real student metrics instead of zeros"
+
+=============================================================================
+STEP 4 (OPTIONAL): Create a new branch for these changes
+=============================================================================
+
+# If you want to keep main branch clean:
+git checkout -b fix/student-data-aggregation
+# Then follow steps 1-3
+# Then: git push origin fix/student-data-aggregation
+
+=============================================================================
+FILES TO IGNORE (Already updated in .gitignore):
+=============================================================================
+
+✅ .backend.pid, .frontend.pid - Process IDs
+✅ catboost_info/ - Training logs  
+✅ data/*.db - Database files
+✅ plaf_complete_database.sql - 1.1GB SQL dump
+✅ data/rag_index.* - RAG cache
+✅ data/demo_accounts.csv - Generated data
+✅ plots/evaluation/ - Generated plots
+
+=============================================================================
+SUMMARY OF CHANGES:
+=============================================================================
+
+🔧 Core Fixes (MUST commit):
+  - src/database/models.py: Added num_days_active, total_clicks aliases
+  - src/explainability/explainability_bridge.py: Use get_student_full_context()
+  - src/chatbot/fallback_advisor.py: NEW - rule-based advisor
+
+📊 Data Processing (SHOULD commit):
+  - src/data/preprocessing.py: Weighted scores + registration features
+  - src/data/seed_demo_courses.py: Fixed syntax errors
+  - src/prescriptive/dice_explainer.py: Fixed indentation
+
+🌐 Frontend/API (SHOULD commit):
+  - src/api/main.py: Enhanced student endpoint
+  - src/chatbot/rag_system.py: Fallback integration
+  - frontend/app/dashboard/page.tsx: Fixed data display
+
+🛠️ Scripts (SHOULD commit):
+  - restart_backend.sh: Use .env file
+  - enhance_knowledge_base.py: Generate data-driven KB
+  - generate_evaluation_report.py: Model evaluation
+  - reset_system.sh: Full system reset
+
+📚 Documentation (OPTIONAL):
+  - COMPREHENSIVE_SYSTEM_REVIEW.md: Full system analysis
+  - IMMEDIATE_ACTION_PLAN.md: Quick fix guide
+  - OULAD_DATA_HANDLING_REVIEW.md: Data handling notes
+  - SYSTEM_VERIFICATION_REPORT.md: Verification results
+
+=============================================================================

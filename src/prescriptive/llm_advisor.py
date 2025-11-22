@@ -6,10 +6,11 @@ This module uses Gemini API to generate natural language advice.
 
 import os
 import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 import logging
 import google.generativeai as genai
 from dotenv import load_dotenv
+from src.prescriptive.action_mapper import ActionMapper
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,13 +22,14 @@ load_dotenv()
 class LLMAdvisor:
     """Generate natural language advice using LLM."""
     
-    def __init__(self, api_key: str = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str = None, model_name: str = "gemini-2.5-flash", db_path: str = "data/lms.db"):
         """
         Initialize LLM advisor.
         
         Args:
             api_key: Gemini API key (reads from env if not provided)
             model_name: Gemini model to use
+            db_path: Path to SQLite database
         """
         self.api_key = api_key or os.getenv('GEMINI_API_KEY')
         
@@ -38,50 +40,89 @@ class LLMAdvisor:
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(model_name)
         
+        # Initialize Action Mapper
+        self.action_mapper = ActionMapper(db_path=db_path)
+        
         logger.info(f"LLM Advisor initialized with {model_name}")
     
-    def create_prompt(self, student_data: Dict, counterfactual_changes: Dict) -> str:
+    def create_prompt(self, student_data: Dict, counterfactual_changes: Dict, specific_actions: Dict = None) -> str:
         """
         Create prompt for LLM to generate advice.
         
         Args:
             student_data: Original student feature values
             counterfactual_changes: Recommended changes from DiCE
+            specific_actions: Specific resources/assessments from ActionMapper
             
         Returns:
             Formatted prompt string
         """
-        prompt = f"""You are an academic advisor AI assistant helping students at risk of not completing their course.
+        # Format specific actions into human-readable action items
+        action_items = []
+        if specific_actions:
+            # Format unvisited resources
+            if specific_actions.get('recommended_resources'):
+                for r in specific_actions['recommended_resources'][:3]:  # Top 3
+                    activity = r.get('activity_type', 'resource')
+                    week = r.get('week_from')
+                    week_text = f"Week {week}" if week else "the course materials"
+                    action_items.append(f"Access the {activity} in {week_text}")
+            
+            # Format low-score assessments to review
+            if specific_actions.get('review_assessments'):
+                for a in specific_actions['review_assessments'][:2]:  # Top 2
+                    assess_type = a.get('assessment_type', 'assignment')
+                    score = a.get('score', 0)
+                    action_items.append(f"Review and redo your {assess_type} where you scored {score:.0f}% to understand mistakes")
+            
+            # Format upcoming assessments
+            if specific_actions.get('upcoming_assessments'):
+                for a in specific_actions['upcoming_assessments'][:2]:
+                    assess_type = a.get('assessment_type', 'assessment')
+                    action_items.append(f"Prepare for upcoming {assess_type}")
+        
+        # If no specific actions found, create generic but still actionable items
+        if not action_items:
+            action_items = [
+                "Review the course lecture videos you haven't watched yet",
+                "Complete the practice exercises and quizzes",
+                "Post a question or comment in the discussion forum",
+                "Review your lowest-scoring assignments to identify weak areas"
+            ]
+        
+        # Create actionable instructions list
+        action_list_text = "\n".join([f"{i+1}. {action}" for i, action in enumerate(action_items)])
 
-Based on predictive analytics and counterfactual analysis, you need to provide clear, actionable, and supportive advice to help a student improve their outcomes.
+        prompt = f"""You are an empathetic academic advisor helping a student improve their learning outcomes.
 
-## Student Current Situation:
+## Student Situation:
 {json.dumps(student_data, indent=2)}
 
-## Recommended Changes to Improve Success:
-{json.dumps(counterfactual_changes, indent=2)}
+## SPECIFIC ACTIONS THIS STUDENT MUST DO:
+{action_list_text}
+
+## ⚠️ CRITICAL RULES - FAILURE TO FOLLOW WILL RESULT IN UNHELPFUL ADVICE:
+1. **ABSOLUTELY FORBIDDEN**: Do NOT mention numerical targets like "increase clicks from X to Y" or "raise score by Z%". Students do NOT understand what this means.
+2. **REQUIRED**: Your recommendations MUST use ONLY the specific actions listed above.
+3. **Format**: Be conversational, warm, and specific. Say things like "I recommend you start by reviewing the resource in Week 3" NOT "increase your engagement metrics".
+4. **Prioritize**: Focus on the TOP 3 most impactful actions from the list above.
 
 ## Your Task:
-Generate personalized, evidence-based advice for this student. The advice should:
-1. Be supportive and encouraging (not judgmental)
-2. Be specific and actionable
-3. Prioritize the most impactful changes
-4. Be realistic and achievable
-5. Explain WHY these changes would help
+Write advice that sounds like a caring human tutor, not a data scientist. The student should know EXACTLY what to click on and what to do after reading your advice.
 
 ## Output Format (JSON):
 {{
-    "summary": "Brief overview of the student's situation",
-    "risk_factors": ["List of main risk factors"],
+    "summary": "Brief, empathetic assessment (NO NUMBERS)",
+    "risk_factors": ["Plain English risk factors (NO METRICS)"],
     "recommendations": [
         {{
-            "action": "Specific action to take",
-            "reason": "Why this will help",
+            "action": "ONE specific action from the list above",
+            "reason": "Why this helps their learning",
             "priority": "high/medium/low",
-            "expected_impact": "What improvement to expect"
+            "expected_impact": "What they'll gain (NO NUMBERS)"
         }}
     ],
-    "encouragement": "Positive, motivating closing message"
+    "encouragement": "Warm, motivating message"
 }}
 
 Generate the advice now:"""
@@ -89,7 +130,7 @@ Generate the advice now:"""
         return prompt
     
     def generate_advice(self, student_data: Dict, counterfactual_changes: Dict,
-                       temperature: float = 0.7) -> Dict:
+                       temperature: float = 0.7, specific_actions: Dict = None) -> Dict:
         """
         Generate advice for a student.
         
@@ -97,13 +138,14 @@ Generate the advice now:"""
             student_data: Student's current data
             counterfactual_changes: Recommended changes
             temperature: LLM temperature (0-1, higher = more creative)
+            specific_actions: Specific actionable items
             
         Returns:
             Dictionary with generated advice
         """
         try:
             # Create prompt
-            prompt = self.create_prompt(student_data, counterfactual_changes)
+            prompt = self.create_prompt(student_data, counterfactual_changes, specific_actions)
             
             # Generate response
             logger.info("Generating advice with LLM...")
@@ -165,6 +207,29 @@ Generate the advice now:"""
                 'summary': 'Failed to generate advice'
             }
     
+    def generate_advice_for_student(self, student_id: int, student_data: Dict, counterfactuals: Dict) -> Dict:
+        """
+        Generate advice for a specific student, including action mapping.
+        
+        Args:
+            student_id: Student ID
+            student_data: Student features/data
+            counterfactuals: Counterfactual changes dictionary
+            
+        Returns:
+            Advice dictionary
+        """
+        # Get specific actions from ActionMapper
+        specific_actions = {}
+        try:
+            specific_actions = self.action_mapper.map_actions(student_id, counterfactuals)
+            logger.info(f"Mapped {len(specific_actions)} specific action types for student {student_id}")
+        except Exception as e:
+            logger.warning(f"Could not map actions for student {student_id}: {e}")
+            
+        # Generate advice
+        return self.generate_advice(student_data, counterfactuals, specific_actions=specific_actions)
+
     def generate_batch_advice(self, students_data: List[Dict]) -> List[Dict]:
         """
         Generate advice for multiple students.
@@ -183,6 +248,7 @@ Generate the advice now:"""
             # Extract student data and counterfactuals
             current_data = student.get('original_instance', {})
             cf_changes = student.get('counterfactuals', [])
+            student_id = student.get('id_student') or student.get('student_id')
             
             if cf_changes:
                 # Use first counterfactual
@@ -190,8 +256,17 @@ Generate the advice now:"""
             else:
                 changes = {}
             
-            # Generate advice
-            advice = self.generate_advice(current_data, changes)
+            # Generate advice using the new method if student_id is available
+            if student_id:
+                try:
+                    s_id = int(student_id)
+                    advice = self.generate_advice_for_student(s_id, current_data, changes)
+                except Exception:
+                    # Fallback if ID conversion fails
+                    advice = self.generate_advice(current_data, changes)
+            else:
+                advice = self.generate_advice(current_data, changes)
+                
             advice['student_idx'] = student.get('instance_idx', i)
             
             all_advice.append(advice)

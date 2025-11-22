@@ -3,14 +3,18 @@ FastAPI Backend for LMS Portal
 Provides REST API endpoints for the Next.js frontend
 """
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, Dict, List
-import sys
+import logging
 import os
+import pickle
+import json
+import numpy as np
+import sys
 import requests
 import base64
+from typing import List, Optional, Dict, Any
+from fastapi import FastAPI, HTTPException, Depends, Query, Body, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # Add project root to path (for absolute imports)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -189,6 +193,7 @@ async def get_student(student_id: int):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
         
+        
         # Aggregate assessment & activity statistics
         activity_stats = db.get_student_activity_stats(student_id)
         assessment_stats = db.get_student_assessment_stats(student_id)
@@ -218,25 +223,11 @@ async def get_student(student_id: int):
         activities = []
         assessments = []
         
-        # Try to get real data if available
-        try:
-            conn = db.connect()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM activities WHERE id_student = ? LIMIT 10", (student_id,))
-            activities = [dict(row) for row in cursor.fetchall()]
-            
-            cursor.execute("SELECT * FROM assessments WHERE id_student = ? LIMIT 10", (student_id,))
-            assessments = [dict(row) for row in cursor.fetchall()]
-        except Exception as e:
-            logger.warning(f"Could not fetch activities/assessments: {e}")
-        
         return {
             "student": student,
             "activities": activities,
             "assessments": assessments
         }
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -450,6 +441,46 @@ async def submit_quiz(quiz_id: int, request: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== MIT OCW RESOURCES ====================
+
+@app.get("/api/lessons/{lesson_id}/mit-resource")
+async def get_lesson_mit_resource(lesson_id: int):
+    """Get MIT OpenCourseWare resource for a lesson"""
+    try:
+        conn = db.connect()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                l.id, l.title, l.mit_ocw_url, l.resource_type,
+                c.mit_course_id, c.title as course_title
+            FROM lessons l
+            JOIN courses c ON l.course_id = c.id
+            WHERE l.id = ?
+        """, (lesson_id,))
+        
+        lesson = cursor.fetchone()
+        if not lesson:
+            raise HTTPException(status_code=404, detail="Lesson not found")
+        
+        return {
+            "lesson_id": lesson['id'],
+            "title": lesson['title'],
+            "mit_ocw_url": lesson['mit_ocw_url'],
+            "resource_type": lesson['resource_type'],
+            "mit_course_id": lesson['mit_course_id'],
+            "course_title": lesson['course_title'],
+            "attribution": {
+                "source": "MIT OpenCourseWare",
+                "url": "https://ocw.mit.edu",
+                "license": "Creative Commons BY-NC-SA 4.0",
+                "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== FORUM ENDPOINTS ====================
 
 @app.get("/api/lessons/{lesson_id}/forum")
@@ -570,6 +601,16 @@ async def chat_with_ai(request: ChatRequest):
         # Get explainability insights if student is at risk
         explainability_data = None
         stats = full_context.get('stats', {})
+        
+        sim_day = full_context.get('sim_day')
+        if sim_day is not None:
+            # Recalculate risk dynamically
+            risk_result = calculate_dynamic_risk(request.student_id, sim_day)
+            stats['risk_probability'] = risk_result['risk_probability']
+            stats['is_at_risk'] = risk_result['risk_probability'] > 0.5
+            # Update full_context with new stats so RAG sees it
+            full_context['stats'] = stats
+            
         if stats.get('is_at_risk') or stats.get('risk_probability', 0) > 0.4:
             try:
                 bridge = get_explainability_bridge()
@@ -619,16 +660,35 @@ async def clear_chat_history(student_id: int):
 
 @app.post("/api/advice")
 async def get_ai_advice(request: AdviceRequest):
-    """Get personalized advice from LLM"""
+    """Get personalized advice from LLM with Action Mapping"""
     try:
         if not llm_advisor:
             raise HTTPException(status_code=503, detail="AI service not available")
         
         # Get student data
         student = db.get_student(request.student_id)
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+            
+        # Get counterfactuals from explainability bridge
+        counterfactual_changes = {}
+        try:
+            bridge = get_explainability_bridge()
+            explainability_data = bridge.get_student_explainability(request.student_id)
+            
+            if explainability_data and 'dice_counterfactuals' in explainability_data:
+                dice_data = explainability_data['dice_counterfactuals']
+                if dice_data and 'required_changes' in dice_data:
+                    counterfactual_changes = dice_data['required_changes']
+        except Exception as e:
+            print(f"Warning: Could not get counterfactuals for advice: {e}")
         
-        # Generate advice
-        advice = llm_advisor.generate_advice(student_data=student)
+        # Generate advice using the comprehensive method (includes Action Mapping)
+        advice = llm_advisor.generate_advice_for_student(
+            student_id=request.student_id,
+            student_data=student,
+            counterfactuals=counterfactual_changes
+        )
         
         return advice
     except HTTPException:
@@ -636,7 +696,107 @@ async def get_ai_advice(request: AdviceRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ==================== Quiz API Endpoints ====================
+# ==================== Critical Missing Features Endpoints ====================
+
+@app.get("/api/student/{student_id}/registration-info")
+async def get_student_registration_info(student_id: int):
+    """Get registration timing information for student"""
+    try:
+        registration_info = db.get_student_registration_info(student_id)
+        if not registration_info:
+            raise HTTPException(status_code=404, detail="Registration info not found")
+        
+        # Calculate registration timing metrics
+        date_reg = registration_info['date_registration']
+        is_early = date_reg < -7  # Registered more than 7 days before start
+        
+        return {
+            "date_registration": date_reg,
+            "date_unregistration": registration_info['date_unregistration'],
+            "is_early_registrant": is_early,
+            "days_before_start": abs(date_reg) if date_reg < 0 else 0,
+            "code_module": registration_info['code_module'],
+            "code_presentation": registration_info['code_presentation']
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/student/{student_id}/course-progress")
+async def get_student_course_progress(student_id: int):
+    """Get course progress percentage and days remaining"""
+    try:
+        
+        progress_info = db.get_course_progress(student_id, current_day=sim_day)
+        if not progress_info:
+            raise HTTPException(status_code=404, detail="Progress info not found")
+        
+        return progress_info
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/student/{student_id}/upcoming-assessments")
+async def get_student_upcoming_assessments(student_id: int):
+    """Get unsubmitted assessments with weights, highlighting high-weight and exam items"""
+    try:
+        
+        upcoming = db.get_upcoming_assessments(student_id, current_day=sim_day)
+        
+        # Separate by type (OULAD uses separate grading: Exam=100%, TMAs=100% total)
+        exam_assessments = [a for a in upcoming if a['assessment_type'] == 'Exam']
+        tma_cma_assessments = [a for a in upcoming if a['assessment_type'] in ['TMA', 'CMA']]
+        
+        # Calculate weights separately
+        exam_weight = sum(a['weight'] for a in exam_assessments)  # Should be 0 or 100
+        tma_cma_weight = sum(a['weight'] for a in tma_cma_assessments)
+        
+        # Identify critical items (exam or high-weight TMAs)
+        critical_assessments = [a for a in upcoming if a['is_exam'] or a['is_high_weight']]
+        
+        return {
+            "total_upcoming": len(upcoming),
+            "critical_count": len(critical_assessments),
+            "exam_weight_remaining": round(exam_weight, 1),
+            "tma_cma_weight_remaining": round(tma_cma_weight, 1),
+            "has_exam": len(exam_assessments) > 0,
+            "exam_assessments": exam_assessments,
+            "tma_cma_assessments": tma_cma_assessments,
+            "critical_assessments": critical_assessments,
+            "all_assessments": upcoming
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== Simulation API Endpoints ====================
+
+class PredictionRequest(BaseModel):
+    day: int
+
+@app.post("/api/predict-risk/{student_id}")
+async def predict_student_risk(student_id: int, request: PredictionRequest):
+    """
+    Predict student risk at a specific day in the course (Time-Travel).
+    """
+    try:
+        result = calculate_dynamic_risk(student_id, request.day)
+        
+        # Get snapshot for debugging
+        data = db.get_student_data_at_day(student_id, request.day)
+        
+        return {
+            "day": request.day,
+            "risk_probability": result['risk_probability'],
+            "risk_level": result['risk_level'],
+            "data_snapshot": data
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/quizzes")
 async def create_quiz(quiz_data: QuizCreate):

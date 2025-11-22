@@ -891,47 +891,94 @@ class Database:
             quiz_avg_score = sum(quiz_scores) / len(quiz_scores) if quiz_scores else 0
             passed_quizzes = sum(1 for quiz in quiz_results if quiz['passed'])
             
+            # Check for simulation mode
+            sim_day = self.get_simulation_day(student_id)
+            
             # Get OULAD activity and assessment data (calculate from activities/assessments tables)
             # This is the ground truth data for students
-            cursor.execute("""
-                SELECT COUNT(DISTINCT date) as days_active,
-                       SUM(clicks) as total_clicks,
-                       COUNT(*) as total_activities
-                FROM activities
-                WHERE id_student = ?
-            """, (student_id,))
+            if sim_day is not None:
+                cursor.execute("""
+                    SELECT COUNT(DISTINCT date) as days_active,
+                           SUM(clicks) as total_clicks,
+                           COUNT(*) as total_activities
+                    FROM activities
+                    WHERE id_student = ? AND date <= ?
+                """, (student_id, sim_day))
+            else:
+                cursor.execute("""
+                    SELECT COUNT(DISTINCT date) as days_active,
+                           SUM(clicks) as total_clicks,
+                           COUNT(*) as total_activities
+                    FROM activities
+                    WHERE id_student = ?
+                """, (student_id,))
+                
             activity_data = cursor.fetchone()
             days_active = activity_data['days_active'] if activity_data else 0
             total_clicks = activity_data['total_clicks'] if activity_data else 0
             
-            # Calculate weighted average score from assessments
-            # Note: Exams (weight=100) are handled separately in OULAD
+            # Calculate OULAD-compliant grade using Two-Component Rule
+            # Official OULAD Rule: Pass IF (OCAS ≥ 40) AND (OES ≥ 40)
+            # Source: https://analyse.kmi.open.ac.uk/open_dataset
+            
+            # Calculate OCAS (Overall Continuous Assessment Score)
+            # OCAS = Σ(TMA/CMA score × weight) / 100
+            if sim_day is not None:
+                cursor.execute("""
+                    SELECT 
+                        SUM(score * weight) / 100.0 as ocas,
+                        COUNT(*) as total_tma_cma
+                    FROM assessments
+                    WHERE id_student = ?
+                    AND score IS NOT NULL
+                    AND weight IS NOT NULL
+                    AND weight > 0
+                    AND assessment_type IN ('TMA', 'CMA')
+                    AND date_submitted <= ?
+                """, (student_id, sim_day))
+            else:
+                cursor.execute("""
+                    SELECT 
+                        SUM(score * weight) / 100.0 as ocas,
+                        COUNT(*) as total_tma_cma
+                    FROM assessments
+                    WHERE id_student = ?
+                    AND score IS NOT NULL
+                    AND weight IS NOT NULL
+                    AND weight > 0
+                    AND assessment_type IN ('TMA', 'CMA')
+                """, (student_id,))
+                
+            tma_data = cursor.fetchone()
+            
+            # Get OES (Overall Examination Score)
             cursor.execute("""
-                SELECT 
-                    SUM(score * weight) / SUM(weight) as weighted_avg_score,
-                    AVG(score) as simple_avg_score,
-                    COUNT(*) as total_assessments,
-                    SUM(CASE WHEN assessment_type = 'Exam' THEN score ELSE NULL END) as exam_score
+                SELECT score as oes
                 FROM assessments
                 WHERE id_student = ?
+                AND assessment_type = 'Exam'
                 AND score IS NOT NULL
-                AND weight IS NOT NULL
-                AND weight > 0
+                LIMIT 1
             """, (student_id,))
-            assessment_data = cursor.fetchone()
+            exam_data = cursor.fetchone()
             
-            # Use weighted average if available, otherwise fall back to simple average
-            weighted_avg = assessment_data['weighted_avg_score'] if assessment_data else None
-            simple_avg = assessment_data['simple_avg_score'] if assessment_data else None
-            assessment_avg_score = weighted_avg if weighted_avg is not None else (simple_avg if simple_avg is not None else 0)
-            total_assessments = assessment_data['total_assessments'] if assessment_data else 0
-            exam_score = assessment_data['exam_score'] if assessment_data and assessment_data['exam_score'] else None
+            # Extract values
+            ocas = tma_data['ocas'] if tma_data and tma_data['ocas'] else 0
+            oes = exam_data['oes'] if exam_data and exam_data['oes'] else None
+            total_assessments = tma_data['total_tma_cma'] if tma_data else 0
+            
+            # For display purposes, show the component scores
+            # Note: Student passes ONLY if BOTH OCAS ≥ 40 AND OES ≥ 40
+            assessment_avg_score = ocas  # Show OCAS as the primary score
+            exam_score = oes
             
             # Use student table data as fallback (for backward compatibility)
             student_dict = dict(student)
             primary_avg_score = assessment_avg_score or quiz_avg_score
             primary_progress = course_progress if total_courses > 0 else 0
             risk_probability = student_dict.get('risk_probability', 0) or 0
+
+
             
             return {
                 'student': student_dict,
@@ -1125,23 +1172,56 @@ class Database:
         return dict(row)
     
     def get_student_assessment_stats(self, student_id: int) -> Dict:
-        """Aggregate assessment stats for a student."""
+        """Aggregate assessment stats using OULAD Two-Component Rule."""
         conn = self.connect()
         cursor = conn.cursor()
         
+        # Calculate OCAS (Overall Continuous Assessment Score)
         cursor.execute("""
             SELECT 
-                COUNT(*) as total_assessments,
-                COALESCE(AVG(score), 0) as avg_score,
-                COALESCE(SUM(score), 0) as total_score
+                COUNT(*) as total_tma_cma,
+                SUM(score * weight) / 100.0 as ocas
             FROM assessments
             WHERE id_student = ?
+            AND assessment_type IN ('TMA', 'CMA')
+            AND score IS NOT NULL
+            AND weight IS NOT NULL
         """, (student_id,))
         
-        row = cursor.fetchone()
-        if not row:
-            return {'total_assessments': 0, 'avg_score': 0, 'total_score': 0}
-        return dict(row)
+        ocas_row = cursor.fetchone()
+        ocas = ocas_row['ocas'] if ocas_row and ocas_row['ocas'] is not None else 0
+        total_tma_cma = ocas_row['total_tma_cma'] if ocas_row else 0
+        
+        # Calculate OES (Overall Exam Score)
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_exams,
+                SUM(score * weight) / 100.0 as oes
+            FROM assessments
+            WHERE id_student = ?
+            AND assessment_type = 'Exam'
+            AND score IS NOT NULL
+            AND weight IS NOT NULL
+        """, (student_id,))
+        
+        oes_row = cursor.fetchone()
+        oes = oes_row['oes'] if oes_row and oes_row['oes'] is not None else 0
+        total_exams = oes_row['total_exams'] if oes_row else 0
+        
+        # OULAD Two-Component Rule: Pass IF (OCAS ≥ 40) AND (OES ≥ 40)
+        passes_rule = (ocas >= 40) and (oes is not None and oes >= 40)
+        
+        total_assessments = total_tma_cma + total_exams
+        
+        return {
+            'total_assessments': total_assessments,
+            'avg_score': ocas,  # Show OCAS as primary score
+            'total_score': ocas,  # Legacy compatibility
+            'ocas': ocas,  # Overall Continuous Assessment Score
+            'oes': oes,  # Overall Examination Score
+            'has_exam': oes is not None,
+            'passes_oulad_rule': passes_rule
+        }
     
     def get_student_quiz_performance(self, student_id: int) -> Dict:
         """Get student's quiz performance summary."""
@@ -1507,6 +1587,254 @@ class Database:
         except Exception as e:
             logger.error(f"Error checking lesson completion: {e}")
             return {"can_complete": False, "reason": "Error checking completion status"}
+
+    def get_student_registration_info(self, student_id: int) -> Optional[Dict]:
+        """Get registration timing information for student."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT sr.date_registration, sr.date_unregistration,
+                   s.code_module, s.code_presentation
+            FROM student_registration sr
+            JOIN students s ON sr.id_student = s.id_student
+            WHERE sr.id_student = ?
+        """, (student_id,))
+        
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+    
+    def get_course_progress(self, student_id: int) -> Optional[Dict]:
+        """Calculate course progress % based on current engagement vs total course length."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        # Get student's module and presentation
+        cursor.execute("""
+            SELECT code_module, code_presentation, final_result
+            FROM students
+            WHERE id_student = ?
+        """, (student_id,))
+        
+        student_row = cursor.fetchone()
+        if not student_row:
+            return None
+        
+        student_data = dict(student_row)
+        
+        # Get course length from original OULAD data (if available in a courses table)
+        # For now, use typical Open University course length: 269 days for DDD
+        # This could be enhanced by querying a courses table with actual length data
+        course_length_map = {
+            'AAA': 251, 'BBB': 252, 'CCC': 236,
+            'DDD': 269, 'EEE': 153, 'FFF': 242, 'GGG': 262
+        }
+        
+        course_length = course_length_map.get(student_data['code_module'], 269)
+        
+        # Get latest activity date (proxy for "current day" in course)
+        cursor.execute("""
+            SELECT MAX(date) as latest_day
+            FROM activities
+            WHERE id_student = ?
+        """, (student_id,))
+        
+        activity_row = cursor.fetchone()
+        current_day = dict(activity_row)['latest_day'] if activity_row else 0
+        current_day = current_day or 0  # Handle None
+        
+        # Calculate progress
+        progress_percent = min((current_day / course_length) * 100, 100) if course_length > 0 else 0
+        
+        return {
+            'course_length': course_length,
+            'current_day': current_day,
+            'progress_percent': round(progress_percent, 1),
+            'days_remaining': max(course_length - current_day, 0),
+            'is_withdrawn': student_data['final_result'] == 'Withdrawn',
+            'final_result': student_data['final_result']
+        }
+    
+    def get_student_data_at_day(self, student_id: int, day: int) -> Dict:
+        """
+        Fetch student data as it would appear on a specific day of the course.
+        Used for 'Time-Travel' risk prediction.
+        """
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        # 1. Get Demographics (Static)
+        cursor.execute("""
+            SELECT gender, region, highest_education, imd_band, age_band, disability, num_of_prev_attempts
+            FROM students WHERE id_student = ?
+        """, (student_id,))
+        demographics = dict(cursor.fetchone())
+        
+        # 2. Get Assessments submitted BEFORE or ON 'day'
+        cursor.execute("""
+            SELECT score, date_submitted
+            FROM assessments
+            WHERE id_student = ? 
+            AND date_submitted <= ?
+            AND score IS NOT NULL
+        """, (student_id, day))
+        assessments = cursor.fetchall()
+        
+        scores = [a['score'] for a in assessments]
+        avg_score = sum(scores) / len(scores) if scores else 0
+        min_score = min(scores) if scores else 0
+        max_score = max(scores) if scores else 0
+        
+        # 3. Get VLE Clicks BEFORE or ON 'day'
+        cursor.execute("""
+            SELECT SUM(clicks) as total_clicks, COUNT(DISTINCT date) as active_days, COUNT(DISTINCT resource_id) as unique_resources
+            FROM activities
+            WHERE id_student = ?
+            AND date <= ?
+        """, (student_id, day))
+        vle_stats = cursor.fetchone()
+        
+        total_clicks = vle_stats['total_clicks'] if vle_stats['total_clicks'] else 0
+        active_days = vle_stats['active_days'] if vle_stats['active_days'] else 0
+        unique_resources = vle_stats['unique_resources'] if vle_stats['unique_resources'] else 0
+        
+        # Derived features
+        avg_clicks_per_day = total_clicks / day if day > 0 else 0
+        clicks_per_active_day = total_clicks / active_days if active_days > 0 else 0
+        
+        return {
+            'demographics': demographics,
+            'features': {
+                'avg_score': avg_score,
+                'min_score': min_score,
+                'max_score': max_score,
+                'total_clicks': total_clicks,
+                'avg_clicks_per_day': avg_clicks_per_day,
+                'num_days_active': active_days,
+                'num_unique_resources': unique_resources,
+                'clicks_per_active_day': clicks_per_active_day,
+                'resource_diversity': unique_resources,
+                'study_intensity': total_clicks,
+                'submission_rate': 1.0, # Simplified
+                'num_unregistrations': demographics['num_of_prev_attempts'],
+                'registered_early': 0, # Placeholder
+                'has_unregistrations': 0 # Placeholder
+            }
+        }
+    
+    def get_upcoming_assessments(self, student_id: int, current_day: Optional[int] = None) -> List[Dict]:
+        """Get unsubmitted assessments with weights, sorted by due date.
+           If current_day is provided, filters based on that day (Time-Travel).
+        """
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        # Get student's module and presentation
+        cursor.execute("""
+            SELECT code_module, code_presentation
+            FROM students
+            WHERE id_student = ?
+        """, (student_id,))
+        
+        student_row = cursor.fetchone()
+        if not student_row:
+            return []
+        
+        student_data = dict(student_row)
+        
+        # Get all assessments for this module/presentation
+        cursor.execute("""
+            SELECT ai.id_assessment, ai.assessment_type, ai.date as date_due, ai.weight
+            FROM assessment_info ai
+            WHERE ai.code_module = ? AND ai.code_presentation = ?
+            ORDER BY ai.date ASC
+        """, (student_data['code_module'], student_data['code_presentation']))
+        
+        all_assessments = [dict(row) for row in cursor.fetchall()]
+        
+        # Get submitted assessments
+        # If simulation mode: Only count submissions BEFORE or ON current_day
+        if current_day is not None:
+            cursor.execute("""
+                SELECT DISTINCT id_assessment
+                FROM assessments
+                WHERE id_student = ? AND date_submitted <= ?
+            """, (student_id, current_day))
+        else:
+            cursor.execute("""
+                SELECT DISTINCT id_assessment
+                FROM assessments
+                WHERE id_student = ?
+            """, (student_id,))
+        
+        submitted_ids = {row['id_assessment'] for row in cursor.fetchall()}
+        
+        # Filter and status
+        upcoming = []
+        for assessment in all_assessments:
+            # If submitted, it's not upcoming (unless we want to show history, but this function implies 'upcoming')
+            # Actually, for the dashboard, we usually want to see what's NEXT.
+            # But if we want to show "Overdue", we need to include unsubmitted past items.
+            
+            if assessment['id_assessment'] in submitted_ids:
+                continue
+                
+            # It is unsubmitted (or submitted in future relative to sim day)
+            assessment['is_high_weight'] = assessment['weight'] >= 20.0
+            assessment['is_exam'] = assessment['assessment_type'] == 'Exam'
+            
+            # Determine status
+            if current_day is not None and assessment['date_due'] is not None and assessment['date_due'] < current_day:
+                assessment['status'] = 'Overdue'
+            else:
+                assessment['status'] = 'Upcoming'
+                
+            upcoming.append(assessment)
+    
+        return upcoming
+
+    def get_course_progress(self, student_id: int, current_day: Optional[int] = None) -> Dict:
+        """Get course progress stats. Respects simulation day."""
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        # Get total course length (approximate or from presentation)
+        # OULAD doesn't strictly define length, but usually ~269 days
+        total_days = 269
+        
+        # Determine "now"
+        if current_day is not None:
+            days_elapsed = min(current_day, total_days)
+        else:
+            # Default to end of course for historical data
+            days_elapsed = total_days
+            
+        progress_percentage = (days_elapsed / total_days) * 100
+        
+        # Get completed assessments count (respecting sim day)
+        if current_day is not None:
+            cursor.execute("""
+                SELECT COUNT(DISTINCT id_assessment) as count
+                FROM assessments
+                WHERE id_student = ? AND date_submitted <= ?
+            """, (student_id, current_day))
+        else:
+            cursor.execute("""
+                SELECT COUNT(DISTINCT id_assessment) as count
+                FROM assessments
+                WHERE id_student = ?
+            """, (student_id,))
+            
+        completed_assessments = cursor.fetchone()['count']
+        
+        return {
+            "days_elapsed": days_elapsed,
+            "total_days": total_days,
+            "progress_percentage": round(progress_percentage, 1),
+            "completed_assessments": completed_assessments
+        }
 
 
 # Singleton instance

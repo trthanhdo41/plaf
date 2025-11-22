@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import QuizPlayer from '@/components/QuizPlayer';
 import DiscussionForum from '@/components/DiscussionForum';
+import MITAttribution from '@/components/MITAttribution';
+import PDFViewer from '@/components/PDFViewer';
 import {
   ArrowLeft,
   Play,
@@ -22,6 +24,7 @@ import {
   Trophy,
   BookOpen,
   Lock,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function CoursePlayerPage() {
@@ -41,6 +44,7 @@ export default function CoursePlayerPage() {
   const [currentView, setCurrentView] = useState<'video' | 'quiz' | 'forum'>('video');
   const [quiz, setQuiz] = useState<any>(null);
   const [videoProgress, setVideoProgress] = useState<any>(null);
+  const [mitResource, setMitResource] = useState<any>(null);
 
   useEffect(() => {
     const storedStudent = localStorage.getItem('student');
@@ -62,6 +66,7 @@ export default function CoursePlayerPage() {
   useEffect(() => {
     if (selectedLesson) {
       loadQuiz(selectedLesson.id);
+      loadMITResource(selectedLesson.id);
     }
   }, [selectedLesson]);
 
@@ -162,9 +167,26 @@ export default function CoursePlayerPage() {
     }
   };
 
+  const loadMITResource = async (lessonId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/lessons/${lessonId}/mit-resource`);
+      if (response.ok) {
+        const data = await response.json();
+        setMitResource(data);
+        console.log('MIT resource loaded:', data);
+      } else {
+        setMitResource(null);
+      }
+    } catch (error) {
+      console.error('Failed to load MIT resource:', error);
+      setMitResource(null);
+    }
+  };
+
+
   const handleVideoProgress = async (watchTime: number, duration: number, percentage: number) => {
     if (!selectedLesson || !student) return;
-    
+
     try {
       await fetch(`/api/lessons/${selectedLesson.id}/video-progress`, {
         method: 'POST',
@@ -183,10 +205,10 @@ export default function CoursePlayerPage() {
 
   const handleQuizComplete = (score: number, passed: boolean) => {
     console.log(`Quiz completed! Score: ${score}%, Passed: ${passed}`);
-    
+
     if (passed) {
       handleCompleteLesson();
-      
+
       // Auto advance to next lesson if passed
       const nextLesson = getNextLesson();
       if (nextLesson) {
@@ -206,7 +228,7 @@ export default function CoursePlayerPage() {
         setCurrentView('video');
       }, 2000);
     }
-    
+
     // Reload quiz data to show updated results
     loadQuiz(selectedLesson?.id || 0);
   };
@@ -251,7 +273,7 @@ export default function CoursePlayerPage() {
   const canCompleteLesson = (lessonIndex: number) => {
     // First lesson can always be completed
     if (lessonIndex === 0) return true;
-    
+
     // Check if previous lesson is completed
     const previousLesson = lessons[lessonIndex - 1];
     return previousLesson ? isLessonCompleted(previousLesson.id) : false;
@@ -260,7 +282,7 @@ export default function CoursePlayerPage() {
   const isLessonAccessible = (lessonIndex: number) => {
     // First lesson is always accessible
     if (lessonIndex === 0) return true;
-    
+
     // Check if previous lesson is completed
     const previousLesson = lessons[lessonIndex - 1];
     return previousLesson ? isLessonCompleted(previousLesson.id) : false;
@@ -326,9 +348,8 @@ export default function CoursePlayerPage() {
       <div className="flex h-[calc(100vh-100px)]">
         {/* Sidebar - Lesson List */}
         <div
-          className={`${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } fixed md:sticky md:translate-x-0 top-[100px] left-0 h-[calc(100vh-100px)] w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto transition-transform duration-300 z-40`}
+          className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            } fixed md:sticky md:translate-x-0 top-[100px] left-0 h-[calc(100vh-100px)] w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto transition-transform duration-300 z-40`}
         >
           <div className="p-4">
             <div className="mb-4">
@@ -352,13 +373,12 @@ export default function CoursePlayerPage() {
                     key={lesson.id}
                     onClick={() => isAccessible ? handleSelectLesson(lesson) : null}
                     disabled={!isAccessible}
-                    className={`w-full text-left p-3 rounded-lg transition-all ${
-                      !isAccessible
-                        ? 'opacity-50 cursor-not-allowed bg-gray-800'
-                        : isSelected
+                    className={`w-full text-left p-3 rounded-lg transition-all ${!isAccessible
+                      ? 'opacity-50 cursor-not-allowed bg-gray-800'
+                      : isSelected
                         ? 'bg-blue-600 text-white'
                         : 'hover:bg-gray-700 text-gray-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5">
@@ -410,11 +430,10 @@ export default function CoursePlayerPage() {
                 <div className="flex">
                   <button
                     onClick={() => setCurrentView('video')}
-                    className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${
-                      currentView === 'video'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                    }`}
+                    className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${currentView === 'video'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
                   >
                     <Play className="w-4 h-4" />
                     Video
@@ -422,11 +441,10 @@ export default function CoursePlayerPage() {
                   {quiz && (
                     <button
                       onClick={() => setCurrentView('quiz')}
-                      className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${
-                        currentView === 'quiz'
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                      }`}
+                      className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${currentView === 'quiz'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                        }`}
                     >
                       <Trophy className="w-4 h-4" />
                       Quiz
@@ -434,11 +452,10 @@ export default function CoursePlayerPage() {
                   )}
                   <button
                     onClick={() => setCurrentView('forum')}
-                    className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${
-                      currentView === 'forum'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                    }`}
+                    className={`px-6 py-3 flex items-center gap-2 font-medium transition-colors ${currentView === 'forum'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Discussion
@@ -448,41 +465,102 @@ export default function CoursePlayerPage() {
 
               {/* Content Area */}
               <div className="relative bg-black aspect-video">
-                {currentView === 'video' && selectedLesson.video_url && (
-                  <iframe
-                    key={`video-${selectedLesson.id}`} // Force re-render when lesson changes
-                    src={(() => {
-                      const url = selectedLesson.video_url;
-                      let videoId = '';
-                      
-                      // Extract video ID from various YouTube URL formats
-                      if (url.includes('youtube.com/watch?v=')) {
-                        videoId = url.split('v=')[1]?.split('&')[0];
-                      } else if (url.includes('youtu.be/')) {
-                        videoId = url.split('youtu.be/')[1]?.split('?')[0];
-                      } else if (url.includes('youtube.com/embed/')) {
-                        videoId = url.split('embed/')[1]?.split('?')[0];
-                      }
-                      
-                      console.log(`Loading video for lesson ${selectedLesson.id}:`, url, '→', videoId);
-                      
-                      return `https://www.youtube.com/embed/${videoId}`;
-                    })()}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="YouTube Video Player"
-                  />
-                )}
-                
-                {currentView === 'video' && !selectedLesson.video_url && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-400">No video available</p>
+                {/* VIDEO CONTENT */}
+                {currentView === 'video' && (() => {
+                  // Determine if this is a video resource
+                  const isVideoResource = mitResource?.resource_type === 'video' ||
+                    (!mitResource && selectedLesson.lesson_type === 'video');
+                  const videoUrl = mitResource?.mit_ocw_url || selectedLesson.video_url;
+
+                  if (isVideoResource && videoUrl && videoUrl.includes('youtu')) {
+                    // Render YouTube video
+                    let videoId = '';
+                    if (videoUrl.includes('youtube.com/watch?v=')) {
+                      videoId = videoUrl.split('v=')[1]?.split('&')[0];
+                    } else if (videoUrl.includes('youtu.be/')) {
+                      videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
+                    } else if (videoUrl.includes('youtube.com/embed/')) {
+                      videoId = videoUrl.split('embed/')[1]?.split('?')[0];
+                    }
+
+                    return (
+                      <iframe
+                        key={`video-${selectedLesson.id}`}
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="YouTube Video Player"
+                      />
+                    );
+                  }
+
+                  // PDF Resource
+                  if (mitResource?.resource_type === 'pdf' && mitResource?.mit_ocw_url) {
+                    return (
+                      <div className="w-full h-full">
+                        <PDFViewer
+                          pdfUrl={mitResource.mit_ocw_url}
+                          title={selectedLesson.title}
+                        />
+                      </div>
+                    );
+                  }
+
+                  // Webpage/Link Resource
+                  if (mitResource?.resource_type === 'webpage' && mitResource?.mit_ocw_url) {
+                    return (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                        <div className="text-center p-8">
+                          <BookOpen className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                          <h3 className="text-white text-xl font-semibold mb-2">
+                            {selectedLesson.title}
+                          </h3>
+                          <p className="text-gray-400 mb-6">External learning resource</p>
+                          <Button
+                            onClick={() => window.open(mitResource.mit_ocw_url, '_blank')}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Open MIT OCW Resource
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Quiz Link Resource
+                  if (mitResource?.resource_type === 'quiz' && mitResource?.mit_ocw_url) {
+                    return (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                        <div className="text-center p-8">
+                          <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+                          <h3 className="text-white text-xl font-semibold mb-2">
+                            {selectedLesson.title}
+                          </h3>
+                          <p className="text-gray-400 mb-6">Practice problems from MIT OCW</p>
+                          <Button
+                            onClick={() => window.open(mitResource.mit_ocw_url, '_blank')}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            View MIT Assignments
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // No video/resource available
+                  return (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-400">No video available for this lesson</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {currentView === 'quiz' && quiz && (
                   <div className="absolute inset-0 bg-white overflow-auto">
@@ -539,7 +617,7 @@ export default function CoursePlayerPage() {
                   ) : (() => {
                     const currentIndex = lessons.findIndex(l => l.id === selectedLesson.id);
                     const canComplete = canCompleteLesson(currentIndex);
-                    
+
                     return canComplete ? (
                       <Button onClick={handleCompleteLesson} className="bg-green-600 hover:bg-green-700">
                         Mark as Complete
@@ -582,6 +660,14 @@ export default function CoursePlayerPage() {
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
+
+                {/* MIT Attribution */}
+                {mitResource?.mit_ocw_url && (
+                  <MITAttribution
+                    mitCourseId={mitResource.mit_course_id}
+                    compact={false}
+                  />
+                )}
               </div>
             </div>
           ) : (

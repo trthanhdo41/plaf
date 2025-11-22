@@ -338,30 +338,67 @@ Use this context to provide more personalized and consistent advice. Reference p
                 explainability_info += "**Key Risk Factors Identified:**\n"
                 for i, factor in enumerate(top_factors[:3], 1):
                     feature = factor.get('feature', 'Unknown')
-                    impact = factor.get('impact_percentage', 0)
-                    value = factor.get('value', 'N/A')
-                    explainability_info += f"{i}. {feature}: {value} (Impact: {impact:.1f}%)\n"
+                    explanation = factor.get('explanation', '')
+                    explainability_info += f"{i}. {explanation}\n"
                 
                 explainability_info += "\n**What This Means:**\n"
                 explainability_info += shap_data.get('interpretation', 'Analysis of key factors affecting student risk.')
                 explainability_info += "\n"
             
-            # Add DiCE counterfactual recommendations
-            recommendations = dice_data.get('recommendations', [])
-            if recommendations:
-                explainability_info += "\n**Targeted Improvement Strategies (Data-Driven):**\n"
-                for i, rec in enumerate(recommendations[:3], 1):
-                    explainability_info += f"{i}. {rec}\n"
+            # ★★★ NEW: Use ActionMapper to get specific actions instead of numerical targets ★★★
+            specific_actions_text = ""
+            if full_context:
+                student_id = full_context.get('student', {}).get('id_student')
+                required_changes = dice_data.get('required_changes', {})
                 
-                changes = dice_data.get('required_changes', {})
-                if changes:
-                    explainability_info += "\n**Specific Goals to Reduce Risk:**\n"
-                    for feature, change_info in list(changes.items())[:3]:
-                        current = change_info.get('current', 'N/A')
-                        target = change_info.get('target', 'N/A')
-                        explainability_info += f"- {feature}: Current {current} → Target {target}\n"
+                if student_id and required_changes:
+                    try:
+                        from src.prescriptive.action_mapper import ActionMapper
+                        action_mapper = ActionMapper()
+                        specific_actions = action_mapper.map_actions(student_id, required_changes)
+                        
+                        # Format actions into human-readable list
+                        action_items = []
+                        
+                        if specific_actions.get('recommended_resources'):
+                            for r in specific_actions['recommended_resources'][:3]:
+                                activity = r.get('activity_type', 'resource')
+                                week = r.get('week_from')
+                                week_text = f"Week {week}" if week else "the course materials"
+                                action_items.append(f"Access the {activity} in {week_text}")
+                        
+                        if specific_actions.get('review_assessments'):
+                            for a in specific_actions['review_assessments'][:2]:
+                                assess_type = a.get('assessment_type', 'assignment')
+                                score = a.get('score', 0)
+                                action_items.append(f"Review your {assess_type} where you scored {score:.0f}%")
+                        
+                        if specific_actions.get('upcoming_assessments'):
+                            for a in specific_actions['upcoming_assessments'][:2]:
+                                assess_type = a.get('assessment_type', 'assessment')
+                                action_items.append(f"Prepare for your upcoming {assess_type}")
+                        
+                        if action_items:
+                            specific_actions_text = "\n**SPECIFIC ACTIONS THIS STUDENT MUST DO:**\n"
+                            for i, action in enumerate(action_items, 1):
+                                specific_actions_text += f"{i}. {action}\n"
+                            
+                            specific_actions_text += "\n⚠️ CRITICAL: You MUST recommend these SPECIFIC actions, not generic advice like 'increase clicks'.\n"
+                    except Exception as e:
+                        logger.warning(f"Could not get specific actions: {e}")
             
-            explainability_info += "\n**IMPORTANT:** Use these data-driven insights to provide SPECIFIC, TARGETED advice that addresses the exact factors contributing to this student's risk. Don't give generic advice - focus on the identified risk factors above.\n"
+            # If we have specific actions, use them; otherwise fall back to generic recommendations
+            if specific_actions_text:
+                explainability_info += specific_actions_text
+            else:
+                # Fallback: Use DiCE recommendations but warn to be specific
+                recommendations = dice_data.get('recommendations', [])
+                if recommendations:
+                    explainability_info += "\n**Targeted Improvement Strategies:**\n"
+                    for i, rec in enumerate(recommendations[:3], 1):
+                        explainability_info += f"{i}. {rec}\n"
+            
+            explainability_info += "\n**IMPORTANT:** Provide SPECIFIC, ACTIONABLE advice. Instead of saying 'increase interaction', say 'review the lecture notes' or 'complete the quiz'. Be a caring tutor, not a statistician.\n"
         
         prompt = f"""You are an experienced AI academic advisor helping students succeed in their online learning journey. You have access to comprehensive data about this student's learning behavior, progress, and performance, including advanced predictive analytics.
 
@@ -381,13 +418,13 @@ Use this context to provide more personalized and consistent advice. Reference p
 Based on the student's complete profile above, provide:
 1. A personalized, data-driven response that references their specific situation
 2. Concrete, actionable advice tailored to their progress and performance
-3. If explainability insights are provided, DIRECTLY ADDRESS the identified risk factors with specific strategies
-4. Encouragement and motivation appropriate to their current status
-5. Specific next steps they should take
+3. If specific actions are listed above, recommend those EXACT actions (e.g., "Review your TMA where you scored 22%")
+4. ABSOLUTELY FORBIDDEN: Do NOT mention numerical targets like "increase from X to Y" or "raise by Z%"
+5. Encouragement and motivation appropriate to their current status
 
 If the student is at-risk, be especially supportive and provide clear guidance on improvement.
 If they're doing well, acknowledge their progress and suggest ways to maintain momentum.
-Reference specific metrics from their profile when relevant (e.g., "I see you've completed X lessons...").
+Reference specific actions from their profile when provided.
 If risk factors are identified, explain how addressing them will improve their outcomes.
 
 Keep the response conversational, encouraging, and focused (2-3 paragraphs).

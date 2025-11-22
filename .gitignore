@@ -117,3 +117,8 @@ data/enhanced_knowledge_base.txt
 
 # Evaluation plots
 plots/evaluation/
+
+# Large database files
+plaf_complete_database.sql
+*.sql
+data/*.db

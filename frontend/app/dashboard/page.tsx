@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  BookOpen, 
-  MessageCircle, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  BookOpen,
+  MessageCircle,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
   Clock,
   BarChart,
   GraduationCap,
@@ -39,7 +39,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
 
   useEffect(() => {
     if (!startOnMount || hasStarted) return;
-    
+
     setHasStarted(true);
     let startTime: number | null = null;
     const startValue = 0;
@@ -47,7 +47,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
     const animate = (currentTime: number) => {
       if (!startTime) startTime = currentTime;
       const progress = Math.min((currentTime - startTime) / duration, 1);
-      
+
       // Easing function for smooth animation
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
       setCount(Math.floor(easeOutQuart * end));
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                 <TrendingUp className={`w-8 h-8 ${riskColor.text} animate-bounce-slow`} />
               </div>
               <div className="relative h-2 mb-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`absolute top-0 left-0 h-full ${isAtRisk ? 'bg-red-600' : 'bg-green-600'} transition-all duration-2000 ease-out`}
                   style={{ width: `${startAnimation ? Math.round(animatedRisk) : 0}%` }}
                 />
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                 <Target className="w-8 h-8 text-blue-600 animate-pulse" />
               </div>
               <div className="relative h-2 mb-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-2000 ease-out"
                   style={{ width: `${startAnimation ? animatedScore : 0}%` }}
                 />
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                 <CheckCircle className="w-8 h-8 text-green-600 animate-pulse" />
               </div>
               <div className="relative h-2 mb-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-2000 ease-out"
                   style={{ width: `${startAnimation && quizCompleted > 0 ? animatedPassRate : 0}%` }}
                 />
@@ -375,11 +375,11 @@ export default function DashboardPage() {
             <CardContent>
               <div className="relative">
                 <ResponsiveContainer width="100%" height={300}>
-                  <RadialBarChart 
-                    cx="50%" 
-                    cy="50%" 
-                    innerRadius="60%" 
-                    outerRadius="90%" 
+                  <RadialBarChart
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="60%"
+                    outerRadius="90%"
                     barSize={20}
                     data={[{ name: 'Risk', value: animatedRisk, fill: isAtRisk ? '#ef4444' : '#22c55e' }]}
                     startAngle={180}
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
-                  {isAtRisk 
+                  {isAtRisk
                     ? 'Consider talking to your AI Advisor for personalized support'
                     : 'Great job! Keep up the good work'
                   }
@@ -451,13 +451,13 @@ export default function DashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="week" tick={{ fill: '#6b7280' }} />
                   <YAxis tick={{ fill: '#6b7280' }} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                     labelStyle={{ color: '#111827', fontWeight: 'bold' }}
                   />
-                  <Bar 
-                    dataKey="clicks" 
-                    fill="#8b5cf6" 
+                  <Bar
+                    dataKey="clicks"
+                    fill="#8b5cf6"
                     radius={[8, 8, 0, 0]}
                     isAnimationActive={true}
                     animationDuration={1500}
@@ -484,10 +484,10 @@ export default function DashboardPage() {
         {/* Intervention Plan Section */}
         {isAtRisk && (
           <div className="mb-8">
-            <InterventionPlan 
-              student={student} 
-              riskFactors={[]} 
-              strategies={[]} 
+            <InterventionPlan
+              student={student}
+              riskFactors={[]}
+              strategies={[]}
             />
           </div>
         )}
